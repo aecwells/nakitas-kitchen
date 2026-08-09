@@ -14,10 +14,21 @@ const data = recipe.data;
 		{data.featured_image && (
 			<div class="card-image">
 				<Image image={data.featured_image} alt={data.title} />
+				{data.recipe_source && (
+					<span class="source-badge">
+						{data.recipe_source}
+					</span>
+				)}
 			</div>
 		)}
 
 		<div class="card-body">
+			{data.equipment && (
+				<div class="equipment-pill">
+					⚙️ {data.equipment}
+				</div>
+			)}
+
 			<div class="card-meta">
 				{data.prep_time && <span class="meta-item">Prep: {data.prep_time}</span>}
 				{data.cook_time && <span class="meta-item">Cook: {data.cook_time}</span>}
@@ -53,12 +64,27 @@ const data = recipe.data;
 		aspect-ratio: 16 / 10;
 		overflow: hidden;
 		background: var(--color-bg-subtle, #f1f5f9);
+		position: relative;
 	}
 	.card-image img {
 		width: 100%;
 		height: 100%;
 		object-fit: cover;
 		transition: transform 0.3s ease;
+	}
+	.source-badge {
+		position: absolute;
+		top: 0.75rem;
+		right: 0.75rem;
+		background: rgba(15, 23, 42, 0.85);
+		backdrop-filter: blur(4px);
+		color: #ffffff;
+		font-weight: 700;
+		font-size: 0.6875rem;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		padding: 0.25rem 0.6rem;
+		border-radius: 20px;
 	}
 	.recipe-card:hover .card-image img {
 		transform: scale(1.03);
@@ -68,6 +94,12 @@ const data = recipe.data;
 		display: flex;
 		flex-direction: column;
 		flex-grow: 1;
+	}
+	.equipment-pill {
+		font-size: 0.75rem;
+		font-weight: 600;
+		color: #d97706;
+		margin-bottom: 0.35rem;
 	}
 	.card-meta {
 		display: flex;

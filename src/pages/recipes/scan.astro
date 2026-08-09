@@ -1,0 +1,334 @@
+---
+import Base from "../../layouts/Base.astro";
+---
+
+<Base title="AI Recipe Card Scanner | Nakita's Kitchen" description="Take a photo of your HomeChef, HelloFresh, or outdoor barbecue recipe card to instantly create and publish a digital recipe.">
+	<div class="scanner-page container">
+		<header class="page-header">
+			<a href="/recipes" class="back-link">&larr; Back to Recipes</a>
+			<div class="badge">AI Recipe Importer</div>
+			<h1 class="page-title">Scan Recipe Card</h1>
+			<p class="page-description">
+				Take a picture of your physical <strong>HomeChef</strong>, <strong>HelloFresh</strong>, or outdoor barbecue recipe card. Our scanner will extract ingredients, instructions, source attribution, and equipment setup to instantly publish it into your kitchen journal.
+			</p>
+		</header>
+
+		<div class="scanner-card">
+			<form id="scanner-form" class="scanner-form">
+				<!-- Image Upload Dropzone -->
+				<div class="upload-area" id="upload-area">
+					<input type="file" id="card_image" name="card_image" accept="image/*" capture="environment" class="file-input" />
+					<div class="upload-prompt" id="upload-prompt">
+						<div class="upload-icon">📷</div>
+						<h3>Snap Photo or Drag Recipe Card Here</h3>
+						<p>Supports HomeChef cards, HelloFresh cards, magazine cutouts, and physical recipe cards.</p>
+						<span class="upload-btn-fake">Choose Image / Take Photo</span>
+					</div>
+					<div class="image-preview" id="image-preview" hidden>
+						<img id="preview-img" src="" alt="Recipe Card Preview" />
+						<button type="button" id="remove-img-btn" class="remove-btn">Change Photo</button>
+					</div>
+				</div>
+
+				<!-- Source & Equipment Configuration -->
+				<div class="form-row">
+					<div class="form-group">
+						<label for="source" class="form-label">Recipe Source / Card Brand</label>
+						<select id="source" name="source" class="form-select">
+							<option value="HomeChef">HomeChef Meal Card</option>
+							<option value="HelloFresh">HelloFresh Meal Card</option>
+							<option value="Kamado Joe">Kamado Joe BBQ Special</option>
+							<option value="Oklahoma Joe">Oklahoma Joe Smoker Special</option>
+							<option value="Homemade Original">Homemade Original Recipe</option>
+							<option value="Family Tradition">Family Tradition</option>
+						</select>
+					</div>
+
+					<div class="form-group">
+						<label for="equipment" class="form-label">Grill & Cooking Equipment</label>
+						<select id="equipment" name="equipment" class="form-select">
+							<option value="Kamado Joe Classic III">Kamado Joe Classic III (Ceramic)</option>
+							<option value="Oklahoma Joe DLX 900">Oklahoma Joe DLX 900 (Pellet Smoker)</option>
+							<option value="Kamado Joe Classic III w/ Joetisserie">Joetisserie Rotisserie (Kamado Joe)</option>
+							<option value="Kamado Joe Classic III w/ DoJoe">DoJoe Wood-Fired Pizza Wedge</option>
+							<option value="Cast Iron Dutch Oven">Cast Iron Dutch Oven</option>
+							<option value="Indoor Oven & Stovetop Skillet">Indoor Oven & Stovetop Skillet</option>
+						</select>
+					</div>
+				</div>
+
+				<!-- Quick Metadata Fields -->
+				<div class="form-group">
+					<label for="title" class="form-label">Recipe Title</label>
+					<input type="text" id="title" name="title" class="form-input" placeholder="e.g. HomeChef Garlic-Parmesan Crusted Chicken or Rotisserie Smoked Pork" />
+				</div>
+
+				<div class="form-row">
+					<div class="form-group">
+						<label for="prep_time" class="form-label">Prep Time</label>
+						<input type="text" id="prep_time" name="prep_time" class="form-input" value="15 mins" />
+					</div>
+					<div class="form-group">
+						<label for="cook_time" class="form-label">Cook Time</label>
+						<input type="text" id="cook_time" name="cook_time" class="form-input" value="30 mins" />
+					</div>
+					<div class="form-group">
+						<label for="servings" class="form-label">Yield / Servings</label>
+						<input type="text" id="servings" name="servings" class="form-input" value="2-4 servings" />
+					</div>
+				</div>
+
+				<div class="form-group">
+					<label for="ingredients" class="form-label">Ingredients Checklist (One per line)</label>
+					<textarea id="ingredients" name="ingredients" class="form-textarea" rows="5" placeholder="• 2 Boneless Chicken Breasts&#10;• 1/4 cup Panko Breadcrumbs&#10;• 3 tbsp Parmesan&#10;• 12 oz Yukon Gold Potatoes"></textarea>
+				</div>
+
+				<div class="form-group">
+					<label for="instructions" class="form-label">Step-by-Step Instructions</label>
+					<textarea id="instructions" name="instructions" class="form-textarea" rows="6" placeholder="1. Prep & Season&#10;Wash vegetables and pat protein dry with paper towels.&#10;&#10;2. Sear & Roast&#10;Heat grill/oven to 400°F. Roast until golden brown."></textarea>
+				</div>
+
+				<button type="submit" id="submit-btn" class="submit-btn">
+					<span>✨ Scan & Create Digital Recipe</span>
+				</button>
+			</form>
+		</div>
+	</div>
+</Base>
+
+<script>
+	document.addEventListener("DOMContentLoaded", () => {
+		const fileInput = document.getElementById("card_image") as HTMLInputElement;
+		const uploadPrompt = document.getElementById("upload-prompt");
+		const imagePreview = document.getElementById("image-preview");
+		const previewImg = document.getElementById("preview-img") as HTMLImageElement;
+		const removeImgBtn = document.getElementById("remove-img-btn");
+		const form = document.getElementById("scanner-form") as HTMLFormElement;
+		const submitBtn = document.getElementById("submit-btn") as HTMLButtonElement;
+
+		// Preview uploaded photo
+		fileInput?.addEventListener("change", () => {
+			const file = fileInput.files?.[0];
+			if (file) {
+				const reader = new FileReader();
+				reader.onload = (e) => {
+					if (previewImg && e.target?.result) {
+						previewImg.src = e.target.result as string;
+						uploadPrompt?.setAttribute("hidden", "true");
+						imagePreview?.removeAttribute("hidden");
+					}
+				};
+				reader.readAsDataURL(file);
+			}
+		});
+
+		removeImgBtn?.addEventListener("click", (e) => {
+			e.preventDefault();
+			if (fileInput) fileInput.value = "";
+			uploadPrompt?.removeAttribute("hidden");
+			imagePreview?.setAttribute("hidden", "true");
+		});
+
+		// Submit form to API
+		form?.addEventListener("submit", async (e) => {
+			e.preventDefault();
+			submitBtn.disabled = true;
+			submitBtn.innerText = "⏳ Extracting & Publishing Recipe...";
+
+			try {
+				const formData = new FormData(form);
+				const res = await fetch("/api/scan-recipe", {
+					method: "POST",
+					body: formData,
+				});
+
+				const data = await res.json();
+				if (data.success && data.redirectUrl) {
+					window.location.href = data.redirectUrl;
+				} else {
+					alert("Error: " + (data.error || "Failed to process card"));
+					submitBtn.disabled = false;
+					submitBtn.innerText = "✨ Scan & Create Digital Recipe";
+				}
+			} catch (err: any) {
+				alert("Scan failed: " + err.message);
+				submitBtn.disabled = false;
+				submitBtn.innerText = "✨ Scan & Create Digital Recipe";
+			}
+		});
+	});
+</script>
+
+<style>
+	.scanner-page {
+		max-width: 800px;
+		margin: 0 auto;
+		padding: 2.5rem 1.5rem 4rem 1.5rem;
+	}
+	.back-link {
+		color: var(--color-brand, #0066cc);
+		text-decoration: none;
+		font-weight: 600;
+		font-size: 0.875rem;
+		display: inline-block;
+		margin-bottom: 1rem;
+	}
+	.page-header {
+		text-align: center;
+		margin-bottom: 2.5rem;
+	}
+	.badge {
+		background: rgba(0, 102, 204, 0.08);
+		color: var(--color-brand, #0066cc);
+		font-weight: 700;
+		font-size: 0.75rem;
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+		padding: 0.35rem 0.85rem;
+		border-radius: 20px;
+		display: inline-block;
+		margin-bottom: 0.75rem;
+	}
+	.page-title {
+		font-size: 2.5rem;
+		font-weight: 700;
+		color: var(--color-text, #0f172a);
+		margin: 0 0 0.75rem 0;
+	}
+	.page-description {
+		font-size: 1.0625rem;
+		color: var(--color-text-secondary, #475569);
+		line-height: 1.6;
+		margin: 0;
+	}
+	.scanner-card {
+		background: var(--color-surface, #ffffff);
+		border: 1px solid var(--color-border, #e2e8f0);
+		border-radius: 16px;
+		padding: 2rem;
+		box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+	}
+	.upload-area {
+		border: 2px dashed var(--color-brand, #0066cc);
+		background: rgba(0, 102, 204, 0.02);
+		border-radius: 12px;
+		padding: 2.5rem 1.5rem;
+		text-align: center;
+		position: relative;
+		margin-bottom: 2rem;
+		cursor: pointer;
+		transition: background 0.2s ease;
+	}
+	.upload-area:hover {
+		background: rgba(0, 102, 204, 0.05);
+	}
+	.file-input {
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+		opacity: 0;
+		cursor: pointer;
+	}
+	.upload-icon {
+		font-size: 3rem;
+		margin-bottom: 0.5rem;
+	}
+	.upload-prompt h3 {
+		margin: 0 0 0.4rem 0;
+		font-size: 1.25rem;
+		color: var(--color-text, #0f172a);
+	}
+	.upload-prompt p {
+		margin: 0 0 1rem 0;
+		font-size: 0.875rem;
+		color: var(--color-muted, #64748b);
+	}
+	.upload-btn-fake {
+		display: inline-block;
+		background: var(--color-brand, #0066cc);
+		color: #ffffff;
+		padding: 0.5rem 1rem;
+		border-radius: 6px;
+		font-weight: 600;
+		font-size: 0.875rem;
+	}
+	.image-preview img {
+		max-height: 280px;
+		border-radius: 8px;
+		margin: 0 auto 1rem auto;
+		display: block;
+	}
+	.remove-btn {
+		background: #ef4444;
+		color: #ffffff;
+		border: none;
+		border-radius: 6px;
+		padding: 0.4rem 0.8rem;
+		font-size: 0.8125rem;
+		font-weight: 600;
+		cursor: pointer;
+	}
+	.form-row {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 1.25rem;
+	}
+	@media (max-width: 600px) {
+		.form-row {
+			grid-template-columns: 1fr;
+		}
+	}
+	.form-group {
+		margin-bottom: 1.25rem;
+	}
+	.form-label {
+		display: block;
+		font-size: 0.875rem;
+		font-weight: 600;
+		color: var(--color-text, #0f172a);
+		margin-bottom: 0.4rem;
+	}
+	.form-input,
+	.form-select,
+	.form-textarea {
+		width: 100%;
+		padding: 0.75rem;
+		border: 1px solid var(--color-border, #cbd5e1);
+		border-radius: 8px;
+		font-family: inherit;
+		font-size: 0.9375rem;
+		color: var(--color-text, #0f172a);
+		background: var(--color-bg, #ffffff);
+		box-sizing: border-box;
+	}
+	.form-input:focus,
+	.form-select:focus,
+	.form-textarea:focus {
+		outline: none;
+		border-color: var(--color-brand, #0066cc);
+		box-shadow: 0 0 0 3px var(--color-brand-ring, rgba(0, 102, 204, 0.15));
+	}
+	.submit-btn {
+		width: 100%;
+		background: var(--color-brand, #0066cc);
+		color: #ffffff;
+		border: none;
+		border-radius: 8px;
+		padding: 1rem;
+		font-size: 1.125rem;
+		font-weight: 700;
+		cursor: pointer;
+		transition: background 0.2s ease, transform 0.1s ease;
+		margin-top: 1rem;
+	}
+	.submit-btn:hover:not(:disabled) {
+		background: var(--color-brand-hover, #0052a3);
+		transform: translateY(-1px);
+	}
+	.submit-btn:disabled {
+		background: var(--color-muted, #94a3b8);
+		cursor: not-allowed;
+	}
+</style>

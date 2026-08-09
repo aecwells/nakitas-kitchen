@@ -46,6 +46,10 @@ export interface Recipe {
   content?: PortableTextBlock[];
   excerpt?: string;
   cottage_license_notice?: string;
+  recipe_source?: string;
+  equipment?: string;
+  cooking_method?: string;
+  card_scan_image?: { id: string; src?: string; alt?: string };
   createdAt: Date;
   updatedAt: Date;
   publishedAt: Date | null;

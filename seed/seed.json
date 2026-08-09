@@ -3,12 +3,12 @@
 	"version": "1",
 	"meta": {
 		"name": "Nakita's Kitchen Starter",
-		"description": "Bakery recipes, blog, and cottage food storefront",
+		"description": "Bakery recipes, blog, outdoor barbecue, and cottage food storefront",
 		"author": "Nakita's Kitchen"
 	},
 	"settings": {
 		"title": "Nakita's Kitchen",
-		"tagline": "Handcrafted sourdough, artisanal baked goods, and cottage kitchen recipes"
+		"tagline": "Handcrafted sourdough, outdoor smoker bakes, and cottage kitchen recipes"
 	},
 	"collections": [
 		{
@@ -48,6 +48,7 @@
 			"label": "Recipes",
 			"labelSingular": "Recipe",
 			"supports": ["drafts", "revisions", "search", "seo"],
+			"commentsEnabled": true,
 			"fields": [
 				{
 					"slug": "title",
@@ -60,6 +61,21 @@
 					"slug": "featured_image",
 					"label": "Featured Image",
 					"type": "image"
+				},
+				{
+					"slug": "recipe_source",
+					"label": "Recipe Source / Attribution",
+					"type": "string"
+				},
+				{
+					"slug": "equipment",
+					"label": "Cooking Equipment",
+					"type": "string"
+				},
+				{
+					"slug": "cooking_method",
+					"label": "Cooking Method",
+					"type": "string"
 				},
 				{
 					"slug": "prep_time",
@@ -89,7 +105,7 @@
 				},
 				{
 					"slug": "content",
-					"label": "Baking Notes & Instructions",
+					"label": "Baking & Cooking Instructions",
 					"type": "portableText",
 					"searchable": true
 				},
@@ -102,6 +118,11 @@
 					"slug": "cottage_license_notice",
 					"label": "Cottage Food Notice",
 					"type": "string"
+				},
+				{
+					"slug": "card_scan_image",
+					"label": "Uploaded Recipe Card Photo",
+					"type": "image"
 				}
 			]
 		},
@@ -110,6 +131,7 @@
 			"label": "Store Products",
 			"labelSingular": "Store Product",
 			"supports": ["drafts", "revisions", "search", "seo"],
+			"commentsEnabled": true,
 			"fields": [
 				{
 					"slug": "title",
@@ -146,12 +168,12 @@
 				},
 				{
 					"slug": "matched_recipe_slug",
-					"label": "Matching Recipe Slug (Pulls Ingredients)",
+					"label": "Matching Recipe Slug",
 					"type": "string"
 				},
 				{
 					"slug": "explicit_ingredients",
-					"label": "Fallback / Custom Ingredients List",
+					"label": "Fallback Ingredients List",
 					"type": "text"
 				},
 				{
@@ -210,12 +232,66 @@
 					"label": "Pastries & Sweets"
 				},
 				{
-					"slug": "cookies",
-					"label": "Cookies & Biscuits"
+					"slug": "outdoor-bbq",
+					"label": "Outdoor BBQ & Smoking"
 				},
 				{
-					"slug": "pantry",
-					"label": "Pantry & Spreads"
+					"slug": "meal-kits",
+					"label": "Meal Kit Favorites"
+				}
+			]
+		},
+		{
+			"name": "source",
+			"label": "Recipe Source",
+			"labelSingular": "Source",
+			"hierarchical": false,
+			"collections": ["recipes"],
+			"terms": [
+				{
+					"slug": "homechef",
+					"label": "HomeChef"
+				},
+				{
+					"slug": "hellofresh",
+					"label": "HelloFresh"
+				},
+				{
+					"slug": "homemade",
+					"label": "Homemade Original"
+				},
+				{
+					"slug": "family-tradition",
+					"label": "Family Recipe"
+				}
+			]
+		},
+		{
+			"name": "equipment",
+			"label": "Grill & Equipment",
+			"labelSingular": "Equipment",
+			"hierarchical": false,
+			"collections": ["recipes"],
+			"terms": [
+				{
+					"slug": "kamado-joe",
+					"label": "Kamado Joe Classic III"
+				},
+				{
+					"slug": "oklahoma-joe",
+					"label": "Oklahoma Joe DLX 900"
+				},
+				{
+					"slug": "joetisserie",
+					"label": "Joetisserie Rotisserie"
+				},
+				{
+					"slug": "dojoe",
+					"label": "DoJoe Pizza Attachment"
+				},
+				{
+					"slug": "dutch-oven",
+					"label": "Cast Iron Dutch Oven"
 				}
 			]
 		},
@@ -231,16 +307,16 @@
 					"label": "Wild Yeast Sourdough"
 				},
 				{
-					"slug": "organic",
-					"label": "Organic Flour"
+					"slug": "rotisserie",
+					"label": "Rotisserie"
 				},
 				{
-					"slug": "cottage-bakery",
-					"label": "Cottage Bakery"
+					"slug": "pellet-smoke",
+					"label": "Pellet Smoke"
 				},
 				{
-					"slug": "preorder",
-					"label": "Weekly Pre-Order"
+					"slug": "card-scanned",
+					"label": "Card Scanned AI"
 				}
 			]
 		}
@@ -250,11 +326,6 @@
 			"id": "byline-nakita",
 			"slug": "nakita",
 			"displayName": "Nakita"
-		},
-		{
-			"id": "byline-kitchen",
-			"slug": "nakitas-kitchen-team",
-			"displayName": "Nakita's Kitchen Team"
 		}
 	],
 	"menus": [
@@ -279,47 +350,30 @@
 						},
 						{
 							"type": "custom",
-							"label": "Artisan Country Sourdough Boule",
+							"label": "📸 AI Recipe Card Scanner",
+							"url": "/recipes/scan"
+						},
+						{
+							"type": "custom",
+							"label": "Artisan Country Sourdough",
 							"url": "/recipes/artisan-sourdough-boule"
 						},
 						{
 							"type": "custom",
-							"label": "Swedish Cardamom Cinnamon Knots",
-							"url": "/recipes/cardamom-cinnamon-knots"
+							"label": "Rotisserie Smoked Herb Chicken",
+							"url": "/recipes/rotisserie-smoked-herb-chicken"
 						},
 						{
 							"type": "custom",
-							"label": "Meyer Lemon Thyme Shortbread",
-							"url": "/recipes/meyer-lemon-shortbread"
+							"label": "DoJoe Wood-Fired Neapolitan Pizza",
+							"url": "/recipes/dojoe-woodfired-pizza"
 						}
 					]
 				},
 				{
 					"type": "custom",
 					"label": "Cottage Bakery Shop",
-					"url": "/shop",
-					"children": [
-						{
-							"type": "custom",
-							"label": "Weekly Pre-Order Menu",
-							"url": "/shop"
-						},
-						{
-							"type": "custom",
-							"label": "Country Sourdough Loaf ($12.00)",
-							"url": "/shop/artisan-sourdough-loaf"
-						},
-						{
-							"type": "custom",
-							"label": "Cardamom Cinnamon Knots 4-Pack ($16.00)",
-							"url": "/shop/cardamom-cinnamon-knots-4pack"
-						},
-						{
-							"type": "custom",
-							"label": "Meyer Lemon Shortbread Box ($14.00)",
-							"url": "/shop/meyer-lemon-shortbread-box"
-						}
-					]
+					"url": "/shop"
 				},
 				{
 					"type": "custom",
@@ -333,431 +387,5 @@
 				}
 			]
 		}
-	],
-	"widgetAreas": [
-		{
-			"name": "sidebar",
-			"label": "Sidebar",
-			"description": "Widget area displayed on single post pages",
-			"widgets": [
-				{
-					"type": "component",
-					"componentId": "core:search",
-					"title": "Search"
-				},
-				{
-					"type": "component",
-					"componentId": "core:categories",
-					"title": "Categories"
-				}
-			]
-		},
-		{
-			"name": "footer",
-			"label": "Footer",
-			"description": "Widget area displayed in the site footer",
-			"widgets": [
-				{
-					"type": "content",
-					"title": "Cottage Kitchen Disclosure",
-					"content": [
-						{
-							"_type": "block",
-							"style": "normal",
-							"children": [
-								{
-									"_type": "span",
-									"text": "Nakita's Kitchen is a registered Cottage Food Operation (License #CFO-LA-2026-9481). Food items are prepared in a home kitchen that is not subject to state licensing or inspection.",
-									"_key": "k1"
-								}
-							],
-							"_key": "k0"
-						}
-					]
-				}
-			]
-		}
-	],
-	"sections": [
-		{
-			"slug": "bakery-announcement",
-			"title": "Weekly Bake Schedule",
-			"description": "Weekly sourdough bake drops and pickup hours",
-			"keywords": ["bake", "schedule", "sourdough", "pickup"],
-			"source": "theme",
-			"content": [
-				{
-					"_type": "block",
-					"style": "h3",
-					"children": [
-						{
-							"_type": "span",
-							"text": "Fresh Bake Pickups Every Saturday",
-							"_key": "k1"
-						}
-					],
-					"_key": "k0"
-				},
-				{
-					"_type": "block",
-					"style": "normal",
-					"children": [
-						{
-							"_type": "span",
-							"text": "Pre-order by Thursday 5 PM for Saturday morning porch pickup or local farmers market drop-off.",
-							"_key": "k3"
-						}
-					],
-					"_key": "k2"
-				}
-			]
-		}
-	],
-	"content": {
-		"pages": [
-			{
-				"id": "about",
-				"slug": "about",
-				"status": "published",
-				"data": {
-					"title": "About Nakita's Kitchen",
-					"content": [
-						{
-							"_type": "block",
-							"style": "normal",
-							"children": [
-								{
-									"_type": "span",
-									"text": "Welcome to Nakita's Kitchen! We are an artisanal cottage bakery dedicated to slow-fermented sourdoughs, heritage grain pastries, and seasonal preserves baked in small batches.",
-									"_key": "k1"
-								}
-							],
-							"_key": "k0"
-						},
-						{
-							"_type": "block",
-							"style": "normal",
-							"children": [
-								{
-									"_type": "span",
-									"text": "All items are baked locally under Cottage Food License #CFO-LA-2026-9481 using organic stone-ground flours, local dairy, and unrefined sugars.",
-									"_key": "k3"
-								}
-							],
-							"_key": "k2"
-						}
-					]
-				}
-			}
-		],
-		"recipes": [
-			{
-				"id": "rec-1",
-				"slug": "artisan-sourdough-boule",
-				"status": "published",
-				"data": {
-					"title": "Artisan Country Sourdough Boule",
-					"excerpt": "A crispy, blistered crust with an open, airy crumb and subtle tang crafted over 36 hours of cold fermentation.",
-					"prep_time": "30 mins + 24hr ferment",
-					"cook_time": "45 mins",
-					"servings": "1 loaf (approx 750g)",
-					"allergens": "Contains: Wheat (Gluten).",
-					"cottage_license_notice": "Baked in a Cottage Food Operation (License #CFO-LA-2026-9481).",
-					"ingredients": "• 400g Organic Unbleached Bread Flour\n• 100g Whole Grain Rye Flour\n• 375g Filtered Water (75% hydration)\n• 100g Active Sourdough Starter\n• 10g Fine Sea Salt",
-					"featured_image": {
-						"$media": {
-							"url": "https://images.unsplash.com/photo-1589367920969-ab8e050bbb04?w=1200&h=800&fit=crop",
-							"alt": "Freshly baked sourdough loaf with golden blistered crust",
-							"filename": "sourdough-boule.jpg"
-						}
-					},
-					"content": [
-						{
-							"_type": "block",
-							"style": "h2",
-							"children": [{ "_type": "span", "text": "1. Autolyse & Levain Building", "_key": "k1" }],
-							"_key": "k0"
-						},
-						{
-							"_type": "block",
-							"style": "normal",
-							"children": [{ "_type": "span", "text": "Mix the bread flour, rye flour, and water until no dry spots remain. Rest for 45 minutes to autolyse. Fold in active levain and salt gently.", "_key": "k3" }],
-							"_key": "k2"
-						},
-						{
-							"_type": "block",
-							"style": "h2",
-							"children": [{ "_type": "span", "text": "2. Bulk Fermentation & Folds", "_key": "k5" }],
-							"_key": "k4"
-						},
-						{
-							"_type": "block",
-							"style": "normal",
-							"children": [{ "_type": "span", "text": "Perform 4 stretch-and-folds spaced 30 minutes apart over 2.5 hours. Allow the dough to rise in a warm spot until expanded by 50%.", "_key": "k7" }],
-							"_key": "k6"
-						},
-						{
-							"_type": "block",
-							"style": "h2",
-							"children": [{ "_type": "span", "text": "3. Shaping & Dutch Oven Bake", "_key": "k9" }],
-							"_key": "k8"
-						},
-						{
-							"_type": "block",
-							"style": "normal",
-							"children": [{ "_type": "span", "text": "Pre-shape into a round, rest 20 mins, then shape tightly into a banneton basket. Cold retard in the fridge overnight. Bake at 450°F (230°C) covered in a preheated Dutch oven for 20 mins with steam, then uncovered for 25 mins until mahogany golden.", "_key": "k11" }],
-							"_key": "k10"
-						}
-					]
-				},
-				"bylines": [{ "byline": "byline-nakita" }],
-				"taxonomies": {
-					"category": ["breads"],
-					"tag": ["sourdough", "organic", "cottage-bakery"]
-				}
-			},
-			{
-				"id": "rec-2",
-				"slug": "cardamom-cinnamon-knots",
-				"status": "published",
-				"data": {
-					"title": "Swedish Cardamom Cinnamon Knots",
-					"excerpt": "Soft enriched brioche dough laced with freshly crushed green cardamom pods and organic Ceylon cinnamon.",
-					"prep_time": "40 mins",
-					"cook_time": "22 mins",
-					"servings": "8 individual knots",
-					"allergens": "Contains: Wheat, Whole Milk, Butter (Milk), Eggs.",
-					"cottage_license_notice": "Baked in a Cottage Food Operation (License #CFO-LA-2026-9481).",
-					"ingredients": "• 500g Organic All-Purpose Flour\n• 250g Whole Milk (Warm)\n• 80g Grass-Fed European Butter (Softened)\n• 70g Organic Cane Sugar\n• 1 Egg (Free-Range)\n• 2 tsp Crushed Green Cardamom Seeds\n• 1.5 tsp Active Dry Yeast\n• 1 tsp Sea Salt\n• Filling: Butter, Brown Sugar, Ground Cinnamon, Cardamom",
-					"featured_image": {
-						"$media": {
-							"url": "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=1200&h=800&fit=crop",
-							"alt": "Golden Swedish cardamom knots dusted with pearl sugar",
-							"filename": "cardamom-knots.jpg"
-						}
-					},
-					"content": [
-						{
-							"_type": "block",
-							"style": "h2",
-							"children": [{ "_type": "span", "text": "1. Dough Kneading & First Rise", "_key": "k1" }],
-							"_key": "k0"
-						},
-						{
-							"_type": "block",
-							"style": "normal",
-							"children": [{ "_type": "span", "text": "Whisk warm milk, yeast, and sugar. Knead with flour, cardamom, and egg for 8 minutes until smooth. Gradually incorporate softened butter until shiny and elastic. Let rise 1.5 hours.", "_key": "k3" }],
-							"_key": "k2"
-						},
-						{
-							"_type": "block",
-							"style": "h2",
-							"children": [{ "_type": "span", "text": "2. Filling & Knot Shaping", "_key": "k5" }],
-							"_key": "k4"
-						},
-						{
-							"_type": "block",
-							"style": "normal",
-							"children": [{ "_type": "span", "text": "Roll into a 12x18 inch rectangle. Spread spiced butter filling evenly. Fold into thirds like a letter, cut strips, twist, and tie into traditional Swedish knots.", "_key": "k7" }],
-							"_key": "k6"
-						},
-						{
-							"_type": "block",
-							"style": "h2",
-							"children": [{ "_type": "span", "text": "3. Baking & Vanilla Glaze", "_key": "k9" }],
-							"_key": "k8"
-						},
-						{
-							"_type": "block",
-							"style": "normal",
-							"children": [{ "_type": "span", "text": "Proof for 45 minutes, egg wash, and sprinkle with Swedish pearl sugar. Bake at 375°F (190°C) for 20-22 minutes until deep amber golden.", "_key": "k11" }],
-							"_key": "k10"
-						}
-					]
-				},
-				"bylines": [{ "byline": "byline-nakita" }],
-				"taxonomies": {
-					"category": ["pastries"],
-					"tag": ["cottage-bakery", "preorder"]
-				}
-			},
-			{
-				"id": "rec-3",
-				"slug": "meyer-lemon-shortbread",
-				"status": "published",
-				"data": {
-					"title": "Meyer Lemon Thyme Shortbread",
-					"excerpt": "Melt-in-your-mouth tender shortbread cookies infusing fresh Meyer lemon zest and subtle garden thyme.",
-					"prep_time": "15 mins + 1hr chill",
-					"cook_time": "18 mins",
-					"servings": "12 thick cookies",
-					"allergens": "Contains: Wheat, Butter (Milk).",
-					"cottage_license_notice": "Baked in a Cottage Food Operation (License #CFO-LA-2026-9481).",
-					"ingredients": "• 250g Organic Pastry Flour\n• 175g Cultured Irish Butter (Cold & Cubed)\n• 70g Powdered Cane Sugar\n• Zest of 2 Fresh Meyer Lemons\n• 1 tsp Chopped Fresh Lemon Thyme\n• 1/2 tsp Vanilla Bean Paste\n• Flaky Sea Salt for topping",
-					"featured_image": {
-						"$media": {
-							"url": "https://images.unsplash.com/photo-1558961363-fa8fdf82db35?w=1200&h=800&fit=crop",
-							"alt": "Lemon shortbread cookies arranged neatly on parchment paper",
-							"filename": "lemon-shortbread.jpg"
-						}
-					},
-					"content": [
-						{
-							"_type": "block",
-							"style": "h2",
-							"children": [{ "_type": "span", "text": "1. Creaming & Dough Preparation", "_key": "k1" }],
-							"_key": "k0"
-						},
-						{
-							"_type": "block",
-							"style": "normal",
-							"children": [{ "_type": "span", "text": "Rub lemon zest and thyme into powdered sugar until fragrant. Beat with cold butter and vanilla until pale. Fold in flour gently until a cohesive dough forms.", "_key": "k3" }],
-							"_key": "k2"
-						},
-						{
-							"_type": "block",
-							"style": "h2",
-							"children": [{ "_type": "span", "text": "2. Chilling & Slow Bake", "_key": "k5" }],
-							"_key": "k4"
-						},
-						{
-							"_type": "block",
-							"style": "normal",
-							"children": [{ "_type": "span", "text": "Shape into a log, wrap in parchment, and chill for 1 hour until firm. Slice into 1/2-inch thick rounds. Bake at 325°F (160°C) for 18 minutes until barely golden on the edges.", "_key": "k7" }],
-							"_key": "k6"
-						}
-					]
-				},
-				"bylines": [{ "byline": "byline-nakita" }],
-				"taxonomies": {
-					"category": ["cookies"],
-					"tag": ["organic", "cottage-bakery"]
-				}
-			}
-		],
-		"products": [
-			{
-				"id": "prod-1",
-				"slug": "artisan-sourdough-loaf",
-				"status": "published",
-				"data": {
-					"title": "Country Sourdough Loaf",
-					"price": "12.00",
-					"net_weight": "24 oz (680g)",
-					"description": "Naturally leavened 36-hour cold fermented bread baked in a stone oven. Crisp crust with an airy, tender interior.",
-					"cottage_license_number": "CFO-LA-2026-9481",
-					"matched_recipe_slug": "artisan-sourdough-boule",
-					"allergens": "Contains: Wheat (Gluten).",
-					"in_stock": true,
-					"stripe_price_id": "price_1SourdoughBouleDemo",
-					"featured_image": {
-						"$media": {
-							"url": "https://images.unsplash.com/photo-1589367920969-ab8e050bbb04?w=1200&h=800&fit=crop",
-							"alt": "Fresh sourdough loaf",
-							"filename": "sourdough-product.jpg"
-						}
-					}
-				},
-				"taxonomies": {
-					"category": ["breads"],
-					"tag": ["sourdough", "preorder"]
-				}
-			},
-			{
-				"id": "prod-2",
-				"slug": "cardamom-cinnamon-knots-4pack",
-				"status": "published",
-				"data": {
-					"title": "Cardamom Cinnamon Knots (4-Pack)",
-					"price": "16.00",
-					"net_weight": "16 oz (450g)",
-					"description": "Four buttery brioche knots infused with organic cardamom and Ceylon cinnamon. Finished with Swedish pearl sugar.",
-					"cottage_license_number": "CFO-LA-2026-9481",
-					"matched_recipe_slug": "cardamom-cinnamon-knots",
-					"allergens": "Contains: Wheat, Whole Milk, Butter (Milk), Eggs.",
-					"in_stock": true,
-					"stripe_price_id": "price_1CardamomKnotsDemo",
-					"featured_image": {
-						"$media": {
-							"url": "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=1200&h=800&fit=crop",
-							"alt": "Cardamom knots 4 pack",
-							"filename": "knots-product.jpg"
-						}
-					}
-				},
-				"taxonomies": {
-					"category": ["pastries"],
-					"tag": ["preorder"]
-				}
-			},
-			{
-				"id": "prod-3",
-				"slug": "meyer-lemon-shortbread-box",
-				"status": "published",
-				"data": {
-					"title": "Meyer Lemon Shortbread Box (8-Pack)",
-					"price": "14.00",
-					"net_weight": "12 oz (340g)",
-					"description": "Tender, buttery shortbread cookies scented with organic Meyer lemon zest and fresh thyme. Packed in an eco-friendly bakery box.",
-					"cottage_license_number": "CFO-LA-2026-9481",
-					"matched_recipe_slug": "meyer-lemon-shortbread",
-					"allergens": "Contains: Wheat, Butter (Milk).",
-					"in_stock": true,
-					"stripe_price_id": "price_1ShortbreadBoxDemo",
-					"featured_image": {
-						"$media": {
-							"url": "https://images.unsplash.com/photo-1558961363-fa8fdf82db35?w=1200&h=800&fit=crop",
-							"alt": "Meyer Lemon Shortbread box",
-							"filename": "shortbread-product.jpg"
-						}
-					}
-				},
-				"taxonomies": {
-					"category": ["cookies"],
-					"tag": ["organic"]
-				}
-			}
-		],
-		"posts": [
-			{
-				"id": "post-1",
-				"slug": "welcome-to-nakitas-kitchen",
-				"status": "published",
-				"data": {
-					"title": "Welcome to Nakita's Kitchen",
-					"excerpt": "Exploring the magic of wild yeast, slow fermentation, and seasonal baking from our cottage kitchen.",
-					"featured_image": {
-						"$media": {
-							"url": "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=1200&h=800&fit=crop",
-							"alt": "Baking flour and sourdough dough on marble counter",
-							"filename": "welcome-baking.jpg"
-						}
-					},
-					"content": [
-						{
-							"_type": "block",
-							"style": "normal",
-							"children": [
-								{
-									"_type": "span",
-									"text": "Baking has always been about patience and intention. In our cottage kitchen, every loaf of sourdough takes over 36 hours from starter feed to final bake. We believe in unhurried food made with honest ingredients.",
-									"_key": "k1"
-								}
-							],
-							"_key": "k0"
-						}
-					]
-				},
-				"bylines": [
-					{
-						"byline": "byline-nakita"
-					}
-				],
-				"taxonomies": {
-					"category": ["breads"],
-					"tag": ["sourdough", "cottage-bakery"]
-				}
-			}
-		]
-	}
+	]
 }

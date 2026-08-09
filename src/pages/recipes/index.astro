@@ -10,13 +10,18 @@ const { entries: recipes, cacheHint } = await getEmDashCollection("recipes", {
 Astro.cache.set(cacheHint);
 ---
 
-<Base title="Recipes | Nakita's Kitchen" description="Handcrafted sourdough, baking recipes, and culinary guides from Nakita's Kitchen.">
+<Base title="Recipes & Barbecue Journal | Nakita's Kitchen" description="Handcrafted sourdough, outdoor smoker recipes on Kamado Joe and Oklahoma Joe, and meal kit favorites.">
 	<div class="container main-content">
 		<header class="page-header">
-			<span class="badge">From Our Kitchen</span>
-			<h1 class="page-title">Recipes & Baking Guides</h1>
+			<div class="header-top">
+				<span class="badge">From Our Kitchen & Outdoor Smoker</span>
+				<a href="/recipes/scan" class="scan-cta-btn">
+					<span>📷 Scan Recipe Card</span>
+				</a>
+			</div>
+			<h1 class="page-title">Recipes & Cooking Journal</h1>
 			<p class="page-description">
-				Explore our collection of slow-fermented sourdoughs, heritage grain pastries, and seasonal kitchen recipes. Tested and perfected in our cottage kitchen.
+				Slow-fermented sourdoughs, outdoor barbecue on our <strong>Kamado Joe Classic III</strong> & <strong>Oklahoma Joe DLX 900</strong>, plus imported <strong>HomeChef</strong> and <strong>HelloFresh</strong> favorites.
 			</p>
 		</header>
 
@@ -42,8 +47,16 @@ Astro.cache.set(cacheHint);
 	}
 	.page-header {
 		text-align: center;
-		max-width: 680px;
+		max-width: 720px;
 		margin: 0 auto 3rem auto;
+	}
+	.header-top {
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		gap: 1rem;
+		margin-bottom: 0.75rem;
+		flex-wrap: wrap;
 	}
 	.badge {
 		background: rgba(0, 102, 204, 0.08);
@@ -54,8 +67,20 @@ Astro.cache.set(cacheHint);
 		letter-spacing: 0.05em;
 		padding: 0.3rem 0.8rem;
 		border-radius: 20px;
-		display: inline-block;
-		margin-bottom: 0.75rem;
+	}
+	.scan-cta-btn {
+		background: #d97706;
+		color: #ffffff;
+		font-weight: 700;
+		font-size: 0.8125rem;
+		padding: 0.35rem 0.85rem;
+		border-radius: 20px;
+		text-decoration: none;
+		transition: background 0.15s ease, transform 0.15s ease;
+	}
+	.scan-cta-btn:hover {
+		background: #b45309;
+		transform: translateY(-1px);
 	}
 	.page-title {
 		font-size: 2.5rem;
