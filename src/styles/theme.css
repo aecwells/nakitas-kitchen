@@ -1,41 +1,21 @@
 /*
-  theme.css -- your theme overrides. This is the file to edit to
-  retheme the site.
-
-  Every design token lives in src/styles/tokens.css (colors, type
-  scale, spacing, layout, shadows) with its default value. Override any
-  of them here: declarations in this file are unlayered, so they always
-  beat the @layer base defaults in tokens.css.
-
-  Colors are defined with light-dark(). Overriding with a plain color
-  changes light and dark mode at once; use light-dark(<light>, <dark>)
-  to set different values per mode.
-
-  Webfonts are loaded in astro.config.mjs (--font-body, --font-mono).
-  Swap the loaded font there; use overrides here for system fonts or a
-  separate heading face.
-
-  Example:
-
-  :root {
-    --color-brand: light-dark(#0f766e, #2dd4bf);
-    --font-heading: "Iowan Old Style", Georgia, serif;
-    --radius: 8px;
-  }
+  theme.css -- Nakita's Kitchen Custom Light & Dark Themes
+  - Light Mode: Warm Artisan Sourdough & Kitchen Cream
+  - Dark Mode: Midnight Outdoor Barbecue Hearth Slate with Electric Neon Accents
 */
 
 :root {
-	/* Culinary warm theme palette */
-	--color-bg: light-dark(#fdfbf7, #181412);
-	--color-bg-subtle: light-dark(#f5efe6, #211c18);
-	--color-surface: light-dark(#ede4da, #2b241f);
-	--color-text: light-dark(#2c1d18, #f5efe9);
-	--color-text-secondary: light-dark(#6b544b, #bdab9f);
-	--color-muted: light-dark(#998074, #8c776c);
-	--color-border: light-dark(#e6d9cc, #382d27);
-	--color-border-subtle: light-dark(#f0e6dc, #2b221d);
+	/* Light Mode: Warm Sourdough Cream Palette */
+	--color-bg: light-dark(#fdfbf7, #0b0f17);
+	--color-bg-subtle: light-dark(#f6efe6, #131b2a);
+	--color-surface: light-dark(#ffffff, #1e293b);
+	--color-text: light-dark(#1c130e, #f8fafc);
+	--color-text-secondary: light-dark(#5c473c, #cbd5e1);
+	--color-muted: light-dark(#8a7366, #64748b);
+	--color-border: light-dark(#e6dacd, #334155);
+	--color-border-subtle: light-dark(#f0e6da, #1e293b);
 
-	/* Warm spice & terracotta brand accents */
+	/* Warm spice terracotta in light mode / Electric flame orange in dark mode */
 	--color-brand: light-dark(#c2410c, #f97316);
 	--color-brand-hover: light-dark(#9a3412, #fb923c);
 	--color-on-brand: #ffffff;
@@ -45,6 +25,64 @@
 	--font-heading: "Playfair Display", Georgia, serif;
 	--font-weight-heading: 600;
 	--font-weight-display: 700;
+}
+
+/* Explicit class override for forced Light mode */
+:root.light {
+	color-scheme: light;
+	--color-bg: #fdfbf7;
+	--color-bg-subtle: #f6efe6;
+	--color-surface: #ffffff;
+	--color-text: #1c130e;
+	--color-text-secondary: #5c473c;
+	--color-muted: #8a7366;
+	--color-border: #e6dacd;
+	--color-border-subtle: #f0e6da;
+	--color-brand: #c2410c;
+	--color-brand-hover: #9a3412;
+	--color-brand-ring: rgba(194, 65, 12, 0.2);
+}
+
+/* Explicit class override for forced Dark mode */
+:root.dark {
+	color-scheme: dark;
+	--color-bg: #0b0f17;
+	--color-bg-subtle: #131b2a;
+	--color-surface: #1e293b;
+	--color-text: #f8fafc;
+	--color-text-secondary: #cbd5e1;
+	--color-muted: #64748b;
+	--color-border: #334155;
+	--color-border-subtle: #1e293b;
+	--color-brand: #f97316;
+	--color-brand-hover: #fb923c;
+	--color-brand-ring: rgba(249, 115, 22, 0.3);
+}
+
+/* Dark mode specific component refinements */
+:root.dark body {
+	background-color: var(--color-bg);
+	color: var(--color-text);
+}
+
+:root.dark .site-header {
+	background: rgba(11, 15, 23, 0.85) !important;
+	border-bottom-color: rgba(51, 65, 85, 0.7) !important;
+}
+
+:root.dark .mega-menu-panel {
+	background: rgba(19, 27, 42, 0.95) !important;
+	border-color: #334155 !important;
+	box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5) !important;
+}
+
+:root.dark .recipe-card,
+:root.dark .product-card,
+:root.dark .scanner-card,
+:root.dark .ingredients-box {
+	background: var(--color-surface);
+	border-color: var(--color-border);
+	box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
 }
 
 .nav-admin {

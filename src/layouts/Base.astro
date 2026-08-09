@@ -88,14 +88,18 @@ const isLoggedIn = !!Astro.locals.user;
 		<EmDashHead page={pageCtx} />
 		<script is:inline>
 			// Apply an explicit theme choice immediately to prevent flash.
-			// With no cookie, color-scheme: light dark follows the OS.
 			(function () {
-				var c = document.cookie;
-				var i = c.indexOf("theme=");
-				var theme = i >= 0 ? c.slice(i + 6).split(";")[0] : null;
-				if (theme === "dark" || theme === "light") {
-					document.documentElement.classList.add(theme);
-				}
+				try {
+					var theme = localStorage.getItem("theme");
+					if (!theme) {
+						var c = document.cookie;
+						var i = c.indexOf("theme=");
+						theme = i >= 0 ? c.slice(i + 6).split(";")[0] : null;
+					}
+					if (theme === "dark" || theme === "light") {
+						document.documentElement.classList.add(theme);
+					}
+				} catch (e) {}
 			})();
 		</script>
 	</head>
@@ -110,6 +114,10 @@ const isLoggedIn = !!Astro.locals.user;
 					<span class="brand-text-name">Nakita's Kitchen</span>
 				</a>
 				<div class="nav-right">
+					<button type="button" id="theme-toggle-btn" class="theme-toggle-btn" aria-label="Toggle Light & Dark Mode" title="Toggle Light / Dark Theme">
+						<span class="theme-icon light-icon">☀️</span>
+						<span class="theme-icon dark-icon">🌙</span>
+					</button>
 					<LiveSearch
 						placeholder="Search..."
 						class="site-search"
@@ -575,8 +583,36 @@ const isLoggedIn = !!Astro.locals.user;
 			.nav-right {
 				display: flex;
 				align-items: center;
-				gap: var(--spacing-6);
+				gap: var(--spacing-4);
 				margin-inline-start: auto;
+			}
+
+			.theme-toggle-btn {
+				background: var(--color-bg-subtle);
+				border: 1px solid var(--color-border);
+				color: var(--color-text);
+				width: 36px;
+				height: 36px;
+				border-radius: 50%;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				cursor: pointer;
+				font-size: 1.1rem;
+				transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+			}
+			.theme-toggle-btn:hover {
+				transform: scale(1.1);
+				background: var(--color-surface);
+				border-color: var(--color-brand);
+			}
+			.light-icon { display: inline; }
+			.dark-icon { display: none; }
+			:root.dark .light-icon { display: none; }
+			:root.dark .dark-icon { display: inline; }
+			@media (prefers-color-scheme: dark) {
+				:root:not(.light) .light-icon { display: none; }
+				:root:not(.light) .dark-icon { display: inline; }
 			}
 
 			.nav-links {
@@ -1094,17 +1130,38 @@ const isLoggedIn = !!Astro.locals.user;
 		</style>
 
 		<script>
-			// ⌘K / Ctrl+K to focus search
-			document.addEventListener("keydown", (e) => {
-				if ((e.metaKey || e.ctrlKey) && e.key === "k") {
-					e.preventDefault();
-					const searchInput = document.querySelector(
-						".site-search-input"
-					) as HTMLInputElement;
-					if (searchInput) {
-						searchInput.focus();
+			// Theme Toggle Switcher Handler
+			document.addEventListener("DOMContentLoaded", () => {
+				const themeBtn = document.getElementById("theme-toggle-btn");
+				const html = document.documentElement;
+
+				themeBtn?.addEventListener("click", () => {
+					const isDark = html.classList.contains("dark") || (!html.classList.contains("light") && window.matchMedia("(prefers-color-scheme: dark)").matches);
+					if (isDark) {
+						html.classList.remove("dark");
+						html.classList.add("light");
+						localStorage.setItem("theme", "light");
+						document.cookie = "theme=light; path=/; max-age=31536000";
+					} else {
+						html.classList.remove("light");
+						html.classList.add("dark");
+						localStorage.setItem("theme", "dark");
+						document.cookie = "theme=dark; path=/; max-age=31536000";
 					}
-				}
+				});
+
+				// ⌘K / Ctrl+K to focus search
+				document.addEventListener("keydown", (e) => {
+					if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+						e.preventDefault();
+						const searchInput = document.querySelector(
+							".site-search-input"
+						) as HTMLInputElement;
+						if (searchInput) {
+							searchInput.focus();
+						}
+					}
+				});
 			});
 		</script>
 		<EmDashBodyEnd page={pageCtx} />
