@@ -62,10 +62,8 @@ const sessionCookie = Astro.cookies.get("emdash_session")?.value;
 const urlPreview = Astro.url.searchParams.get("preview");
 const isLoggedIn = Boolean(sessionCookie || urlPreview === "1" || (Astro.locals as any)?.user);
 
-// Universal Step Parser: Splits raw text, JSON arrays, or blocks into distinct Step objects
-let recipeSteps: { number: number; title: string; text: string }[] = [];
+// Universal Uniform Step Parser: Splits raw text, JSON arrays, or blocks into distinct uniform Step objects (1..N)
 let rawText = "";
-
 if (typeof data.content === "string") {
 	try {
 		const parsed = JSON.parse(data.content);
@@ -87,31 +85,54 @@ if (typeof data.content === "string") {
 	});
 }
 
-if (rawText.trim()) {
-	const blocks = rawText.split(/\n\s*\n/).filter(Boolean);
-	blocks.forEach((blk, idx) => {
-		const lines = blk.trim().split("\n");
-		const firstLine = lines[0].trim();
-		const stepMatch = firstLine.match(/^(\d+)\.\s*(.*)/);
+function extractUniformSteps(text: string) {
+	const steps: { number: number; title: string; text: string }[] = [];
+	if (!text || !text.trim()) return steps;
 
-		if (stepMatch) {
-			const stepNum = parseInt(stepMatch[1], 10);
-			const stepTitle = stepMatch[2] || `Step ${stepNum}`;
-			const stepBody = lines.slice(1).join("\n").trim() || stepTitle;
-			recipeSteps.push({
-				number: stepNum,
-				title: stepTitle,
-				text: stepBody,
-			});
-		} else {
-			recipeSteps.push({
-				number: idx + 1,
-				title: lines.length > 1 ? firstLine : `Step ${idx + 1}`,
-				text: lines.length > 1 ? lines.slice(1).join("\n").trim() : firstLine,
+	// Regex matching step numbers like "1. Prep Ingredients", "2. Cook Chicken", "3. Cook Veggies", "Step 4: Make Filling"
+	const stepHeaderRegex = /(?:^|\n)\s*(?:Step\s*)?(\d+)[\.:\s]+([^\n]+)/gi;
+	const matches: { index: number; number: number; title: string; headerLength: number }[] = [];
+	let match;
+
+	while ((match = stepHeaderRegex.exec(text)) !== null) {
+		matches.push({
+			index: match.index,
+			number: parseInt(match[1], 10),
+			title: match[2].trim(),
+			headerLength: match[0].length,
+		});
+	}
+
+	if (matches.length > 0) {
+		for (let i = 0; i < matches.length; i++) {
+			const current = matches[i];
+			const nextIndex = i + 1 < matches.length ? matches[i + 1].index : text.length;
+			const stepContent = text.substring(current.index + current.headerLength, nextIndex).trim();
+
+			steps.push({
+				number: current.number || i + 1,
+				title: current.title,
+				text: stepContent || current.title,
 			});
 		}
-	});
+	} else {
+		const paragraphs = text.split(/\n\s*\n/).filter((p) => p.trim());
+		paragraphs.forEach((p, idx) => {
+			const lines = p.trim().split("\n");
+			const firstLine = lines[0].trim();
+			const bodyText = lines.slice(1).join("\n").trim() || firstLine;
+			steps.push({
+				number: idx + 1,
+				title: lines.length > 1 ? firstLine : `Step ${idx + 1}`,
+				text: bodyText,
+			});
+		});
+	}
+
+	return steps;
 }
+
+const recipeSteps = extractUniformSteps(rawText);
 ---
 
 <Base
