@@ -1,6 +1,7 @@
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
 	"name": "nakitas-kitchen",
+	"account_id": "6dc10b9b2d4dcffe1f9a15738392f263",
 	"main": "./src/worker.ts",
 	"compatibility_date": "2026-02-24",
 	"compatibility_flags": [
