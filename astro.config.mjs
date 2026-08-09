@@ -37,7 +37,7 @@ export default defineConfig({
 				formsPlugin(),
 				webhookNotifier,
 				cloudflareEmail({
-					from: "nakitas-kitchen@outlook.com",
+					from: "noreply@nakitas-kitchen.com",
 				}),
 			],
 		}),

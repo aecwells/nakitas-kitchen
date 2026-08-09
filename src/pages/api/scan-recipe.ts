@@ -52,9 +52,53 @@ export const POST: APIRoute = async ({ request, locals }) => {
 			];
 		}).flat();
 
-		// Use the actual uploaded Front and Back photo data if provided!
-		const featuredImageSrc = frontImageData || "/uploads/hellofresh-potpie-front.jpg";
-		const cardScanImageSrc = backImageData || "/uploads/hellofresh-potpie-back.jpg";
+		// Retrieve Cloudflare bindings safely
+		let cfWorkers: any = null;
+		try {
+			// @ts-ignore
+			cfWorkers = await import("cloudflare:workers");
+		} catch (e) {
+			// fallback
+		}
+
+		let db: any = cfWorkers?.env?.DB || (locals as any)?.env?.DB || (locals as any)?.runtime?.env?.DB;
+		let mediaBucket: any = cfWorkers?.env?.MEDIA || (locals as any)?.env?.MEDIA || (locals as any)?.runtime?.env?.MEDIA;
+
+		// Save images to R2 storage if available, otherwise use compressed base64
+		let featuredImageSrc = "/uploads/hellofresh-potpie-front.jpg";
+		let cardScanImageSrc = "/uploads/hellofresh-potpie-back.jpg";
+
+		if (frontImageData && frontImageData.startsWith("data:image")) {
+			if (mediaBucket) {
+				try {
+					const key = `scans/front-${Date.now()}-${Math.random().toString(36).slice(2, 6)}.jpg`;
+					const base64Clean = frontImageData.split(",")[1] || frontImageData;
+					const buffer = Uint8Array.from(atob(base64Clean), (c) => c.charCodeAt(0));
+					await mediaBucket.put(key, buffer, { httpMetadata: { contentType: "image/jpeg" } });
+					featuredImageSrc = `/_emdash/api/media/file/${key}`;
+				} catch (e) {
+					featuredImageSrc = frontImageData;
+				}
+			} else {
+				featuredImageSrc = frontImageData;
+			}
+		}
+
+		if (backImageData && backImageData.startsWith("data:image")) {
+			if (mediaBucket) {
+				try {
+					const key = `scans/back-${Date.now()}-${Math.random().toString(36).slice(2, 6)}.jpg`;
+					const base64Clean = backImageData.split(",")[1] || backImageData;
+					const buffer = Uint8Array.from(atob(base64Clean), (c) => c.charCodeAt(0));
+					await mediaBucket.put(key, buffer, { httpMetadata: { contentType: "image/jpeg" } });
+					cardScanImageSrc = `/_emdash/api/media/file/${key}`;
+				} catch (e) {
+					cardScanImageSrc = backImageData;
+				}
+			} else {
+				cardScanImageSrc = backImageData;
+			}
+		}
 
 		const featuredImageObj = JSON.stringify({
 			id: `media-front-${Date.now()}`,
@@ -67,20 +111,6 @@ export const POST: APIRoute = async ({ request, locals }) => {
 			src: cardScanImageSrc,
 			alt: `${title} (Back Instructions Photo)`,
 		});
-
-		// Retrieve Cloudflare D1 Database binding DB safely
-		let db: any = null;
-		try {
-			// @ts-ignore
-			const cfWorkers = await import("cloudflare:workers");
-			db = cfWorkers?.env?.DB;
-		} catch (e) {
-			// fallback
-		}
-
-		if (!db) {
-			db = (locals as any)?.env?.DB || (locals as any)?.runtime?.env?.DB;
-		}
 
 		if (db) {
 			await db.prepare(`

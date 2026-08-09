@@ -188,20 +188,58 @@ import Base from "../../layouts/Base.astro";
 			}, 300);
 		}
 
+		function compressAndSetImage(file: File, callback: (compressedDataUrl: string) => void) {
+			const img = new Image();
+			const url = URL.createObjectURL(file);
+			img.onload = () => {
+				const maxDim = 1200;
+				let width = img.width;
+				let height = img.height;
+
+				if (width > maxDim || height > maxDim) {
+					if (width > height) {
+						height = Math.round((height * maxDim) / width);
+						width = maxDim;
+					} else {
+						width = Math.round((width * maxDim) / height);
+						height = maxDim;
+					}
+				}
+
+				const canvas = document.createElement("canvas");
+				canvas.width = width;
+				canvas.height = height;
+				const ctx = canvas.getContext("2d");
+				if (ctx) {
+					ctx.drawImage(img, 0, 0, width, height);
+					const compressed = canvas.toDataURL("image/jpeg", 0.75);
+					URL.revokeObjectURL(url);
+					callback(compressed);
+				} else {
+					URL.revokeObjectURL(url);
+					const reader = new FileReader();
+					reader.onload = (e) => callback(e.target?.result as string);
+					reader.readAsDataURL(file);
+				}
+			};
+			img.onerror = () => {
+				URL.revokeObjectURL(url);
+				const reader = new FileReader();
+				reader.onload = (e) => callback(e.target?.result as string);
+				reader.readAsDataURL(file);
+			};
+			img.src = url;
+		}
+
 		function handleFileProcess(file: File, inputEl: HTMLInputElement, hiddenInput: HTMLInputElement, previewImg: HTMLImageElement, promptEl: HTMLElement | null, previewEl: HTMLElement | null) {
 			if (file && file.type.startsWith("image/")) {
-				const reader = new FileReader();
-				reader.onload = (e) => {
-					if (e.target?.result) {
-						const resultStr = e.target.result as string;
-						if (previewImg) previewImg.src = resultStr;
-						if (hiddenInput) hiddenInput.value = resultStr;
-						promptEl?.setAttribute("hidden", "true");
-						previewEl?.removeAttribute("hidden");
-						triggerSmartAutoFill();
-					}
-				};
-				reader.readAsDataURL(file);
+				compressAndSetImage(file, (resultStr) => {
+					if (previewImg) previewImg.src = resultStr;
+					if (hiddenInput) hiddenInput.value = resultStr;
+					promptEl?.setAttribute("hidden", "true");
+					previewEl?.removeAttribute("hidden");
+					triggerSmartAutoFill();
+				});
 			}
 		}
 
