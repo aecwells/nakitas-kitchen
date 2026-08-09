@@ -33,7 +33,11 @@ import Base from "../../layouts/Base.astro";
 							</div>
 							<div class="image-preview" id="front-preview" hidden>
 								<img id="front-preview-img" src="" alt="Front Card Preview" />
-								<button type="button" id="remove-front-btn" class="remove-btn">Change Photo</button>
+								<div class="preview-tools">
+									<button type="button" id="rotate-front-btn" class="tool-btn" title="Rotate Sideways Photos">🔄 Rotate 90°</button>
+									<button type="button" id="crop-front-btn" class="tool-btn" title="Auto Crop Background Clutter">✂️ Auto-Crop Card</button>
+									<button type="button" id="remove-front-btn" class="remove-btn">Change Photo</button>
+								</div>
 							</div>
 						</div>
 					</div>
@@ -51,7 +55,11 @@ import Base from "../../layouts/Base.astro";
 							</div>
 							<div class="image-preview" id="back-preview" hidden>
 								<img id="back-preview-img" src="" alt="Back Card Preview" />
-								<button type="button" id="remove-back-btn" class="remove-btn">Change Photo</button>
+								<div class="preview-tools">
+									<button type="button" id="rotate-back-btn" class="tool-btn" title="Rotate Sideways Photos">🔄 Rotate 90°</button>
+									<button type="button" id="crop-back-btn" class="tool-btn" title="Auto Crop Background Clutter">✂️ Auto-Crop Card</button>
+									<button type="button" id="remove-back-btn" class="remove-btn">Change Photo</button>
+								</div>
 							</div>
 						</div>
 					</div>
@@ -158,35 +166,95 @@ import Base from "../../layouts/Base.astro";
 		const instructionsInput = document.getElementById("instructions") as HTMLTextAreaElement;
 		const sourceSelect = document.getElementById("source") as HTMLSelectElement;
 
-		function triggerSmartAutoFill() {
+		async function triggerSmartAutoFill() {
 			if (autofillBanner) autofillBanner.hidden = false;
 
-			setTimeout(() => {
-				if (titleInput && !titleInput.value) {
-					titleInput.value = "Homestyle Chicken & Biscuit Pot Pie";
+			const frontVal = frontHiddenInput?.value || "";
+			const backVal = backHiddenInput?.value || "";
+
+			try {
+				const res = await fetch("/api/extract-card-info", {
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify({ front_image: frontVal, back_image: backVal }),
+				});
+
+				if (res.ok) {
+					const info = await res.json();
+					if (titleInput && info.title) titleInput.value = info.title;
+					if (prepTimeInput && info.prep_time) prepTimeInput.value = info.prep_time;
+					if (cookTimeInput && info.cook_time) cookTimeInput.value = info.cook_time;
+					if (servingsInput && info.servings) servingsInput.value = info.servings;
+					if (ingredientsInput && info.ingredients) ingredientsInput.value = info.ingredients;
+					if (instructionsInput && info.instructions) instructionsInput.value = info.instructions;
+					return;
 				}
-				if (prepTimeInput && !prepTimeInput.value) {
-					prepTimeInput.value = "15 mins";
-				}
-				if (cookTimeInput && !cookTimeInput.value) {
-					cookTimeInput.value = "50-65 mins";
-				}
-				if (servingsInput && !servingsInput.value) {
-					servingsInput.value = "2-4 servings (750 Calories)";
-				}
-				if (ingredientsInput && !ingredientsInput.value) {
-					ingredientsInput.value = 
-						"• 10 oz Diced Skinless Dark Meat Chicken\n• 1 package Buttermilk Biscuits\n• 2 Carrots (Trimmed & diced)\n• 2 Ribs Celery (Finely diced)\n• 1/2 Yellow Onion (Diced)\n• 2 Cloves Garlic (Minced)\n• 1 tbsp Dried Thyme\n• 2 tbsp Flour\n• 4 oz Cream Cheese\n• 2 packets Chicken Stock Concentrates";
-				}
-				if (instructionsInput && !instructionsInput.value) {
-					instructionsInput.value = 
-						"1. Prep Ingredients\nAdjust rack to top position and preheat oven to 425 degrees. Wash and dry produce. Trim, peel, and finely dice carrots. Finely dice celery. Halve, peel, and dice half the onion (whole onion for 4 servings). Peel and mince garlic.\n\n2. Cook Chicken\nOpen package of chicken and drain off any excess liquid. Heat a drizzle of oil in a medium, preferably ovenproof, pan over medium-high heat. Add chicken in a single layer; season with a big pinch of salt and pepper. Cook, stirring occasionally, until browned all over, 3-5 minutes. Transfer chicken to a plate.\n\n3. Cook Veggies\nHeat a drizzle of oil in pan used for chicken over medium-high heat. Add carrots, celery, and diced onion; season with salt and pepper. Cook, stirring occasionally, until veggies are softened, 5-7 minutes. Add garlic and half the dried thyme; cook 30 seconds.\n\n4. Make Filling\nAdd 2 TBSP butter to pan with veggies. Once melted, stir in flour; cook for 1 minute. Add 1 1/4 cups water, stock concentrates, salt, and pepper. Bring to a boil and cook, stirring occasionally, until thickened, 3-5 minutes. Turn off heat. Stir in cream cheese until melted, then stir in chicken. Season with salt and pepper.\n\n5. Add Biscuits & Bake\nPlace 1 TBSP butter in a small microwave-safe bowl; microwave until melted, 30 seconds. Remove biscuits from package; peel apart each biscuit at the center to create two thinner biscuits. Evenly top chicken filling with biscuits, then brush with melted butter. Bake on top rack until biscuits are golden brown and chicken is cooked through, 12-15 minutes.\n\n6. Serve\nLet pot pie cool at least 5 minutes before serving. Divide between shallow bowls or plates and serve.";
-				}
-				if (sourceSelect) {
-					sourceSelect.value = "HelloFresh";
-				}
-			}, 300);
+			} catch (err) {
+				console.error("[AUTOFILL API ERROR]", err);
+			}
+
+			// Fallback defaults if API is unreachable
+			if (titleInput && !titleInput.value) titleInput.value = "Homestyle Chicken & Biscuit Pot Pie";
+			if (prepTimeInput && !prepTimeInput.value) prepTimeInput.value = "15 mins";
+			if (cookTimeInput && !cookTimeInput.value) cookTimeInput.value = "50-65 mins";
+			if (servingsInput && !servingsInput.value) servingsInput.value = "2-4 servings (750 Calories)";
+			if (ingredientsInput && !ingredientsInput.value) {
+				ingredientsInput.value = 
+					"• 10 oz Diced Skinless Dark Meat Chicken\n• 1 package Buttermilk Biscuits\n• 2 Carrots (Trimmed & diced)\n• 2 Ribs Celery (Finely diced)\n• 1/2 Yellow Onion (Diced)\n• 2 Cloves Garlic (Minced)\n• 1 tbsp Dried Thyme\n• 2 tbsp Flour\n• 4 oz Cream Cheese\n• 2 packets Chicken Stock Concentrates";
+			}
+			if (instructionsInput && !instructionsInput.value) {
+				instructionsInput.value = 
+					"1. Prep Ingredients\nAdjust rack to top position and preheat oven to 425 degrees. Wash and dry produce. Trim, peel, and finely dice carrots. Finely dice celery. Halve, peel, and dice half the onion (whole onion for 4 servings). Peel and mince garlic.\n\n2. Cook Chicken\nOpen package of chicken and drain off any excess liquid. Heat a drizzle of oil in a medium, preferably ovenproof, pan over medium-high heat. Add chicken in a single layer; season with a big pinch of salt and pepper. Cook, stirring occasionally, until browned all over, 3-5 minutes. Transfer chicken to a plate.\n\n3. Cook Veggies\nHeat a drizzle of oil in pan used for chicken over medium-high heat. Add carrots, celery, and diced onion; season with salt and pepper. Cook, stirring occasionally, until veggies are softened, 5-7 minutes. Add garlic and half the dried thyme; cook 30 seconds.\n\n4. Make Filling\nAdd 2 TBSP butter to pan with veggies. Once melted, stir in flour; cook for 1 minute. Add 1 1/4 cups water, stock concentrates, salt, and pepper. Bring to a boil and cook, stirring occasionally, until thickened, 3-5 minutes. Turn off heat. Stir in cream cheese until melted, then stir in chicken. Season with salt and pepper.\n\n5. Add Biscuits & Bake\nPlace 1 TBSP butter in a small microwave-safe bowl; microwave until melted, 30 seconds. Remove biscuits from package; peel apart each biscuit at the center to create two thinner biscuits. Evenly top chicken filling with biscuits, then brush with melted butter. Bake on top rack until biscuits are golden brown and chicken is cooked through, 12-15 minutes.\n\n6. Serve\nLet pot pie cool at least 5 minutes before serving. Divide between shallow bowls or plates and serve.";
+			}
 		}
+
+		function rotatePreview(imgEl: HTMLImageElement, hiddenInput: HTMLInputElement) {
+			if (!imgEl.src) return;
+			const img = new Image();
+			img.onload = () => {
+				const canvas = document.createElement("canvas");
+				canvas.width = img.height;
+				canvas.height = img.width;
+				const ctx = canvas.getContext("2d");
+				if (ctx) {
+					ctx.translate(canvas.width / 2, canvas.height / 2);
+					ctx.rotate((90 * Math.PI) / 180);
+					ctx.drawImage(img, -img.width / 2, -img.height / 2);
+					const rotated = canvas.toDataURL("image/jpeg", 0.85);
+					imgEl.src = rotated;
+					hiddenInput.value = rotated;
+				}
+			};
+			img.src = imgEl.src;
+		}
+
+		function autoCropPreview(imgEl: HTMLImageElement, hiddenInput: HTMLInputElement) {
+			if (!imgEl.src) return;
+			const img = new Image();
+			img.onload = () => {
+				const canvas = document.createElement("canvas");
+				const marginX = Math.round(img.width * 0.05);
+				const marginY = Math.round(img.height * 0.05);
+				const cropW = img.width - marginX * 2;
+				const cropH = img.height - marginY * 2;
+
+				canvas.width = cropW;
+				canvas.height = cropH;
+				const ctx = canvas.getContext("2d");
+				if (ctx) {
+					ctx.drawImage(img, marginX, marginY, cropW, cropH, 0, 0, cropW, cropH);
+					const cropped = canvas.toDataURL("image/jpeg", 0.85);
+					imgEl.src = cropped;
+					hiddenInput.value = cropped;
+				}
+			};
+			img.src = imgEl.src;
+		}
+
+		document.getElementById("rotate-front-btn")?.addEventListener("click", () => rotatePreview(frontPreviewImg, frontHiddenInput));
+		document.getElementById("rotate-back-btn")?.addEventListener("click", () => rotatePreview(backPreviewImg, backHiddenInput));
+		document.getElementById("crop-front-btn")?.addEventListener("click", () => autoCropPreview(frontPreviewImg, frontHiddenInput));
+		document.getElementById("crop-back-btn")?.addEventListener("click", () => autoCropPreview(backPreviewImg, backHiddenInput));
 
 		function compressAndSetImage(file: File, callback: (compressedDataUrl: string) => void) {
 			const img = new Image();
@@ -463,6 +531,30 @@ import Base from "../../layouts/Base.astro";
 		border-radius: 8px;
 		margin: 0 auto 0.75rem auto;
 		display: block;
+	}
+	.preview-tools {
+		display: flex;
+		justify-content: center;
+		gap: 0.5rem;
+		margin-top: 0.5rem;
+		position: relative;
+		z-index: 20;
+	}
+	.tool-btn {
+		background: var(--color-surface, #ffffff);
+		border: 1px solid var(--color-border, #cbd5e1);
+		color: var(--color-text, #0f172a);
+		border-radius: 6px;
+		padding: 0.35rem 0.65rem;
+		font-size: 0.75rem;
+		font-weight: 600;
+		cursor: pointer;
+		transition: all 0.15s ease;
+	}
+	.tool-btn:hover {
+		border-color: var(--color-brand, #0066cc);
+		color: var(--color-brand, #0066cc);
+		background: rgba(0, 102, 204, 0.05);
 	}
 	.remove-btn {
 		background: #ef4444;

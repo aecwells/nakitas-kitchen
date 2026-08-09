@@ -31,6 +31,9 @@
 			"name": "EMAIL"
 		}
 	],
+	"ai": {
+		"binding": "AI"
+	},
 	// Drives scheduled publishing, plugin cron, and maintenance (see src/worker.ts)
 	"triggers": {
 		"crons": [
