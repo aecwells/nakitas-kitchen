@@ -322,7 +322,7 @@ const isLoggedIn = !!Astro.locals.user;
 		</footer>
 
 		<!-- Global Interactive Image Lightbox & Zoom Modal -->
-		<div id="lightbox-modal" class="lightbox-modal" hidden>
+		<div id="lightbox-modal" class="lightbox-modal" hidden style="display: none;">
 			<div class="lightbox-backdrop" id="lightbox-backdrop"></div>
 			<div class="lightbox-container">
 				<div class="lightbox-toolbar">
@@ -401,17 +401,19 @@ const isLoggedIn = !!Astro.locals.user;
 			const lbViewport = document.getElementById("lightbox-viewport");
 
 			function openLightbox(src: string, alt: string) {
-				if (!lbModal || !lbImg || !src || src.trim() === "" || src.includes("undefined")) return;
+				if (!lbModal || !lbImg || !src || src.trim() === "" || src.includes("undefined") || src === window.location.href) return;
 				lbImg.src = src;
 				currentScale = 1;
 				lbImg.style.transform = "scale(1)";
 				if (lbCaption) lbCaption.innerText = alt || "Full Screen Image Inspection";
+				lbModal.style.display = "flex";
 				lbModal.removeAttribute("hidden");
 				document.body.style.overflow = "hidden";
 			}
 
 			function closeLightbox() {
 				if (!lbModal) return;
+				lbModal.style.display = "none";
 				lbModal.setAttribute("hidden", "true");
 				document.body.style.overflow = "";
 				if (lbImg) lbImg.src = "";
@@ -456,6 +458,9 @@ const isLoggedIn = !!Astro.locals.user;
 
 		<style is:global>
 			/* Interactive Image Lightbox & Zoom Modal */
+			.lightbox-modal[hidden] {
+				display: none !important;
+			}
 			.lightbox-modal {
 				position: fixed;
 				top: 0;
