@@ -40,13 +40,28 @@ export const POST: APIRoute = async ({ request, locals }) => {
 					bytes[i] = binaryString.charCodeAt(i);
 				}
 
-				const aiResponse: any = await ai.run("@cf/meta/llama-3.2-11b-vision-instruct", {
-					prompt: "You are an expert recipe card OCR scanner. Analyze this recipe card image. Extract the exact Recipe Title, Prep Time, Cook Time, Servings, Bulleted Ingredients, and Step-by-Step Instructions (numbered 1., 2., 3., 4., 5., 6.). Return valid JSON with keys: title, prep_time, cook_time, servings, ingredients, instructions.",
-					image: Array.from(bytes),
-					max_tokens: 1024,
-				});
+				let aiResponse: any = null;
+				try {
+					aiResponse = await ai.run("@cf/meta/llama-3.2-11b-vision-instruct", {
+						prompt: "You are an expert recipe card OCR scanner. Analyze this recipe card image. Extract the exact Recipe Title, Prep Time, Cook Time, Servings, Bulleted Ingredients, and Step-by-Step Instructions (numbered 1., 2., 3., 4., 5., 6.). Return valid JSON with keys: title, prep_time, cook_time, servings, ingredients, instructions.",
+						image: [...bytes],
+						max_tokens: 1024,
+					});
+				} catch (err1) {
+					console.error("[LLAMA VISION ERROR]", err1);
+					try {
+						aiResponse = await ai.run("@cf/unum/uform-gen2-qwen-500m", {
+							prompt: "Extract recipe title, ingredients, and instructions from this card.",
+							image: [...bytes],
+						});
+					} catch (err2) {
+						console.error("[UFORM VISION ERROR]", err2);
+					}
+				}
 
 				const rawText = aiResponse?.response || (typeof aiResponse === "string" ? aiResponse : "");
+				console.log("[WORKERS AI RAW OCR TEXT]:", rawText);
+
 				const jsonMatch = rawText.match(/\{[\s\S]*\}/);
 				if (jsonMatch) {
 					try {

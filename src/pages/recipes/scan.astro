@@ -167,10 +167,15 @@ import Base from "../../layouts/Base.astro";
 		const sourceSelect = document.getElementById("source") as HTMLSelectElement;
 
 		async function triggerSmartAutoFill() {
-			if (autofillBanner) autofillBanner.hidden = false;
+			if (autofillBanner) {
+				autofillBanner.hidden = false;
+				autofillBanner.innerHTML = `<span class="autofill-sparkle">⏳</span><div class="autofill-text"><strong>AI Vision Scanning Card:</strong> Analyzing recipe title, prep time, ingredients, and cooking steps...</div>`;
+			}
 
 			const frontVal = frontHiddenInput?.value || "";
 			const backVal = backHiddenInput?.value || "";
+
+			if (!frontVal && !backVal) return;
 
 			try {
 				const res = await fetch("/api/extract-card-info", {
@@ -181,12 +186,17 @@ import Base from "../../layouts/Base.astro";
 
 				if (res.ok) {
 					const info = await res.json();
-					if (titleInput && info.title) titleInput.value = info.title;
-					if (prepTimeInput && info.prep_time) prepTimeInput.value = info.prep_time;
-					if (cookTimeInput && info.cook_time) cookTimeInput.value = info.cook_time;
-					if (servingsInput && info.servings) servingsInput.value = info.servings;
-					if (ingredientsInput && info.ingredients) ingredientsInput.value = info.ingredients;
-					if (instructionsInput && info.instructions) instructionsInput.value = info.instructions;
+					let foundAny = false;
+					if (titleInput && info.title) { titleInput.value = info.title; foundAny = true; }
+					if (prepTimeInput && info.prep_time) { prepTimeInput.value = info.prep_time; foundAny = true; }
+					if (cookTimeInput && info.cook_time) { cookTimeInput.value = info.cook_time; foundAny = true; }
+					if (servingsInput && info.servings) { servingsInput.value = info.servings; foundAny = true; }
+					if (ingredientsInput && info.ingredients) { ingredientsInput.value = info.ingredients; foundAny = true; }
+					if (instructionsInput && info.instructions) { instructionsInput.value = info.instructions; foundAny = true; }
+
+					if (autofillBanner) {
+						autofillBanner.innerHTML = `<span class="autofill-sparkle">✨</span><div class="autofill-text"><strong>AI Card Vision Complete:</strong> ${foundAny ? "Extracted Recipe Title, Ingredients & Steps!" : "Processed Card Photos Successfully!"}</div>`;
+					}
 					return;
 				}
 			} catch (err) {
@@ -215,6 +225,7 @@ import Base from "../../layouts/Base.astro";
 					const rotated = canvas.toDataURL("image/jpeg", 0.85);
 					imgEl.src = rotated;
 					hiddenInput.value = rotated;
+					triggerSmartAutoFill();
 				}
 			};
 			img.src = imgEl.src;
@@ -238,6 +249,7 @@ import Base from "../../layouts/Base.astro";
 					const cropped = canvas.toDataURL("image/jpeg", 0.85);
 					imgEl.src = cropped;
 					hiddenInput.value = cropped;
+					triggerSmartAutoFill();
 				}
 			};
 			img.src = imgEl.src;
