@@ -122,8 +122,16 @@ import Base from "../../layouts/Base.astro";
 				</div>
 
 				<div class="form-group">
-					<label for="ingredients" class="form-label">Ingredients Checklist (Auto-Extracted from Front Card)</label>
-					<textarea id="ingredients" name="ingredients" class="form-textarea" rows="6" placeholder="Uploading Card Front photo will auto-extract ingredients list..."></textarea>
+					<div class="ingredients-header-row">
+						<label for="ingredients" class="form-label">Ingredients Checklist (Amounts & Quantities)</label>
+						<span class="picker-tip">💡 Click any available kitchen ingredient below to add to list:</span>
+					</div>
+
+					<div id="ingredients-chip-container" class="ingredients-chip-container">
+						<!-- Dynamically populated from /api/ingredients -->
+					</div>
+
+					<textarea id="ingredients" name="ingredients" class="form-textarea" rows="6" placeholder="Uploading Card Back photo will auto-extract exact quantities & amounts..."></textarea>
 				</div>
 
 				<div class="form-group">
@@ -161,10 +169,43 @@ import Base from "../../layouts/Base.astro";
 		const titleInput = document.getElementById("title") as HTMLInputElement;
 		const prepTimeInput = document.getElementById("prep_time") as HTMLInputElement;
 		const cookTimeInput = document.getElementById("cook_time") as HTMLInputElement;
-		const servingsInput = document.getElementById("servings") as HTMLInputElement;
-		const ingredientsInput = document.getElementById("ingredients") as HTMLTextAreaElement;
-		const instructionsInput = document.getElementById("instructions") as HTMLTextAreaElement;
-		const sourceSelect = document.getElementById("source") as HTMLSelectElement;
+		// Fetch and render Available Kitchen Ingredients Chips
+		async function loadAvailableIngredients() {
+			const container = document.getElementById("ingredients-chip-container");
+			if (!container) return;
+
+			try {
+				const res = await fetch("/api/ingredients");
+				if (res.ok) {
+					const data = await res.json();
+					const list: string[] = data.ingredients || [];
+					if (list.length > 0) {
+						container.innerHTML = list
+							.map((ing) => `<button type="button" class="ing-chip" data-ing="${ing}">+ ${ing}</button>`)
+							.join(" ");
+
+						container.querySelectorAll(".ing-chip").forEach((btn) => {
+							btn.addEventListener("click", () => {
+								const ingName = btn.getAttribute("data-ing");
+								if (ingName && ingredientsInput) {
+									const cur = ingredientsInput.value.trim();
+									const newLine = `• ${ingName}`;
+									if (!cur) {
+										ingredientsInput.value = newLine;
+									} else if (!cur.includes(ingName)) {
+										ingredientsInput.value = cur + "\n" + newLine;
+									}
+								}
+							});
+						});
+					}
+				}
+			} catch (e) {
+				console.error("[LOAD INGREDIENTS ERR]", e);
+			}
+		}
+
+		loadAvailableIngredients();
 
 		function downscaleDataUrl(dataUrl: string, maxDim: number, callback: (downscaled: string) => void) {
 			if (!dataUrl) return callback("");
@@ -612,6 +653,46 @@ import Base from "../../layouts/Base.astro";
 		border-color: var(--color-brand, #0066cc);
 		color: var(--color-brand, #0066cc);
 		background: rgba(0, 102, 204, 0.05);
+	}
+	.ingredients-header-row {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		justify-content: space-between;
+		margin-bottom: 0.5rem;
+	}
+	.picker-tip {
+		font-size: 0.75rem;
+		color: var(--color-brand, #0066cc);
+		font-weight: 600;
+	}
+	.ingredients-chip-container {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.4rem;
+		margin-bottom: 0.75rem;
+		max-height: 120px;
+		overflow-y: auto;
+		padding: 0.5rem;
+		background: var(--color-bg-subtle, #f8fafc);
+		border: 1px solid var(--color-border, #cbd5e1);
+		border-radius: 8px;
+	}
+	.ing-chip {
+		background: var(--color-surface, #ffffff);
+		border: 1px solid var(--color-brand, #0066cc);
+		color: var(--color-brand, #0066cc);
+		border-radius: 20px;
+		padding: 0.25rem 0.65rem;
+		font-size: 0.75rem;
+		font-weight: 600;
+		cursor: pointer;
+		transition: all 0.15s ease;
+	}
+	.ing-chip:hover {
+		background: var(--color-brand, #0066cc);
+		color: #ffffff;
+		transform: translateY(-1px);
 	}
 	.remove-btn {
 		background: #ef4444;

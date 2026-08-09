@@ -54,7 +54,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
 								],
 							},
 						],
-						max_tokens: 512,
+						max_tokens: 1024,
 					});
 				} catch (err1) {
 					console.error("[VISION MSG ERR]", err1);
@@ -84,9 +84,8 @@ export const POST: APIRoute = async ({ request, locals }) => {
 			return text.trim();
 		}
 
-		// 1. Process Front Card Image (Dedicated Title + Details)
+		// 1. Process Front Card Image (Dedicated Title + Ingredient Names)
 		if (frontImageData) {
-			// Direct dedicated title extraction prompt
 			const titlePrompt = "What is the exact main dish title printed on this recipe card (e.g. Cheese Smashed Burgers, Tilapia with Scallion Rice)? Respond with ONLY the dish name title.";
 			const titleText = await runVisionOCR(frontImageData, titlePrompt);
 			if (titleText) {
@@ -97,8 +96,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
 				}
 			}
 
-			// Full details prompt (prep time, cook time, servings, ingredients)
-			const frontPrompt = "Extract Prep Time, Cook Time, Servings, and Ingredients from this recipe card front photo. Return valid JSON with keys: title, prep_time, cook_time, servings, ingredients.";
+			const frontPrompt = "Extract Prep Time, Cook Time, Servings, and Ingredient Names from this recipe card front photo. Return valid JSON with keys: title, prep_time, cook_time, servings, ingredients.";
 			const frontText = await runVisionOCR(frontImageData, frontPrompt);
 			if (frontText) {
 				console.log("[FRONT DETAILS OCR]:", frontText);
@@ -116,9 +114,9 @@ export const POST: APIRoute = async ({ request, locals }) => {
 			}
 		}
 
-		// 2. Process Back Card Image (Step-by-Step Instructions)
+		// 2. Process Back Card Image (Exact Quantities & Step-by-Step Instructions)
 		if (backImageData) {
-			const backPrompt = "Extract all Step-by-Step Cooking Instructions (numbered 1., 2., 3., 4., 5., 6.) from the back of this recipe card. Return valid JSON with key: instructions.";
+			const backPrompt = "Analyze the back of this recipe card. Extract exact Pantry Ingredient Quantities & Amounts (e.g. 10 oz Ground Beef, 2 Yukon Gold Potatoes, 1 tbsp Old Bay Seasoning) AND all Step-by-Step Cooking Instructions (numbered 1., 2., 3., 4., 5., 6.). Return valid JSON with keys: ingredients, instructions.";
 			const backText = await runVisionOCR(backImageData, backPrompt);
 			if (backText) {
 				console.log("[BACK OCR TEXT]:", backText);
@@ -127,7 +125,10 @@ export const POST: APIRoute = async ({ request, locals }) => {
 					try {
 						const parsed = JSON.parse(jsonMatch[0]);
 						if (parsed.instructions) extractedInfo.instructions = parsed.instructions.trim();
-						if (parsed.title && !extractedInfo.title) extractedInfo.title = cleanTitleText(parsed.title);
+						if (parsed.ingredients && parsed.ingredients.length > 10) {
+							// Prefer exact quantities from Back Card
+							extractedInfo.ingredients = parsed.ingredients.trim();
+						}
 					} catch (e) {}
 				}
 				if (!extractedInfo.instructions && backText.length > 20) {
