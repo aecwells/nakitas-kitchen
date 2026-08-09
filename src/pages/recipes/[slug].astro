@@ -12,9 +12,11 @@ if (!recipe) return Astro.redirect("/404");
 Astro.cache.set(cacheHint);
 const data = recipe.data;
 
-// Retrieve taxonomy terms for categories & tags
-const [categories, tags] = await Promise.all([
+// Retrieve taxonomy terms for categories, difficulty, dietary, and tags
+const [categories, difficultyTerms, dietaryTerms, tags] = await Promise.all([
 	getEntryTerms("recipes", data.id, "category").catch(() => []),
+	getEntryTerms("recipes", data.id, "difficulty").catch(() => []),
+	getEntryTerms("recipes", data.id, "dietary").catch(() => []),
 	getEntryTerms("recipes", data.id, "tag").catch(() => []),
 ]);
 
@@ -28,6 +30,7 @@ try {
 }
 
 const bylines = data.bylines ?? [];
+const difficulty = difficultyTerms && difficultyTerms.length > 0 ? difficultyTerms[0].label : null;
 ---
 
 <Base
@@ -52,16 +55,33 @@ const bylines = data.bylines ?? [];
 
 			<h1 class="recipe-title">{data.title}</h1>
 
-			{bylines.length > 0 && (
-				<div class="byline-row">
-					<span class="byline-prefix">Recipe by</span>
-					{bylines.map((credit: any) => (
-						<span class="byline-author">
-							{credit.byline.displayName || "Nakita"}
-						</span>
-					))}
-				</div>
-			)}
+			<div class="meta-bar">
+				{bylines.length > 0 && (
+					<div class="byline-row">
+						<span class="byline-prefix">Recipe by</span>
+						{bylines.map((credit: any) => (
+							<span class="byline-author">
+								{credit.byline.displayName || "Nakita"}
+							</span>
+						))}
+					</div>
+				)}
+
+				{difficulty && (
+					<span class="difficulty-badge">
+						⚡ Difficulty: {difficulty}
+					</span>
+				)}
+
+				<button type="button" class="print-btn" onclick="window.print()">
+					<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+						<polyline points="6 9 6 2 18 2 18 9"></polyline>
+						<path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+						<rect x="6" y="14" width="12" height="8"></rect>
+					</svg>
+					<span>Print Recipe</span>
+				</button>
+			</div>
 
 			{data.excerpt && <p class="recipe-excerpt">{data.excerpt}</p>}
 
@@ -96,14 +116,26 @@ const bylines = data.bylines ?? [];
 		<div class="recipe-layout container">
 			<aside class="recipe-ingredients-sidebar">
 				<div class="ingredients-box">
-					<h3 class="ingredients-title">Ingredients</h3>
+					<div class="ingredients-header">
+						<h3 class="ingredients-title">Ingredients</h3>
+						<!-- Recipe Batch Scaling Control -->
+						<div class="scaler-controls">
+							<span class="scaler-label">Scale:</span>
+							<button type="button" class="scale-btn active" data-scale="1">1x</button>
+							<button type="button" class="scale-btn" data-scale="2">2x</button>
+							<button type="button" class="scale-btn" data-scale="3">3x</button>
+						</div>
+					</div>
+
 					{data.ingredients ? (
-						<ul class="ingredients-list">
+						<ul class="ingredients-list" id="ingredients-list">
 							{data.ingredients.split("\n").filter(Boolean).map((ing: string) => (
 								<li class="ingredient-item">
 									<label class="checkbox-label">
 										<input type="checkbox" />
-										<span>{ing.replace(/^•\s*/, "")}</span>
+										<span class="ingredient-text" data-raw-text={ing.replace(/^•\s*/, "")}>
+											{ing.replace(/^•\s*/, "")}
+										</span>
 									</label>
 								</li>
 							))}
@@ -115,6 +147,17 @@ const bylines = data.bylines ?? [];
 					{data.allergens && (
 						<div class="allergen-box">
 							<strong>Allergens:</strong> {data.allergens}
+						</div>
+					)}
+
+					{dietaryTerms && dietaryTerms.length > 0 && (
+						<div class="dietary-box">
+							<strong>Dietary:</strong>
+							<div class="dietary-list">
+								{dietaryTerms.map((diet: any) => (
+									<span class="diet-chip">✓ {diet.label}</span>
+								))}
+							</div>
 						</div>
 					)}
 
@@ -132,7 +175,7 @@ const bylines = data.bylines ?? [];
 					{matchingProduct && (
 						<div class="shop-match-box">
 							<h4>Available for Pre-Order!</h4>
-							<p>Order freshly baked {matchingProduct.data.title} directly from our cottage bakery.</p>
+							<p>Don't want to bake it yourself? Order freshly baked {matchingProduct.data.title} directly from our cottage bakery.</p>
 							<a href={`/shop/${matchingProduct.id}`} class="buy-link">Order Pre-Order (${matchingProduct.data.price}) &rarr;</a>
 						</div>
 					)}
@@ -157,13 +200,40 @@ const bylines = data.bylines ?? [];
 
 				<!-- Reader Recipe Discussion & Comments -->
 				<section class="comments-section">
-					<h3 class="comments-heading">Baking Q&A & Community Comments</h3>
+					<h3 class="comments-heading">Baking Q&A & Reader Comments</h3>
 					<Comments collection="recipes" contentId={data.id} threaded />
 				</section>
 			</main>
 		</div>
 	</article>
 </Base>
+
+<script>
+	// Interactive Recipe Batch Quantity Scaler
+	document.addEventListener("DOMContentLoaded", () => {
+		const scaleBtns = document.querySelectorAll<HTMLButtonElement>(".scale-btn");
+		const ingredientElements = document.querySelectorAll<HTMLElement>(".ingredient-text");
+
+		scaleBtns.forEach((btn) => {
+			btn.addEventListener("click", () => {
+				const scale = parseFloat(btn.dataset.scale || "1");
+
+				scaleBtns.forEach((b) => b.classList.remove("active"));
+				btn.classList.add("active");
+
+				ingredientElements.forEach((el) => {
+					const raw = el.dataset.rawText || el.innerText;
+					// Scale any leading numbers (e.g., "400g", "100g", "2.5 tsp")
+					const scaled = raw.replace(/(\d+(?:\.\d+)?)/g, (match) => {
+						const num = parseFloat(match);
+						return (num * scale).toString();
+					});
+					el.innerText = scaled;
+				});
+			});
+		});
+	});
+</script>
 
 <style>
 	.recipe-detail-page {
@@ -208,17 +278,48 @@ const bylines = data.bylines ?? [];
 		line-height: 1.2;
 		letter-spacing: -0.02em;
 	}
+	.meta-bar {
+		display: flex;
+		align-items: center;
+		gap: 1.25rem;
+		margin-bottom: 1.25rem;
+		flex-wrap: wrap;
+	}
 	.byline-row {
 		display: flex;
 		align-items: center;
 		gap: 0.4rem;
 		font-size: 0.875rem;
 		color: var(--color-muted, #64748b);
-		margin-bottom: 1rem;
 	}
 	.byline-author {
 		font-weight: 600;
 		color: var(--color-text, #0f172a);
+	}
+	.difficulty-badge {
+		font-size: 0.8125rem;
+		font-weight: 600;
+		background: #fef3c7;
+		color: #92400e;
+		padding: 0.2rem 0.6rem;
+		border-radius: 6px;
+	}
+	.print-btn {
+		display: flex;
+		align-items: center;
+		gap: 0.4rem;
+		background: transparent;
+		border: 1px solid var(--color-border, #cbd5e1);
+		border-radius: 6px;
+		padding: 0.25rem 0.65rem;
+		font-size: 0.8125rem;
+		font-weight: 600;
+		color: var(--color-text-secondary, #475569);
+		cursor: pointer;
+		transition: background 0.15s ease;
+	}
+	.print-btn:hover {
+		background: var(--color-bg-subtle, #f8fafc);
 	}
 	.recipe-excerpt {
 		font-size: 1.25rem;
@@ -267,7 +368,7 @@ const bylines = data.bylines ?? [];
 	}
 	.recipe-layout {
 		display: grid;
-		grid-template-columns: 320px 1fr;
+		grid-template-columns: 340px 1fr;
 		gap: 3rem;
 		align-items: start;
 	}
@@ -284,13 +385,44 @@ const bylines = data.bylines ?? [];
 		position: sticky;
 		top: 2rem;
 	}
+	.ingredients-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		border-bottom: 2px solid var(--color-brand, #0066cc);
+		padding-bottom: 0.5rem;
+		margin-bottom: 1rem;
+	}
 	.ingredients-title {
 		font-size: 1.25rem;
 		font-weight: 700;
-		margin: 0 0 1rem 0;
+		margin: 0;
 		color: var(--color-text, #0f172a);
-		border-bottom: 2px solid var(--color-brand, #0066cc);
-		padding-bottom: 0.5rem;
+	}
+	.scaler-controls {
+		display: flex;
+		align-items: center;
+		gap: 0.25rem;
+	}
+	.scaler-label {
+		font-size: 0.75rem;
+		font-weight: 600;
+		color: var(--color-muted, #64748b);
+		margin-right: 0.2rem;
+	}
+	.scale-btn {
+		background: var(--color-bg-subtle, #f1f5f9);
+		border: 1px solid var(--color-border, #cbd5e1);
+		border-radius: 4px;
+		font-size: 0.75rem;
+		font-weight: 700;
+		padding: 0.15rem 0.45rem;
+		cursor: pointer;
+	}
+	.scale-btn.active {
+		background: var(--color-brand, #0066cc);
+		color: #ffffff;
+		border-color: var(--color-brand, #0066cc);
 	}
 	.ingredients-list {
 		list-style: none;
@@ -320,6 +452,24 @@ const bylines = data.bylines ?? [];
 		border-radius: 8px;
 		font-size: 0.84375rem;
 		margin-bottom: 1rem;
+	}
+	.dietary-box {
+		margin-bottom: 1rem;
+		font-size: 0.84375rem;
+	}
+	.dietary-list {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.35rem;
+		margin-top: 0.3rem;
+	}
+	.diet-chip {
+		background: #dcfce7;
+		color: #15803d;
+		font-weight: 600;
+		font-size: 0.75rem;
+		padding: 0.15rem 0.5rem;
+		border-radius: 4px;
 	}
 	.tags-container {
 		margin-bottom: 1.25rem;
@@ -393,5 +543,19 @@ const bylines = data.bylines ?? [];
 		font-weight: 700;
 		margin-bottom: 1.5rem;
 		color: var(--color-text, #0f172a);
+	}
+
+	@media print {
+		.header-nav-row, .meta-bar, .shop-match-box, .comments-section, .scaler-controls {
+			display: none !important;
+		}
+		.recipe-layout {
+			grid-template-columns: 1fr;
+		}
+		.ingredients-box {
+			position: static;
+			border: none;
+			padding: 0;
+		}
 	}
 </style>
