@@ -87,52 +87,43 @@ if (typeof data.content === "string") {
 
 function extractUniformSteps(text: string) {
 	const steps: { number: number; title: string; text: string }[] = [];
-	if (!text || !text.trim()) return steps;
+	if (!text || typeof text !== "string" || !text.trim()) return steps;
 
-	// Regex matching step numbers like "1. Prep Ingredients", "2. Cook Chicken", "3. Cook Veggies", "Step 4: Make Filling"
-	const stepHeaderRegex = /(?:^|\n)\s*(?:Step\s*)?(\d+)[\.:\s]+([^\n]+)/gi;
-	const matches: { index: number; number: number; title: string; headerLength: number }[] = [];
-	let match;
+	// Split by step number prefixes: 1., 2., 3., 4., 5., 6., etc.
+	const rawChunks = text.split(/(?=\b\d+[\.\:]\s+)/g).filter((c) => c.trim());
 
-	while ((match = stepHeaderRegex.exec(text)) !== null) {
-		matches.push({
-			index: match.index,
-			number: parseInt(match[1], 10),
-			title: match[2].trim(),
-			headerLength: match[0].length,
-		});
-	}
-
-	if (matches.length > 0) {
-		for (let i = 0; i < matches.length; i++) {
-			const current = matches[i];
-			const nextIndex = i + 1 < matches.length ? matches[i + 1].index : text.length;
-			const stepContent = text.substring(current.index + current.headerLength, nextIndex).trim();
-
+	rawChunks.forEach((chunk, idx) => {
+		const trimmed = chunk.trim();
+		const match = trimmed.match(/^(\d+)[\.\:]\s*([^\n]+)([\s\S]*)/);
+		if (match) {
+			const stepNum = parseInt(match[1], 10);
+			const stepTitle = match[2].trim();
+			const stepBody = match[3].trim() || stepTitle;
 			steps.push({
-				number: current.number || i + 1,
-				title: current.title,
-				text: stepContent || current.title,
+				number: stepNum,
+				title: stepTitle,
+				text: stepBody,
 			});
-		}
-	} else {
-		const paragraphs = text.split(/\n\s*\n/).filter((p) => p.trim());
-		paragraphs.forEach((p, idx) => {
-			const lines = p.trim().split("\n");
-			const firstLine = lines[0].trim();
-			const bodyText = lines.slice(1).join("\n").trim() || firstLine;
+		} else if (trimmed) {
+			const lines = trimmed.split("\n");
 			steps.push({
 				number: idx + 1,
-				title: lines.length > 1 ? firstLine : `Step ${idx + 1}`,
-				text: bodyText,
+				title: lines[0].replace(/^\d+[\.\:]\s*/, "").trim() || `Step ${idx + 1}`,
+				text: lines.slice(1).join("\n").trim() || lines[0],
 			});
-		});
-	}
+		}
+	});
 
 	return steps;
 }
 
 const recipeSteps = extractUniformSteps(rawText);
+
+// Construct interactive multi-image gallery list
+const galleryList = [
+	data.featured_image ? { src: data.featured_image.src, alt: `${data.title} Front Card Photo`, label: "Card Front" } : null,
+	data.card_scan_image ? { src: data.card_scan_image.src, alt: `${data.title} Back Card Photo`, label: "Card Back" } : null,
+].filter(Boolean);
 ---
 
 <Base
@@ -228,9 +219,23 @@ const recipeSteps = extractUniformSteps(rawText);
 			</div>
 		</header>
 
-		{data.featured_image && (
-			<div class="hero-image-container container">
-				<Image image={data.featured_image} alt={data.title} />
+		{galleryList.length > 0 && (
+			<div class="recipe-gallery-section container">
+				<div class="main-gallery-view zoomable-img">
+					<img id="main-recipe-img" src={galleryList[0].src} alt={galleryList[0].alt} />
+					<span class="gallery-zoom-badge">🔍 Click for Full Screen & Zoom</span>
+				</div>
+
+				{galleryList.length > 1 && (
+					<div class="gallery-thumbnails">
+						{galleryList.map((img, idx) => (
+							<button type="button" class={`thumb-btn ${idx === 0 ? 'active' : ''}`} data-src={img.src} data-alt={img.alt}>
+								<img src={img.src} alt={img.alt} />
+								<span class="thumb-label">{img.label}</span>
+							</button>
+						))}
+					</div>
+				)}
 			</div>
 		)}
 
@@ -385,6 +390,23 @@ const recipeSteps = extractUniformSteps(rawText);
 <script>
 	// Interactive Unit Converter (Metric vs US Imperial) and Batch Scaler
 	document.addEventListener("DOMContentLoaded", () => {
+		// Gallery thumbnail switcher
+		const mainImg = document.getElementById("main-recipe-img") as HTMLImageElement;
+		const thumbBtns = document.querySelectorAll<HTMLButtonElement>(".thumb-btn");
+
+		thumbBtns.forEach((btn) => {
+			btn.addEventListener("click", () => {
+				const src = btn.dataset.src;
+				const alt = btn.dataset.alt;
+				if (mainImg && src) {
+					mainImg.src = src;
+					if (alt) mainImg.alt = alt;
+					thumbBtns.forEach((b) => b.classList.remove("active"));
+					btn.classList.add("active");
+				}
+			});
+		});
+
 		const scaleBtns = document.querySelectorAll<HTMLButtonElement>(".scale-btn");
 		const unitMetricBtn = document.getElementById("unit-metric");
 		const unitImperialBtn = document.getElementById("unit-imperial");
@@ -484,6 +506,71 @@ const recipeSteps = extractUniformSteps(rawText);
 		padding: 0.25rem 0.65rem;
 		border-radius: 12px;
 	}
+	.recipe-gallery-section {
+		margin-bottom: 2.5rem;
+	}
+	.main-gallery-view {
+		position: relative;
+		border-radius: 16px;
+		overflow: hidden;
+		background: #0f172a;
+		border: 1px solid var(--color-border, #e2e8f0);
+		box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+		cursor: zoom-in;
+	}
+	.main-gallery-view img {
+		width: 100%;
+		max-height: 520px;
+		object-fit: cover;
+		display: block;
+		transition: opacity 0.2s ease;
+	}
+	.gallery-zoom-badge {
+		position: absolute;
+		bottom: 1rem;
+		right: 1rem;
+		background: rgba(15, 23, 42, 0.85);
+		color: #ffffff;
+		font-weight: 700;
+		font-size: 0.75rem;
+		padding: 0.4rem 0.85rem;
+		border-radius: 20px;
+		backdrop-filter: blur(4px);
+		pointer-events: none;
+	}
+	.gallery-thumbnails {
+		display: flex;
+		gap: 0.85rem;
+		margin-top: 1rem;
+	}
+	.thumb-btn {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		background: var(--color-surface, #ffffff);
+		border: 2px solid var(--color-border, #cbd5e1);
+		border-radius: 8px;
+		padding: 0.35rem 0.75rem;
+		cursor: pointer;
+		transition: all 0.2s ease;
+	}
+	.thumb-btn.active,
+	.thumb-btn:hover {
+		border-color: var(--color-brand, #0066cc);
+		background: rgba(0, 102, 204, 0.05);
+	}
+	.thumb-btn img {
+		width: 36px;
+		height: 36px;
+		object-fit: cover;
+		border-radius: 4px;
+	}
+	.thumb-label {
+		font-weight: 700;
+		font-size: 0.8125rem;
+		color: var(--color-text, #0f172a);
+	}
+
 	.recipe-title {
 		font-size: 2.75rem;
 		font-weight: 700;
