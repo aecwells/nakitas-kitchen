@@ -222,6 +222,26 @@ const isSourdough = slug.includes("sourdough") || (data.ingredients && data.ingr
 					<p>No instructions available.</p>
 				)}
 
+				{data.card_scan_image && (
+					<section class="scanned-card-inspection">
+						<h3 class="scanned-card-heading">📷 Original Scanned Recipe Cards (Front & Back)</h3>
+						<div class="scanned-cards-grid">
+							{data.featured_image && (
+								<div class="scanned-card-item">
+									<span class="card-side-label">Card Front</span>
+									<Image image={data.featured_image} alt={`${data.title} Front Card Photo`} />
+								</div>
+							)}
+							{data.card_scan_image && (
+								<div class="scanned-card-item">
+									<span class="card-side-label">Card Back</span>
+									<Image image={data.card_scan_image} alt={`${data.title} Back Card Photo`} />
+								</div>
+							)}
+						</div>
+					</section>
+				)}
+
 				{data.cottage_license_notice && (
 					<footer class="recipe-footer-notice">
 						<p><em>{data.cottage_license_notice}</em></p>
@@ -651,6 +671,54 @@ const isSourdough = slug.includes("sourdough") || (data.ingredients && data.ingr
 		margin: 0 0 1.25rem 0;
 		color: var(--color-text, #0f172a);
 	}
+	.scanned-card-inspection {
+		margin-top: 2.5rem;
+		padding: 1.5rem;
+		background: var(--color-surface, #ffffff);
+		border: 1px solid var(--color-border, #e2e8f0);
+		border-radius: 12px;
+	}
+	.scanned-card-heading {
+		font-size: 1.25rem;
+		font-weight: 700;
+		margin: 0 0 1.25rem 0;
+		color: var(--color-text, #0f172a);
+	}
+	.scanned-cards-grid {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 1.25rem;
+	}
+	@media (max-width: 640px) {
+		.scanned-cards-grid {
+			grid-template-columns: 1fr;
+		}
+	}
+	.scanned-card-item {
+		border-radius: 8px;
+		overflow: hidden;
+		border: 1px solid var(--color-border, #cbd5e1);
+		background: var(--color-bg-subtle, #f8fafc);
+		position: relative;
+	}
+	.card-side-label {
+		position: absolute;
+		top: 0.5rem;
+		left: 0.5rem;
+		background: rgba(15, 23, 42, 0.85);
+		color: #ffffff;
+		font-weight: 700;
+		font-size: 0.75rem;
+		padding: 0.2rem 0.6rem;
+		border-radius: 4px;
+		z-index: 2;
+	}
+	.scanned-card-item img {
+		width: 100%;
+		height: auto;
+		display: block;
+	}
+
 	.recipe-footer-notice {
 		margin-top: 3rem;
 		padding-top: 1rem;
