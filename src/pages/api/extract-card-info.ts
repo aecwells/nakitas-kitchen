@@ -49,39 +49,29 @@ export const POST: APIRoute = async ({ request, locals }) => {
 				const rawText = aiResponse?.response || (typeof aiResponse === "string" ? aiResponse : "");
 				const jsonMatch = rawText.match(/\{[\s\S]*\}/);
 				if (jsonMatch) {
-					const parsed = JSON.parse(jsonMatch[0]);
-					if (parsed.title) extractedInfo.title = parsed.title;
-					if (parsed.prep_time) extractedInfo.prep_time = parsed.prep_time;
-					if (parsed.cook_time) extractedInfo.cook_time = parsed.cook_time;
-					if (parsed.servings) extractedInfo.servings = parsed.servings;
-					if (parsed.ingredients) extractedInfo.ingredients = parsed.ingredients;
-					if (parsed.instructions) extractedInfo.instructions = parsed.instructions;
+					try {
+						const parsed = JSON.parse(jsonMatch[0]);
+						if (parsed.title) extractedInfo.title = parsed.title.trim();
+						if (parsed.prep_time) extractedInfo.prep_time = parsed.prep_time.trim();
+						if (parsed.cook_time) extractedInfo.cook_time = parsed.cook_time.trim();
+						if (parsed.servings) extractedInfo.servings = parsed.servings.trim();
+						if (parsed.ingredients) extractedInfo.ingredients = parsed.ingredients.trim();
+						if (parsed.instructions) extractedInfo.instructions = parsed.instructions.trim();
+					} catch (e) {
+						// ignore
+					}
+				}
+
+				// Regex extraction fallback if JSON parsing didn't find title
+				if (!extractedInfo.title) {
+					const titleMatch = rawText.match(/(?:title|recipe|dish):\s*([^\n]+)/i);
+					if (titleMatch) {
+						extractedInfo.title = titleMatch[1].replace(/["']/g, "").trim();
+					}
 				}
 			} catch (aiErr) {
 				console.error("[WORKERS AI EXTRACTION ERROR]", aiErr);
 			}
-		}
-
-		// Intelligent fallback if AI output is partial
-		if (!extractedInfo.title) {
-			extractedInfo.title = "Homestyle Chicken & Biscuit Pot Pie";
-		}
-		if (!extractedInfo.prep_time) {
-			extractedInfo.prep_time = "15 mins";
-		}
-		if (!extractedInfo.cook_time) {
-			extractedInfo.cook_time = "50-65 mins";
-		}
-		if (!extractedInfo.servings) {
-			extractedInfo.servings = "2-4 servings (750 Calories)";
-		}
-		if (!extractedInfo.ingredients) {
-			extractedInfo.ingredients = 
-				"• 10 oz Diced Skinless Dark Meat Chicken\n• 1 package Buttermilk Biscuits\n• 2 Carrots (Trimmed & diced)\n• 2 Ribs Celery (Finely diced)\n• 1/2 Yellow Onion (Diced)\n• 2 Cloves Garlic (Minced)\n• 1 tbsp Dried Thyme\n• 2 tbsp Flour\n• 4 oz Cream Cheese\n• 2 packets Chicken Stock Concentrates";
-		}
-		if (!extractedInfo.instructions) {
-			extractedInfo.instructions = 
-				"1. Prep Ingredients\nAdjust rack to top position and preheat oven to 425 degrees. Wash and dry produce. Trim, peel, and finely dice carrots. Finely dice celery. Halve, peel, and dice half the onion (whole onion for 4 servings). Peel and mince garlic.\n\n2. Cook Chicken\nOpen package of chicken and drain off any excess liquid. Heat a drizzle of oil in a medium, preferably ovenproof, pan over medium-high heat. Add chicken in a single layer; season with a big pinch of salt and pepper. Cook, stirring occasionally, until browned all over, 3-5 minutes. Transfer chicken to a plate.\n\n3. Cook Veggies\nHeat a drizzle of oil in pan used for chicken over medium-high heat. Add carrots, celery, and diced onion; season with salt and pepper. Cook, stirring occasionally, until veggies are softened, 5-7 minutes. Add garlic and half the dried thyme; cook 30 seconds.\n\n4. Make Filling\nAdd 2 TBSP butter to pan with veggies. Once melted, stir in flour; cook for 1 minute. Add 1 1/4 cups water, stock concentrates, salt, and pepper. Bring to a boil and cook, stirring occasionally, until thickened, 3-5 minutes. Turn off heat. Stir in cream cheese until melted, then stir in chicken. Season with salt and pepper.\n\n5. Add Biscuits & Bake\nPlace 1 TBSP butter in a small microwave-safe bowl; microwave until melted, 30 seconds. Remove biscuits from package; peel apart each biscuit at the center to create two thinner biscuits. Evenly top chicken filling with biscuits, then brush with melted butter. Bake on top rack until biscuits are golden brown and chicken is cooked through, 12-15 minutes.\n\n6. Serve\nLet pot pie cool at least 5 minutes before serving. Divide between shallow bowls or plates and serve.";
 		}
 
 		return new Response(JSON.stringify(extractedInfo), {

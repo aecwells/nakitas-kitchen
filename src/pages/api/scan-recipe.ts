@@ -24,11 +24,11 @@ export const POST: APIRoute = async ({ request, locals }) => {
 
 		// Front card ingredients list
 		const defaultIngredients = customIngredients.trim() || 
-			"• 10 oz Diced Skinless Dark Meat Chicken\n• 1 package Buttermilk Biscuits\n• 2 Carrots (Trimmed & diced)\n• 2 Ribs Celery (Finely diced)\n• 1/2 Yellow Onion (Diced)\n• 2 Cloves Garlic (Minced)\n• 1 tbsp Dried Thyme\n• 2 tbsp Flour\n• 4 oz Cream Cheese\n• 2 packets Chicken Stock Concentrates";
+			"• Fresh Produce & Main Ingredients (Extracted from Card Front)";
 
 		// Back card step-by-step instructions
 		const rawInstructions = customInstructions.trim() || 
-			"1. Prep Ingredients\nAdjust rack to top position and preheat oven to 425 degrees. Wash and dry produce. Trim, peel, and finely dice carrots. Finely dice celery. Halve, peel, and dice half the onion. Mince garlic.\n\n2. Cook Chicken\nDrain chicken. Heat oil in pan over medium-high heat. Add chicken, season with salt and pepper, and cook until browned, 3-5 minutes. Transfer to a plate.\n\n3. Cook Veggies\nAdd carrots, celery, and onion to pan with salt and pepper. Cook 5-7 minutes. Add garlic and dried thyme; cook 30 seconds.\n\n4. Make Filling\nAdd 2 tbsp butter to pan. Stir in flour; cook 1 min. Add 1 1/4 cups water, stock concentrates, salt, and pepper. Bring to boil and cook until thickened. Stir in cream cheese and chicken.\n\n5. Add Biscuits & Bake\nPeel biscuits in half to make thinner biscuits. Top chicken filling with biscuits and brush with melted butter. Bake on top rack at 425°F for 12-15 minutes.\n\n6. Serve\nCool 5 minutes and serve in shallow bowls.";
+			"1. Preparation & Cooking Steps\nFollow step-by-step instructions on scanned card back photo.";
 
 		// Convert rawInstructions string into structured PortableText blocks
 		const contentBlocks = rawInstructions.split("\n\n").filter(Boolean).map((step, idx) => {
