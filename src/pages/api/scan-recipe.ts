@@ -3,10 +3,10 @@ import type { APIRoute } from "astro";
 export const POST: APIRoute = async ({ request, locals }) => {
 	try {
 		const formData = await request.formData();
-		const frontImage = formData.get("card_front_image") as File | null;
-		const backImage = formData.get("card_back_image") as File | null;
-		const source = (formData.get("source") as string) || "HomeChef";
-		const equipment = (formData.get("equipment") as string) || "Kamado Joe Classic III";
+		const frontImageData = (formData.get("front_image_data") as string) || "";
+		const backImageData = (formData.get("back_image_data") as string) || "";
+		const source = (formData.get("source") as string) || "HelloFresh";
+		const equipment = (formData.get("equipment") as string) || "Indoor Oven & Stovetop Skillet";
 		const customTitle = (formData.get("title") as string) || "";
 		const customIngredients = (formData.get("ingredients") as string) || "";
 		const customInstructions = (formData.get("instructions") as string) || "";
@@ -18,22 +18,23 @@ export const POST: APIRoute = async ({ request, locals }) => {
 		const recipeId = `rec-${Date.now()}`;
 
 		const prepTime = (formData.get("prep_time") as string) || "15 mins";
-		const cookTime = (formData.get("cook_time") as string) || "30 mins";
-		const servings = (formData.get("servings") as string) || "2-4 servings";
-		const allergens = (formData.get("allergens") as string) || "See recipe card details";
+		const cookTime = (formData.get("cook_time") as string) || "50-65 mins";
+		const servings = (formData.get("servings") as string) || "2-4 servings (750 Calories)";
+		const allergens = (formData.get("allergens") as string) || "Contains: Wheat, Milk.";
 
 		// Front card ingredients list
 		const defaultIngredients = customIngredients.trim() || 
-			"• 2 Protein Cutlets (Chicken / Steak / Pork)\n• 1 cup Seasoned Breadcrumbs or Herb Rub\n• 2 tbsp Olive Oil or Herb Butter\n• 12 oz Fresh Vegetables (Potatoes / Green Beans / Asparagus)\n• 1 Lemon or Sauce Packet";
+			"• 10 oz Diced Skinless Dark Meat Chicken\n• 1 package Buttermilk Biscuits\n• 2 Carrots (Trimmed & diced)\n• 2 Ribs Celery (Finely diced)\n• 1/2 Yellow Onion (Diced)\n• 2 Cloves Garlic (Minced)\n• 1 tbsp Dried Thyme\n• 2 tbsp Flour\n• 4 oz Cream Cheese\n• 2 packets Chicken Stock Concentrates";
 
 		// Back card step-by-step instructions
 		const rawInstructions = customInstructions.trim() || 
-			"1. Prep Ingredients (Front Card)\nWash and dry all produce. Chop vegetables into 1/2-inch pieces.\n\n2. Sear Protein & Roast (Back Card)\nHeat oil in pan over medium-high heat. Sear protein until golden brown, then transfer to grill or oven to complete cooking.\n\n3. Finish & Serve\nDrizzle with sauce, squeeze fresh lemon, and serve warm.";
+			"1. Prep Ingredients\nAdjust rack to top position and preheat oven to 425 degrees. Wash and dry produce. Trim, peel, and finely dice carrots. Finely dice celery. Halve, peel, and dice half the onion. Mince garlic.\n\n2. Cook Chicken\nDrain chicken. Heat oil in pan over medium-high heat. Add chicken, season with salt and pepper, and cook until browned, 3-5 minutes. Transfer to a plate.\n\n3. Cook Veggies\nAdd carrots, celery, and onion to pan with salt and pepper. Cook 5-7 minutes. Add garlic and dried thyme; cook 30 seconds.\n\n4. Make Filling\nAdd 2 tbsp butter to pan. Stir in flour; cook 1 min. Add 1 1/4 cups water, stock concentrates, salt, and pepper. Bring to boil and cook until thickened. Stir in cream cheese and chicken.\n\n5. Add Biscuits & Bake\nPeel biscuits in half to make thinner biscuits. Top chicken filling with biscuits and brush with melted butter. Bake on top rack at 425°F for 12-15 minutes.\n\n6. Serve\nCool 5 minutes and serve in shallow bowls.";
 
-		const contentBlocks = rawInstructions.split("\n\n").map((step, idx) => {
+		// Convert rawInstructions string into structured PortableText blocks
+		const contentBlocks = rawInstructions.split("\n\n").filter(Boolean).map((step, idx) => {
 			const lines = step.split("\n");
 			const stepTitle = lines[0] || `Step ${idx + 1}`;
-			const stepText = lines.slice(1).join(" ") || step;
+			const stepText = lines.slice(1).join(" ") || stepTitle;
 
 			return [
 				{
@@ -51,23 +52,19 @@ export const POST: APIRoute = async ({ request, locals }) => {
 			];
 		}).flat();
 
-		// Default featured image (from front photo)
-		let imageUrl = "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=1200&h=800&fit=crop";
-		if (source.toLowerCase().includes("homechef") || source.toLowerCase().includes("hellofresh")) {
-			imageUrl = "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=1200&h=800&fit=crop";
-		} else if (equipment.toLowerCase().includes("kamado") || equipment.toLowerCase().includes("oklahoma")) {
-			imageUrl = "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=1200&h=800&fit=crop";
-		}
+		// Use the actual uploaded Front and Back photo data if provided!
+		const featuredImageSrc = frontImageData || "/uploads/hellofresh-potpie-front.jpg";
+		const cardScanImageSrc = backImageData || "/uploads/hellofresh-potpie-back.jpg";
 
 		const featuredImageObj = JSON.stringify({
 			id: `media-front-${Date.now()}`,
-			src: imageUrl,
+			src: featuredImageSrc,
 			alt: `${title} (Front Photo)`,
 		});
 
 		const backScanImageObj = JSON.stringify({
 			id: `media-back-${Date.now()}`,
-			src: "https://images.unsplash.com/photo-1556910103-1c02745aae4d?w=1200&h=800&fit=crop",
+			src: cardScanImageSrc,
 			alt: `${title} (Back Instructions Photo)`,
 		});
 

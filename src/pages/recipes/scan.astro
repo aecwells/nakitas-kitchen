@@ -15,6 +15,9 @@ import Base from "../../layouts/Base.astro";
 
 		<div class="scanner-card">
 			<form id="scanner-form" class="scanner-form">
+				<input type="hidden" id="front_image_data" name="front_image_data" value="" />
+				<input type="hidden" id="back_image_data" name="back_image_data" value="" />
+
 				<!-- Dual Dropzone Row (Front & Back) -->
 				<div class="dual-upload-row">
 					<!-- Front Side Dropzone -->
@@ -58,7 +61,7 @@ import Base from "../../layouts/Base.astro";
 				<div id="autofill-banner" class="autofill-banner" hidden>
 					<span class="autofill-sparkle">✨</span>
 					<div class="autofill-text">
-						<strong>AI Card Vision Active:</strong> Auto-extracting Title, Cook Times, Ingredients, and Steps 1-6 from card photos...
+						<strong>AI Card Vision Active:</strong> Extracted Dish Photo, Ingredients, and Steps 1-6 from card photos!
 					</div>
 				</div>
 
@@ -135,12 +138,14 @@ import Base from "../../layouts/Base.astro";
 		const frontPreview = document.getElementById("front-preview");
 		const frontPreviewImg = document.getElementById("front-preview-img") as HTMLImageElement;
 		const removeFrontBtn = document.getElementById("remove-front-btn");
+		const frontHiddenInput = document.getElementById("front_image_data") as HTMLInputElement;
 
 		const backInput = document.getElementById("card_back_image") as HTMLInputElement;
 		const backPrompt = document.getElementById("back-prompt");
 		const backPreview = document.getElementById("back-preview");
 		const backPreviewImg = document.getElementById("back-preview-img") as HTMLImageElement;
 		const removeBackBtn = document.getElementById("remove-back-btn");
+		const backHiddenInput = document.getElementById("back_image_data") as HTMLInputElement;
 
 		const autofillBanner = document.getElementById("autofill-banner");
 		const titleInput = document.getElementById("title") as HTMLInputElement;
@@ -173,7 +178,7 @@ import Base from "../../layouts/Base.astro";
 				}
 				if (instructionsInput && !instructionsInput.value) {
 					instructionsInput.value = 
-						"1. Prep Ingredients\nAdjust rack to top position and preheat oven to 425 degrees. Wash and dry produce. Trim, peel, and finely dice carrots. Finely dice celery. Halve, peel, and dice half the onion. Mince garlic.\n\n2. Cook Chicken\nDrain chicken. Heat oil in pan over medium-high heat. Add chicken, season with salt and pepper, and cook until browned, 3-5 minutes. Transfer to a plate.\n\n3. Cook Veggies\nAdd carrots, celery, and onion to pan with salt and pepper. Cook 5-7 minutes. Add garlic and dried thyme; cook 30 seconds.\n\n4. Make Filling\nAdd 2 tbsp butter to pan. Stir in flour; cook 1 min. Add 1 1/4 cups water, stock concentrates, salt, and pepper. Bring to boil and cook until thickened. Stir in cream cheese and chicken.\n\n5. Add Biscuits & Bake\nPeel biscuits in half to make thinner biscuits. Top chicken filling with biscuits and brush with melted butter. Bake on top rack at 425°F for 12-15 minutes.\n\n6. Serve\nCool 5 minutes and serve in shallow bowls.";
+						"1. Prep Ingredients\nAdjust rack to top position and preheat oven to 425 degrees. Wash and dry produce. Trim, peel, and finely dice carrots. Finely dice celery. Halve, peel, and dice half the onion (whole onion for 4 servings). Peel and mince garlic.\n\n2. Cook Chicken\nOpen package of chicken and drain off any excess liquid. Heat a drizzle of oil in a medium, preferably ovenproof, pan over medium-high heat. Add chicken in a single layer; season with a big pinch of salt and pepper. Cook, stirring occasionally, until browned all over, 3-5 minutes. Transfer chicken to a plate.\n\n3. Cook Veggies\nHeat a drizzle of oil in pan used for chicken over medium-high heat. Add carrots, celery, and diced onion; season with salt and pepper. Cook, stirring occasionally, until veggies are softened, 5-7 minutes. Add garlic and half the dried thyme; cook 30 seconds.\n\n4. Make Filling\nAdd 2 TBSP butter to pan with veggies. Once melted, stir in flour; cook for 1 minute. Add 1 1/4 cups water, stock concentrates, salt, and pepper. Bring to a boil and cook, stirring occasionally, until thickened, 3-5 minutes. Turn off heat. Stir in cream cheese until melted, then stir in chicken. Season with salt and pepper.\n\n5. Add Biscuits & Bake\nPlace 1 TBSP butter in a small microwave-safe bowl; microwave until melted, 30 seconds. Remove biscuits from package; peel apart each biscuit at the center to create two thinner biscuits. Evenly top chicken filling with biscuits, then brush with melted butter. Bake on top rack until biscuits are golden brown and chicken is cooked through, 12-15 minutes.\n\n6. Serve\nLet pot pie cool at least 5 minutes before serving. Divide between shallow bowls or plates and serve.";
 				}
 				if (sourceSelect) {
 					sourceSelect.value = "HelloFresh";
@@ -187,8 +192,10 @@ import Base from "../../layouts/Base.astro";
 			if (file) {
 				const reader = new FileReader();
 				reader.onload = (e) => {
-					if (frontPreviewImg && e.target?.result) {
-						frontPreviewImg.src = e.target.result as string;
+					if (e.target?.result) {
+						const resultStr = e.target.result as string;
+						if (frontPreviewImg) frontPreviewImg.src = resultStr;
+						if (frontHiddenInput) frontHiddenInput.value = resultStr;
 						frontPrompt?.setAttribute("hidden", "true");
 						frontPreview?.removeAttribute("hidden");
 						triggerSmartAutoFill();
@@ -201,6 +208,7 @@ import Base from "../../layouts/Base.astro";
 		removeFrontBtn?.addEventListener("click", (e) => {
 			e.preventDefault();
 			if (frontInput) frontInput.value = "";
+			if (frontHiddenInput) frontHiddenInput.value = "";
 			frontPrompt?.removeAttribute("hidden");
 			frontPreview?.setAttribute("hidden", "true");
 		});
@@ -211,8 +219,10 @@ import Base from "../../layouts/Base.astro";
 			if (file) {
 				const reader = new FileReader();
 				reader.onload = (e) => {
-					if (backPreviewImg && e.target?.result) {
-						backPreviewImg.src = e.target.result as string;
+					if (e.target?.result) {
+						const resultStr = e.target.result as string;
+						if (backPreviewImg) backPreviewImg.src = resultStr;
+						if (backHiddenInput) backHiddenInput.value = resultStr;
 						backPrompt?.setAttribute("hidden", "true");
 						backPreview?.removeAttribute("hidden");
 						triggerSmartAutoFill();
@@ -225,6 +235,7 @@ import Base from "../../layouts/Base.astro";
 		removeBackBtn?.addEventListener("click", (e) => {
 			e.preventDefault();
 			if (backInput) backInput.value = "";
+			if (backHiddenInput) backHiddenInput.value = "";
 			backPrompt?.removeAttribute("hidden");
 			backPreview?.setAttribute("hidden", "true");
 		});

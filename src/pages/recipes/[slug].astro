@@ -34,6 +34,28 @@ const difficulty = difficultyTerms && difficultyTerms.length > 0 ? difficultyTer
 
 // Baker's percentage calculations for sourdough/bread recipes
 const isSourdough = slug.includes("sourdough") || (data.ingredients && data.ingredients.toLowerCase().includes("sourdough"));
+// Visual Ingredient Icon Resolver
+function getIngredientIcon(text: string) {
+	const t = text.toLowerCase();
+	if (t.includes("chicken") || t.includes("meat") || t.includes("steak") || t.includes("pork") || t.includes("poultry")) return "🍗";
+	if (t.includes("carrot")) return "🥕";
+	if (t.includes("onion")) return "🧅";
+	if (t.includes("garlic")) return "🧄";
+	if (t.includes("thyme") || t.includes("rosemary") || t.includes("herb")) return "🌿";
+	if (t.includes("flour") || t.includes("bread") || t.includes("yeast")) return "🌾";
+	if (t.includes("cheese") || t.includes("cream cheese") || t.includes("mozzarella")) return "🧀";
+	if (t.includes("butter")) return "🧈";
+	if (t.includes("lemon")) return "🍋";
+	if (t.includes("potato")) return "🥔";
+	if (t.includes("biscuit") || t.includes("bun")) return "🥖";
+	if (t.includes("stock") || t.includes("broth") || t.includes("sauce")) return "🥣";
+	if (t.includes("celery")) return "🥬";
+	if (t.includes("pepper") || t.includes("spice") || t.includes("salt")) return "🧂";
+	if (t.includes("oil") || t.includes("olive")) return "🫒";
+	if (t.includes("milk") || t.includes("cream")) return "🥛";
+	if (t.includes("egg")) return "🥚";
+	return "▫️";
+}
 ---
 
 <Base
@@ -159,16 +181,21 @@ const isSourdough = slug.includes("sourdough") || (data.ingredients && data.ingr
 
 					{data.ingredients ? (
 						<ul class="ingredients-list" id="ingredients-list">
-							{data.ingredients.split("\n").filter(Boolean).map((ing: string) => (
-								<li class="ingredient-item">
-									<label class="checkbox-label">
-										<input type="checkbox" />
-										<span class="ingredient-text" data-raw-text={ing.replace(/^•\s*/, "")}>
-											{ing.replace(/^•\s*/, "")}
-										</span>
-									</label>
-								</li>
-							))}
+							{data.ingredients.split("\n").filter(Boolean).map((ing: string) => {
+								const cleanIng = ing.replace(/^•\s*/, "");
+								const icon = getIngredientIcon(cleanIng);
+								return (
+									<li class="ingredient-item">
+										<label class="checkbox-label">
+											<input type="checkbox" />
+											<span class="ing-icon-badge">{icon}</span>
+											<span class="ingredient-text" data-raw-text={cleanIng}>
+												{cleanIng}
+											</span>
+										</label>
+									</li>
+								);
+							})}
 						</ul>
 					) : (
 						<p>No ingredients listed.</p>
@@ -582,12 +609,17 @@ const isSourdough = slug.includes("sourdough") || (data.ingredients && data.ingr
 	}
 	.checkbox-label {
 		display: flex;
-		align-items: flex-start;
+		align-items: center;
 		gap: 0.6rem;
 		cursor: pointer;
 	}
+	.ing-icon-badge {
+		font-size: 1.15rem;
+		line-height: 1;
+		flex-shrink: 0;
+	}
 	.checkbox-label input {
-		margin-top: 0.2rem;
+		margin-top: 0;
 		cursor: pointer;
 	}
 	.allergen-box {
