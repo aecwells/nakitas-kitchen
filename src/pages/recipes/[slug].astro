@@ -57,55 +57,59 @@ function getIngredientIcon(text: string) {
 	return "▫️";
 }
 
-// Parse content into renderable blocks or step cards
-let parsedContent: any = data.content;
-if (typeof parsedContent === "string") {
+// Check if user is logged in or previewing
+const sessionCookie = Astro.cookies.get("emdash_session")?.value;
+const urlPreview = Astro.url.searchParams.get("preview");
+const isLoggedIn = Boolean(sessionCookie || urlPreview === "1" || (Astro.locals as any)?.user);
+
+// Universal Step Parser: Splits raw text, JSON arrays, or blocks into distinct Step objects
+let recipeSteps: { number: number; title: string; text: string }[] = [];
+let rawText = "";
+
+if (typeof data.content === "string") {
 	try {
-		parsedContent = JSON.parse(parsedContent);
+		const parsed = JSON.parse(data.content);
+		if (Array.isArray(parsed)) {
+			parsed.forEach((b: any) => {
+				const bText = b.children?.map((c: any) => c.text).join("") || "";
+				rawText += bText + "\n";
+			});
+		} else {
+			rawText = data.content;
+		}
 	} catch (e) {
-		// keep string
+		rawText = data.content;
 	}
+} else if (Array.isArray(data.content)) {
+	data.content.forEach((b: any) => {
+		const bText = b.children?.map((c: any) => c.text).join("") || "";
+		rawText += bText + "\n";
+	});
 }
 
-let recipeSteps: { number: number; title: string; text: string }[] = [];
+if (rawText.trim()) {
+	const blocks = rawText.split(/\n\s*\n/).filter(Boolean);
+	blocks.forEach((blk, idx) => {
+		const lines = blk.trim().split("\n");
+		const firstLine = lines[0].trim();
+		const stepMatch = firstLine.match(/^(\d+)\.\s*(.*)/);
 
-if (Array.isArray(parsedContent)) {
-	let currentStep: { number: number; title: string; text: string } | null = null;
-	let stepCounter = 1;
-
-	parsedContent.forEach((block: any) => {
-		if (block._type === "block") {
-			const blockText = block.children?.map((c: any) => c.text).join("") || "";
-			if (block.style === "h2" || block.style === "h3" || /^\d+\./.test(blockText)) {
-				if (currentStep) recipeSteps.push(currentStep);
-				currentStep = {
-					number: stepCounter++,
-					title: blockText.replace(/^\d+\.\s*/, ""),
-					text: "",
-				};
-			} else if (currentStep) {
-				currentStep.text += (currentStep.text ? "\n" : "") + blockText;
-			} else if (blockText.trim()) {
-				currentStep = {
-					number: stepCounter++,
-					title: `Step ${stepCounter}`,
-					text: blockText,
-				};
-			}
+		if (stepMatch) {
+			const stepNum = parseInt(stepMatch[1], 10);
+			const stepTitle = stepMatch[2] || `Step ${stepNum}`;
+			const stepBody = lines.slice(1).join("\n").trim() || stepTitle;
+			recipeSteps.push({
+				number: stepNum,
+				title: stepTitle,
+				text: stepBody,
+			});
+		} else {
+			recipeSteps.push({
+				number: idx + 1,
+				title: lines.length > 1 ? firstLine : `Step ${idx + 1}`,
+				text: lines.length > 1 ? lines.slice(1).join("\n").trim() : firstLine,
+			});
 		}
-	});
-	if (currentStep) recipeSteps.push(currentStep);
-} else if (typeof parsedContent === "string" && parsedContent.trim()) {
-	const rawSteps = parsedContent.split("\n\n").filter(Boolean);
-	recipeSteps = rawSteps.map((stepStr, idx) => {
-		const lines = stepStr.trim().split("\n");
-		const titleLine = lines[0].replace(/^\d+\.\s*/, "");
-		const bodyText = lines.slice(1).join(" ") || titleLine;
-		return {
-			number: idx + 1,
-			title: lines.length > 1 ? titleLine : `Step ${idx + 1}`,
-			text: bodyText,
-		};
 	});
 }
 ---
@@ -342,10 +346,15 @@ if (Array.isArray(parsedContent)) {
 					</footer>
 				)}
 
-				<!-- Reader Recipe Discussion & Comments -->
-				<section class="comments-section">
-					<h3 class="comments-heading">Baking Q&A & Reader Comments</h3>
-					<Comments collection="recipes" contentId={data.id} threaded />
+				<!-- Nakita's Kitchen Owner Chef Notes & Cooking Tips -->
+				<section class="chef-notes-section">
+					<h3 class="chef-notes-heading">👨‍🍳 Nakita's Kitchen Chef & Pitmaster Notes</h3>
+					<div class="chef-notes-card">
+						<p>
+							<em>"For the best result with this {data.recipe_source || 'custom'} recipe, make sure to prep and pre-portion all ingredients before starting heat. If cooking on the Kamado Joe Classic III or Oklahoma Joe DLX 900 pellet smoker, hold your cooking temperature at 425°F indirect for an authentic wood-fired flavor profile!"</em>
+						</p>
+						<span class="chef-signature">— Nakita's Kitchen Culinary Team</span>
+					</div>
 				</section>
 			</main>
 		</div>
@@ -869,16 +878,34 @@ if (Array.isArray(parsedContent)) {
 		font-size: 0.84375rem;
 		color: var(--color-muted, #64748b);
 	}
-	.comments-section {
-		margin-top: 3.5rem;
+	.chef-notes-section {
+		margin-top: 3rem;
 		padding-top: 2rem;
 		border-top: 1px solid var(--color-border, #e2e8f0);
 	}
-	.comments-heading {
-		font-size: 1.5rem;
+	.chef-notes-heading {
+		font-size: 1.35rem;
 		font-weight: 700;
-		margin-bottom: 1.5rem;
+		margin-bottom: 1rem;
 		color: var(--color-text, #0f172a);
+	}
+	.chef-notes-card {
+		background: var(--color-bg-subtle, #f8fafc);
+		border-left: 4px solid var(--color-brand, #0066cc);
+		padding: 1.25rem 1.5rem;
+		border-radius: 0 8px 8px 0;
+	}
+	.chef-notes-card p {
+		margin: 0 0 0.75rem 0;
+		font-size: 0.96875rem;
+		line-height: 1.6;
+		color: var(--color-text, #0f172a);
+	}
+	.chef-signature {
+		font-weight: 700;
+		font-size: 0.84375rem;
+		color: var(--color-brand, #0066cc);
+		display: block;
 	}
 
 	@media print {
