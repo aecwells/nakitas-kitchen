@@ -1,36 +1,41 @@
 import type { APIRoute } from "astro";
 import { getEmDashCollection, getSiteSettings } from "emdash";
-
 import { resolveBlogSiteIdentity } from "../utils/site-identity";
 
 export const GET: APIRoute = async ({ site, url }) => {
 	const siteUrl = site?.toString() || url.origin;
 	const { siteTitle, siteTagline } = resolveBlogSiteIdentity(await getSiteSettings());
 
-	const { entries: posts } = await getEmDashCollection("posts", {
-		orderBy: { published_at: "desc" },
-		limit: 20,
+	const [{ entries: posts }, { entries: recipes }] = await Promise.all([
+		getEmDashCollection("posts", { orderBy: { published_at: "desc" }, limit: 20 }),
+		getEmDashCollection("recipes", { orderBy: { published_at: "desc" }, limit: 20 }),
+	]);
+
+	const postItems = (posts || []).map((post) => {
+		const pubDate = post.data.publishedAt ? post.data.publishedAt.toUTCString() : new Date().toUTCString();
+		const itemUrl = `${siteUrl}/posts/${post.id}`;
+		return `    <item>
+      <title>${escapeXml(post.data.title || "Untitled")}</title>
+      <link>${itemUrl}</link>
+      <guid isPermaLink="true">${itemUrl}</guid>
+      <pubDate>${pubDate}</pubDate>
+      <description>${escapeXml(post.data.excerpt || "")}</description>
+    </item>`;
 	});
 
-	const items = posts
-		.map((post) => {
-			if (!post.data.publishedAt) return null;
-			const pubDate = post.data.publishedAt.toUTCString();
-
-			const postUrl = `${siteUrl}/posts/${post.id}`;
-			const title = escapeXml(post.data.title || "Untitled");
-			const description = escapeXml(post.data.excerpt || "");
-
-			return `    <item>
-      <title>${title}</title>
-      <link>${postUrl}</link>
-      <guid isPermaLink="true">${postUrl}</guid>
+	const recipeItems = (recipes || []).map((recipe) => {
+		const pubDate = recipe.data.publishedAt ? recipe.data.publishedAt.toUTCString() : new Date().toUTCString();
+		const itemUrl = `${siteUrl}/recipes/${recipe.id}`;
+		return `    <item>
+      <title>${escapeXml(`[Recipe] ${recipe.data.title || "Untitled"}`)}</title>
+      <link>${itemUrl}</link>
+      <guid isPermaLink="true">${itemUrl}</guid>
       <pubDate>${pubDate}</pubDate>
-      <description>${description}</description>
+      <description>${escapeXml(recipe.data.excerpt || "")}</description>
     </item>`;
-		})
-		.filter(Boolean)
-		.join("\n");
+	});
+
+	const items = [...postItems, ...recipeItems].join("\n");
 
 	const rss = `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">

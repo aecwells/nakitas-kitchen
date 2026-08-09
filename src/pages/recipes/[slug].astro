@@ -1,6 +1,6 @@
 ---
-import { getEmDashEntry, getEmDashCollection } from "emdash";
-import { Image, PortableText } from "emdash/ui";
+import { getEmDashEntry, getEmDashCollection, getEntryTerms } from "emdash";
+import { Image, PortableText, Comments } from "emdash/ui";
 import Base from "../../layouts/Base.astro";
 
 const { slug } = Astro.params;
@@ -12,6 +12,12 @@ if (!recipe) return Astro.redirect("/404");
 Astro.cache.set(cacheHint);
 const data = recipe.data;
 
+// Retrieve taxonomy terms for categories & tags
+const [categories, tags] = await Promise.all([
+	getEntryTerms("recipes", data.id, "category").catch(() => []),
+	getEntryTerms("recipes", data.id, "tag").catch(() => []),
+]);
+
 // Check if there is a matching shop product
 let matchingProduct = null;
 try {
@@ -20,13 +26,43 @@ try {
 } catch (e) {
 	// ignore match error
 }
+
+const bylines = data.bylines ?? [];
 ---
 
-<Base title={`${data.title} | Nakita's Kitchen`} description={data.excerpt || data.title}>
+<Base
+	title={`${data.title} | Nakita's Kitchen`}
+	description={data.excerpt || data.title}
+	image={data.featured_image?.src}
+	type="article"
+	content={{ collection: "recipes", id: data.id, slug: recipe.id }}
+>
 	<article class="recipe-detail-page">
 		<header class="recipe-header container">
-			<a href="/recipes" class="back-link">&larr; Back to Recipes</a>
+			<div class="header-nav-row">
+				<a href="/recipes" class="back-link">&larr; Back to Recipes</a>
+				{categories && categories.length > 0 && (
+					<div class="category-chips">
+						{categories.map((cat: any) => (
+							<span class="cat-chip">{cat.label}</span>
+						))}
+					</div>
+				)}
+			</div>
+
 			<h1 class="recipe-title">{data.title}</h1>
+
+			{bylines.length > 0 && (
+				<div class="byline-row">
+					<span class="byline-prefix">Recipe by</span>
+					{bylines.map((credit: any) => (
+						<span class="byline-author">
+							{credit.byline.displayName || "Nakita"}
+						</span>
+					))}
+				</div>
+			)}
+
 			{data.excerpt && <p class="recipe-excerpt">{data.excerpt}</p>}
 
 			<div class="recipe-specs-card">
@@ -82,10 +118,21 @@ try {
 						</div>
 					)}
 
+					{tags && tags.length > 0 && (
+						<div class="tags-container">
+							<span class="tags-heading">Tags:</span>
+							<div class="tags-list">
+								{tags.map((tag: any) => (
+									<span class="tag-chip">#{tag.label}</span>
+								))}
+							</div>
+						</div>
+					)}
+
 					{matchingProduct && (
 						<div class="shop-match-box">
 							<h4>Available for Pre-Order!</h4>
-							<p>Don't want to bake it yourself? Order freshly baked {matchingProduct.data.title} directly from our cottage bakery.</p>
+							<p>Order freshly baked {matchingProduct.data.title} directly from our cottage bakery.</p>
 							<a href={`/shop/${matchingProduct.id}`} class="buy-link">Order Pre-Order (${matchingProduct.data.price}) &rarr;</a>
 						</div>
 					)}
@@ -107,6 +154,12 @@ try {
 						<p><em>{data.cottage_license_notice}</em></p>
 					</footer>
 				)}
+
+				<!-- Reader Recipe Discussion & Comments -->
+				<section class="comments-section">
+					<h3 class="comments-heading">Baking Q&A & Community Comments</h3>
+					<Comments collection="recipes" contentId={data.id} threaded />
+				</section>
 			</main>
 		</div>
 	</article>
@@ -121,21 +174,51 @@ try {
 		margin: 0 auto;
 		padding: 0 1.5rem;
 	}
+	.header-nav-row {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		margin-bottom: 1rem;
+	}
 	.back-link {
 		color: var(--color-brand, #0066cc);
 		text-decoration: none;
 		font-weight: 600;
 		font-size: 0.875rem;
-		display: inline-block;
-		margin-bottom: 1rem;
+	}
+	.category-chips {
+		display: flex;
+		gap: 0.5rem;
+	}
+	.cat-chip {
+		background: rgba(0, 102, 204, 0.08);
+		color: var(--color-brand, #0066cc);
+		font-size: 0.75rem;
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		padding: 0.25rem 0.65rem;
+		border-radius: 12px;
 	}
 	.recipe-title {
 		font-size: 2.75rem;
 		font-weight: 700;
 		color: var(--color-text, #0f172a);
-		margin: 0 0 0.75rem 0;
+		margin: 0 0 0.5rem 0;
 		line-height: 1.2;
 		letter-spacing: -0.02em;
+	}
+	.byline-row {
+		display: flex;
+		align-items: center;
+		gap: 0.4rem;
+		font-size: 0.875rem;
+		color: var(--color-muted, #64748b);
+		margin-bottom: 1rem;
+	}
+	.byline-author {
+		font-weight: 600;
+		color: var(--color-text, #0f172a);
 	}
 	.recipe-excerpt {
 		font-size: 1.25rem;
@@ -238,6 +321,29 @@ try {
 		font-size: 0.84375rem;
 		margin-bottom: 1rem;
 	}
+	.tags-container {
+		margin-bottom: 1.25rem;
+	}
+	.tags-heading {
+		font-size: 0.75rem;
+		font-weight: 700;
+		text-transform: uppercase;
+		color: var(--color-muted, #64748b);
+		display: block;
+		margin-bottom: 0.4rem;
+	}
+	.tags-list {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.35rem;
+	}
+	.tag-chip {
+		font-size: 0.75rem;
+		background: var(--color-bg-subtle, #f1f5f9);
+		color: var(--color-text-secondary, #475569);
+		padding: 0.2rem 0.5rem;
+		border-radius: 4px;
+	}
 	.shop-match-box {
 		background: rgba(0, 102, 204, 0.06);
 		border: 1px solid rgba(0, 102, 204, 0.2);
@@ -276,5 +382,16 @@ try {
 		border-top: 1px dashed var(--color-border, #cbd5e1);
 		font-size: 0.84375rem;
 		color: var(--color-muted, #64748b);
+	}
+	.comments-section {
+		margin-top: 3.5rem;
+		padding-top: 2rem;
+		border-top: 1px solid var(--color-border, #e2e8f0);
+	}
+	.comments-heading {
+		font-size: 1.5rem;
+		font-weight: 700;
+		margin-bottom: 1.5rem;
+		color: var(--color-text, #0f172a);
 	}
 </style>
