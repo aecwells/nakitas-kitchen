@@ -25,9 +25,16 @@ jobs:
 
       - name: Build site
         run: npm run build
+        env:
+          EMDASH_ENCRYPTION_KEY: ${{ secrets.EMDASH_ENCRYPTION_KEY }}
+          EMDASH_SITE_URL: ${{ vars.EMDASH_SITE_URL || secrets.EMDASH_SITE_URL }}
 
       - name: Deploy with Wrangler
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          secrets: |
+            EMDASH_ENCRYPTION_KEY
+        env:
+          EMDASH_SITE_URL: ${{ vars.EMDASH_SITE_URL || secrets.EMDASH_SITE_URL }}
