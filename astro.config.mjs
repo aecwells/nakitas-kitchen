@@ -9,6 +9,20 @@ import emdash from "emdash/astro";
 export default defineConfig({
 	output: "server",
 	adapter: cloudflare(),
+	vite: {
+		resolve: {
+			alias: {
+				path: "node:path",
+				fs: "node:fs",
+				crypto: "node:crypto",
+				buffer: "node:buffer",
+				util: "node:util",
+				url: "node:url",
+				events: "node:events",
+				stream: "node:stream",
+			},
+		},
+	},
 	image: {
 		layout: "constrained",
 		responsiveStyles: true,
