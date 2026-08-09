@@ -40,22 +40,48 @@ export const POST: APIRoute = async ({ request, locals }) => {
 					bytes[i] = binaryString.charCodeAt(i);
 				}
 
+				const byteArray = Array.from(bytes);
 				let aiResponse: any = null;
+
+				// 1. Try Messages format for Llama 3.2 Vision
 				try {
 					aiResponse = await ai.run("@cf/meta/llama-3.2-11b-vision-instruct", {
-						prompt: "You are an expert recipe card OCR scanner. Analyze this recipe card image. Extract the exact Recipe Title, Prep Time, Cook Time, Servings, Bulleted Ingredients, and Step-by-Step Instructions (numbered 1., 2., 3., 4., 5., 6.). Return valid JSON with keys: title, prep_time, cook_time, servings, ingredients, instructions.",
-						image: [...bytes],
+						messages: [
+							{
+								role: "user",
+								content: [
+									{
+										type: "text",
+										text: "You are an expert recipe card OCR scanner. Analyze this recipe card image. Extract the exact Recipe Title, Prep Time, Cook Time, Servings, Bulleted Ingredients, and Step-by-Step Instructions (numbered 1., 2., 3., 4., 5., 6.). Return valid JSON with keys: title, prep_time, cook_time, servings, ingredients, instructions.",
+									},
+									{
+										type: "image",
+										image: byteArray,
+									},
+								],
+							},
+						],
 						max_tokens: 1024,
 					});
 				} catch (err1) {
-					console.error("[LLAMA VISION ERROR]", err1);
+					console.error("[LLAMA VISION MSG ERROR]", err1);
+					// 2. Try direct prompt format
 					try {
-						aiResponse = await ai.run("@cf/unum/uform-gen2-qwen-500m", {
-							prompt: "Extract recipe title, ingredients, and instructions from this card.",
-							image: [...bytes],
+						aiResponse = await ai.run("@cf/meta/llama-3.2-11b-vision-instruct", {
+							prompt: "You are an expert recipe card OCR scanner. Analyze this recipe card image. Extract the exact Recipe Title, Prep Time, Cook Time, Servings, Bulleted Ingredients, and Step-by-Step Instructions (numbered 1., 2., 3., 4., 5., 6.). Return valid JSON with keys: title, prep_time, cook_time, servings, ingredients, instructions.",
+							image: byteArray,
+							max_tokens: 1024,
 						});
 					} catch (err2) {
-						console.error("[UFORM VISION ERROR]", err2);
+						console.error("[LLAMA VISION PROMPT ERROR]", err2);
+						try {
+							aiResponse = await ai.run("@cf/unum/uform-gen2-qwen-500m", {
+								prompt: "Extract recipe title, ingredients, and instructions from this card.",
+								image: byteArray,
+							});
+						} catch (err3) {
+							console.error("[UFORM VISION ERROR]", err3);
+						}
 					}
 				}
 
