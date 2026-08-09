@@ -2,31 +2,55 @@
 import Base from "../../layouts/Base.astro";
 ---
 
-<Base title="AI Recipe Card Scanner | Nakita's Kitchen" description="Take a photo of your HomeChef, HelloFresh, or outdoor barbecue recipe card to instantly create and publish a digital recipe.">
+<Base title="Two-Sided AI Recipe Card Scanner | Nakita's Kitchen" description="Scan both the front and back of your HomeChef, HelloFresh, or outdoor barbecue recipe card to create a complete digital recipe.">
 	<div class="scanner-page container">
 		<header class="page-header">
 			<a href="/recipes" class="back-link">&larr; Back to Recipes</a>
-			<div class="badge">AI Recipe Importer</div>
-			<h1 class="page-title">Scan Recipe Card</h1>
+			<div class="badge">Two-Sided AI Recipe Importer</div>
+			<h1 class="page-title">Scan Recipe Card (Front & Back)</h1>
 			<p class="page-description">
-				Take a picture of your physical <strong>HomeChef</strong>, <strong>HelloFresh</strong>, or outdoor barbecue recipe card. Our scanner will extract ingredients, instructions, source attribution, and equipment setup to instantly publish it into your kitchen journal.
+				HomeChef and HelloFresh meal cards have two sides! Upload photos of <strong>Card Front</strong> (finished dish photo, prep/cook time, ingredients) and <strong>Card Back</strong> (step-by-step cooking steps) to create a complete recipe.
 			</p>
 		</header>
 
 		<div class="scanner-card">
 			<form id="scanner-form" class="scanner-form">
-				<!-- Image Upload Dropzone -->
-				<div class="upload-area" id="upload-area">
-					<input type="file" id="card_image" name="card_image" accept="image/*" capture="environment" class="file-input" />
-					<div class="upload-prompt" id="upload-prompt">
-						<div class="upload-icon">📷</div>
-						<h3>Snap Photo or Drag Recipe Card Here</h3>
-						<p>Supports HomeChef cards, HelloFresh cards, magazine cutouts, and physical recipe cards.</p>
-						<span class="upload-btn-fake">Choose Image / Take Photo</span>
+				<!-- Dual Dropzone Row (Front & Back) -->
+				<div class="dual-upload-row">
+					<!-- Front Side Dropzone -->
+					<div class="upload-box">
+						<label class="box-label">📸 1. CARD FRONT (Photo & Ingredients)</label>
+						<div class="upload-area" id="front-area">
+							<input type="file" id="card_front_image" name="card_front_image" accept="image/*" capture="environment" class="file-input" />
+							<div class="upload-prompt" id="front-prompt">
+								<div class="upload-icon">🖼️</div>
+								<h4>Snap Card Front</h4>
+								<p>Dish photo, prep time & ingredients</p>
+								<span class="upload-btn-fake">Take Photo / Choose</span>
+							</div>
+							<div class="image-preview" id="front-preview" hidden>
+								<img id="front-preview-img" src="" alt="Front Card Preview" />
+								<button type="button" id="remove-front-btn" class="remove-btn">Change Photo</button>
+							</div>
+						</div>
 					</div>
-					<div class="image-preview" id="image-preview" hidden>
-						<img id="preview-img" src="" alt="Recipe Card Preview" />
-						<button type="button" id="remove-img-btn" class="remove-btn">Change Photo</button>
+
+					<!-- Back Side Dropzone -->
+					<div class="upload-box">
+						<label class="box-label">📋 2. CARD BACK (Cooking Instructions)</label>
+						<div class="upload-area" id="back-area">
+							<input type="file" id="card_back_image" name="card_back_image" accept="image/*" capture="environment" class="file-input" />
+							<div class="upload-prompt" id="back-prompt">
+								<div class="upload-icon">📝</div>
+								<h4>Snap Card Back</h4>
+								<p>Steps 1-6 & chef diagrams</p>
+								<span class="upload-btn-fake">Take Photo / Choose</span>
+							</div>
+							<div class="image-preview" id="back-preview" hidden>
+								<img id="back-preview-img" src="" alt="Back Card Preview" />
+								<button type="button" id="remove-back-btn" class="remove-btn">Change Photo</button>
+							</div>
+						</div>
 					</div>
 				</div>
 
@@ -79,17 +103,17 @@ import Base from "../../layouts/Base.astro";
 				</div>
 
 				<div class="form-group">
-					<label for="ingredients" class="form-label">Ingredients Checklist (One per line)</label>
-					<textarea id="ingredients" name="ingredients" class="form-textarea" rows="5" placeholder="• 2 Boneless Chicken Breasts&#10;• 1/4 cup Panko Breadcrumbs&#10;• 3 tbsp Parmesan&#10;• 12 oz Yukon Gold Potatoes"></textarea>
+					<label for="ingredients" class="form-label">Ingredients Checklist (From Front Card)</label>
+					<textarea id="ingredients" name="ingredients" class="form-textarea" rows="4" placeholder="• 2 Boneless Chicken Breasts&#10;• 1/4 cup Panko Breadcrumbs&#10;• 3 tbsp Parmesan&#10;• 12 oz Yukon Gold Potatoes"></textarea>
 				</div>
 
 				<div class="form-group">
-					<label for="instructions" class="form-label">Step-by-Step Instructions</label>
+					<label for="instructions" class="form-label">Step-by-Step Instructions (From Back Card)</label>
 					<textarea id="instructions" name="instructions" class="form-textarea" rows="6" placeholder="1. Prep & Season&#10;Wash vegetables and pat protein dry with paper towels.&#10;&#10;2. Sear & Roast&#10;Heat grill/oven to 400°F. Roast until golden brown."></textarea>
 				</div>
 
 				<button type="submit" id="submit-btn" class="submit-btn">
-					<span>✨ Scan & Create Digital Recipe</span>
+					<span>✨ Process Both Card Sides & Publish Recipe</span>
 				</button>
 			</form>
 		</div>
@@ -98,42 +122,72 @@ import Base from "../../layouts/Base.astro";
 
 <script>
 	document.addEventListener("DOMContentLoaded", () => {
-		const fileInput = document.getElementById("card_image") as HTMLInputElement;
-		const uploadPrompt = document.getElementById("upload-prompt");
-		const imagePreview = document.getElementById("image-preview");
-		const previewImg = document.getElementById("preview-img") as HTMLImageElement;
-		const removeImgBtn = document.getElementById("remove-img-btn");
-		const form = document.getElementById("scanner-form") as HTMLFormElement;
-		const submitBtn = document.getElementById("submit-btn") as HTMLButtonElement;
+		// Front photo preview
+		const frontInput = document.getElementById("card_front_image") as HTMLInputElement;
+		const frontPrompt = document.getElementById("front-prompt");
+		const frontPreview = document.getElementById("front-preview");
+		const frontPreviewImg = document.getElementById("front-preview-img") as HTMLImageElement;
+		const removeFrontBtn = document.getElementById("remove-front-btn");
 
-		// Preview uploaded photo
-		fileInput?.addEventListener("change", () => {
-			const file = fileInput.files?.[0];
+		frontInput?.addEventListener("change", () => {
+			const file = frontInput.files?.[0];
 			if (file) {
 				const reader = new FileReader();
 				reader.onload = (e) => {
-					if (previewImg && e.target?.result) {
-						previewImg.src = e.target.result as string;
-						uploadPrompt?.setAttribute("hidden", "true");
-						imagePreview?.removeAttribute("hidden");
+					if (frontPreviewImg && e.target?.result) {
+						frontPreviewImg.src = e.target.result as string;
+						frontPrompt?.setAttribute("hidden", "true");
+						frontPreview?.removeAttribute("hidden");
 					}
 				};
 				reader.readAsDataURL(file);
 			}
 		});
 
-		removeImgBtn?.addEventListener("click", (e) => {
+		removeFrontBtn?.addEventListener("click", (e) => {
 			e.preventDefault();
-			if (fileInput) fileInput.value = "";
-			uploadPrompt?.removeAttribute("hidden");
-			imagePreview?.setAttribute("hidden", "true");
+			if (frontInput) frontInput.value = "";
+			frontPrompt?.removeAttribute("hidden");
+			frontPreview?.setAttribute("hidden", "true");
+		});
+
+		// Back photo preview
+		const backInput = document.getElementById("card_back_image") as HTMLInputElement;
+		const backPrompt = document.getElementById("back-prompt");
+		const backPreview = document.getElementById("back-preview");
+		const backPreviewImg = document.getElementById("back-preview-img") as HTMLImageElement;
+		const removeBackBtn = document.getElementById("remove-back-btn");
+
+		backInput?.addEventListener("change", () => {
+			const file = backInput.files?.[0];
+			if (file) {
+				const reader = new FileReader();
+				reader.onload = (e) => {
+					if (backPreviewImg && e.target?.result) {
+						backPreviewImg.src = e.target.result as string;
+						backPrompt?.setAttribute("hidden", "true");
+						backPreview?.removeAttribute("hidden");
+					}
+				};
+				reader.readAsDataURL(file);
+			}
+		});
+
+		removeBackBtn?.addEventListener("click", (e) => {
+			e.preventDefault();
+			if (backInput) backInput.value = "";
+			backPrompt?.removeAttribute("hidden");
+			backPreview?.setAttribute("hidden", "true");
 		});
 
 		// Submit form to API
+		const form = document.getElementById("scanner-form") as HTMLFormElement;
+		const submitBtn = document.getElementById("submit-btn") as HTMLButtonElement;
+
 		form?.addEventListener("submit", async (e) => {
 			e.preventDefault();
 			submitBtn.disabled = true;
-			submitBtn.innerText = "⏳ Extracting & Publishing Recipe...";
+			submitBtn.innerText = "⏳ Extracting Both Card Sides & Publishing Recipe...";
 
 			try {
 				const formData = new FormData(form);
@@ -148,12 +202,12 @@ import Base from "../../layouts/Base.astro";
 				} else {
 					alert("Error: " + (data.error || "Failed to process card"));
 					submitBtn.disabled = false;
-					submitBtn.innerText = "✨ Scan & Create Digital Recipe";
+					submitBtn.innerText = "✨ Process Both Card Sides & Publish Recipe";
 				}
 			} catch (err: any) {
 				alert("Scan failed: " + err.message);
 				submitBtn.disabled = false;
-				submitBtn.innerText = "✨ Scan & Create Digital Recipe";
+				submitBtn.innerText = "✨ Process Both Card Sides & Publish Recipe";
 			}
 		});
 	});
@@ -161,7 +215,7 @@ import Base from "../../layouts/Base.astro";
 
 <style>
 	.scanner-page {
-		max-width: 800px;
+		max-width: 900px;
 		margin: 0 auto;
 		padding: 2.5rem 1.5rem 4rem 1.5rem;
 	}
@@ -208,16 +262,37 @@ import Base from "../../layouts/Base.astro";
 		padding: 2rem;
 		box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
 	}
+	.dual-upload-row {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 1.5rem;
+		margin-bottom: 2rem;
+	}
+	@media (max-width: 680px) {
+		.dual-upload-row {
+			grid-template-columns: 1fr;
+		}
+	}
+	.box-label {
+		display: block;
+		font-size: 0.875rem;
+		font-weight: 700;
+		color: var(--color-text, #0f172a);
+		margin-bottom: 0.5rem;
+	}
 	.upload-area {
 		border: 2px dashed var(--color-brand, #0066cc);
 		background: rgba(0, 102, 204, 0.02);
 		border-radius: 12px;
-		padding: 2.5rem 1.5rem;
+		padding: 2rem 1rem;
 		text-align: center;
 		position: relative;
-		margin-bottom: 2rem;
 		cursor: pointer;
 		transition: background 0.2s ease;
+		min-height: 200px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
 	}
 	.upload-area:hover {
 		background: rgba(0, 102, 204, 0.05);
@@ -232,32 +307,32 @@ import Base from "../../layouts/Base.astro";
 		cursor: pointer;
 	}
 	.upload-icon {
-		font-size: 3rem;
-		margin-bottom: 0.5rem;
+		font-size: 2.5rem;
+		margin-bottom: 0.4rem;
 	}
-	.upload-prompt h3 {
-		margin: 0 0 0.4rem 0;
-		font-size: 1.25rem;
+	.upload-prompt h4 {
+		margin: 0 0 0.25rem 0;
+		font-size: 1.1rem;
 		color: var(--color-text, #0f172a);
 	}
 	.upload-prompt p {
-		margin: 0 0 1rem 0;
-		font-size: 0.875rem;
+		margin: 0 0 0.85rem 0;
+		font-size: 0.8125rem;
 		color: var(--color-muted, #64748b);
 	}
 	.upload-btn-fake {
 		display: inline-block;
 		background: var(--color-brand, #0066cc);
 		color: #ffffff;
-		padding: 0.5rem 1rem;
+		padding: 0.4rem 0.85rem;
 		border-radius: 6px;
 		font-weight: 600;
-		font-size: 0.875rem;
+		font-size: 0.8125rem;
 	}
 	.image-preview img {
-		max-height: 280px;
+		max-height: 180px;
 		border-radius: 8px;
-		margin: 0 auto 1rem auto;
+		margin: 0 auto 0.75rem auto;
 		display: block;
 	}
 	.remove-btn {
@@ -265,8 +340,8 @@ import Base from "../../layouts/Base.astro";
 		color: #ffffff;
 		border: none;
 		border-radius: 6px;
-		padding: 0.4rem 0.8rem;
-		font-size: 0.8125rem;
+		padding: 0.35rem 0.75rem;
+		font-size: 0.75rem;
 		font-weight: 600;
 		cursor: pointer;
 	}
