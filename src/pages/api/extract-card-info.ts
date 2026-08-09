@@ -41,6 +41,8 @@ export const POST: APIRoute = async ({ request, locals }) => {
 				const byteArray = Array.from(bytes);
 
 				let aiResponse: any = null;
+
+				// 1. Try Messages format for Llama 3.2 11B Vision
 				try {
 					aiResponse = await ai.run("@cf/meta/llama-3.2-11b-vision-instruct", {
 						messages: [
@@ -56,13 +58,23 @@ export const POST: APIRoute = async ({ request, locals }) => {
 					});
 				} catch (err1) {
 					console.error("[VISION MSG ERR]", err1);
+					// 2. Try direct prompt format
 					try {
-						aiResponse = await ai.run("@cf/unum/uform-gen2-qwen-500m", {
+						aiResponse = await ai.run("@cf/meta/llama-3.2-11b-vision-instruct", {
 							prompt: promptText,
 							image: byteArray,
+							max_tokens: 1024,
 						});
 					} catch (err2) {
-						console.error("[UFORM ERR]", err2);
+						console.error("[VISION PROMPT ERR]", err2);
+						try {
+							aiResponse = await ai.run("@cf/unum/uform-gen2-qwen-500m", {
+								prompt: promptText,
+								image: byteArray,
+							});
+						} catch (err3) {
+							console.error("[UFORM ERR]", err3);
+						}
 					}
 				}
 
@@ -75,10 +87,12 @@ export const POST: APIRoute = async ({ request, locals }) => {
 
 		// 1. Process Front Card Image (Title, Prep/Cook Time, Servings, Ingredients)
 		if (frontImageData) {
-			const frontPrompt = "You are an expert recipe card OCR scanner. Analyze the FRONT of this recipe card image. Extract the exact Recipe Title, Prep Time, Cook Time, Servings, and Bulleted Ingredients. Return valid JSON with keys: title, prep_time, cook_time, servings, ingredients.";
+			const frontPrompt = "What is the main recipe title written on this recipe card (e.g. Cheese Smashed Burgers, Tilapia with Scallion Rice)? Extract the exact Recipe Title, Prep Time, Cook Time, Servings, and Ingredients. Return valid JSON with keys: title, prep_time, cook_time, servings, ingredients.";
 			const frontText = await runVisionOCR(frontImageData, frontPrompt);
 			if (frontText) {
 				console.log("[FRONT OCR TEXT]:", frontText);
+				
+				// Try JSON extraction first
 				const jsonMatch = frontText.match(/\{[\s\S]*\}/);
 				if (jsonMatch) {
 					try {
@@ -90,16 +104,26 @@ export const POST: APIRoute = async ({ request, locals }) => {
 						if (parsed.ingredients) extractedInfo.ingredients = parsed.ingredients.trim();
 					} catch (e) {}
 				}
+
+				// Fallback title regex extraction if JSON parse didn't get title
 				if (!extractedInfo.title) {
-					const titleMatch = frontText.match(/(?:title|recipe|dish):\s*([^\n]+)/i);
-					if (titleMatch) extractedInfo.title = titleMatch[1].replace(/["']/g, "").trim();
+					const titleMatch = frontText.match(/(?:title|recipe|dish|name):\s*["']?([^"'\n\r}]+)/i);
+					if (titleMatch) {
+						extractedInfo.title = titleMatch[1].replace(/["'{}]/g, "").trim();
+					} else {
+						// Clean line extraction
+						const cleanLines = frontText.split("\n").map(l => l.replace(/[*#`"'{}]/g, "").trim()).filter(l => l.length > 3 && !/here is|json|recipe card|ingredients|prep|cook/i.test(l));
+						if (cleanLines.length > 0) {
+							extractedInfo.title = cleanLines[0];
+						}
+					}
 				}
 			}
 		}
 
 		// 2. Process Back Card Image (Step-by-Step Instructions)
 		if (backImageData) {
-			const backPrompt = "You are an expert recipe card OCR scanner. Analyze the BACK of this recipe card image. Extract all Step-by-Step Cooking Instructions (numbered 1., 2., 3., 4., 5., 6.). Return valid JSON with key: instructions.";
+			const backPrompt = "Analyze the back of this recipe card. Extract all Step-by-Step Cooking Instructions (numbered 1., 2., 3., 4., 5., 6.). Return valid JSON with key: instructions.";
 			const backText = await runVisionOCR(backImageData, backPrompt);
 			if (backText) {
 				console.log("[BACK OCR TEXT]:", backText);

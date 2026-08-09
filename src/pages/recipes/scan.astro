@@ -232,8 +232,8 @@ import Base from "../../layouts/Base.astro";
 			const backVal = backHiddenInput?.value || "";
 
 			if (frontVal || backVal) {
-				downscaleDataUrl(frontVal, 500, (frontSmall) => {
-					downscaleDataUrl(backVal, 500, async (backSmall) => {
+				downscaleDataUrl(frontVal, 800, (frontSmall) => {
+					downscaleDataUrl(backVal, 800, async (backSmall) => {
 						try {
 							const res = await fetch("/api/extract-card-info", {
 								method: "POST",
@@ -242,12 +242,18 @@ import Base from "../../layouts/Base.astro";
 							});
 							if (res.ok) {
 								const info = await res.json();
-								if (titleInput && info.title && info.title.length > 3) titleInput.value = info.title;
+								if (titleInput && info.title && info.title.length > 2) {
+									titleInput.value = info.title;
+								}
 								if (prepTimeInput && info.prep_time) prepTimeInput.value = info.prep_time;
 								if (cookTimeInput && info.cook_time) cookTimeInput.value = info.cook_time;
 								if (servingsInput && info.servings) servingsInput.value = info.servings;
 								if (ingredientsInput && info.ingredients && info.ingredients.length > 10) ingredientsInput.value = info.ingredients;
 								if (instructionsInput && info.instructions && info.instructions.length > 20) instructionsInput.value = info.instructions;
+
+								if (autofillBanner) {
+									autofillBanner.innerHTML = `<span class="autofill-sparkle">✨</span><div class="autofill-text"><strong>AI Card Importer Complete:</strong> ${info.title ? `Extracted Dish Title: "${info.title}"` : "Extracted Card Details into Form!"}</div>`;
+								}
 							}
 						} catch (e) {
 							// non-fatal
