@@ -1,0 +1,142 @@
+---
+import { getEmDashCollection } from "emdash";
+import Base from "../../layouts/Base.astro";
+import RecipeCard from "../../components/RecipeCard.astro";
+import ProductCard from "../../components/ProductCard.astro";
+
+const { slug } = Astro.params;
+if (!slug) return Astro.redirect("/404");
+
+// Format slug into readable label
+const label = slug.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+
+// Query all recipes and storefront products
+const [{ entries: allRecipes }, { entries: allProducts }] = await Promise.all([
+	getEmDashCollection("recipes", { limit: 100 }),
+	getEmDashCollection("products", { limit: 100 }),
+]);
+
+// Filter entries that mention this ingredient in their text or slug
+const matchingRecipes = (allRecipes || []).filter((r: any) => {
+	const ing = (r.data.ingredients || "").toLowerCase();
+	const title = (r.data.title || "").toLowerCase();
+	const target = slug.toLowerCase().replace(/-/g, " ");
+	return ing.includes(target) || title.includes(target);
+});
+
+const matchingProducts = (allProducts || []).filter((p: any) => {
+	const ing = (p.data.explicit_ingredients || "").toLowerCase();
+	const title = (p.data.title || "").toLowerCase();
+	const target = slug.toLowerCase().replace(/-/g, " ");
+	return ing.includes(target) || title.includes(target);
+});
+---
+
+<Base title={`Recipes with ${label} | Nakita's Kitchen`} description={`Discover artisanal recipes and cottage bakery products crafted with ${label}.`}>
+	<div class="container main-content">
+		<header class="page-header">
+			<a href="/recipes" class="back-link">&larr; Back to Recipes</a>
+			<div class="badge">Ingredient Index</div>
+			<h1 class="page-title">Recipes with {label}</h1>
+			<p class="page-description">
+				All handcrafted kitchen recipes and cottage bakery items made using <strong>{label}</strong>.
+			</p>
+		</header>
+
+		{matchingRecipes.length > 0 && (
+			<section class="section-block">
+				<h2 class="section-title">Kitchen Recipes ({matchingRecipes.length})</h2>
+				<div class="recipes-grid">
+					{matchingRecipes.map((recipe: any) => (
+						<RecipeCard recipe={recipe} />
+					))}
+				</div>
+			</section>
+		)}
+
+		{matchingProducts.length > 0 && (
+			<section class="section-block">
+				<h2 class="section-title">Cottage Bakery Shop Items ({matchingProducts.length})</h2>
+				<div class="products-grid">
+					{matchingProducts.map((product: any) => (
+						<ProductCard product={product} />
+					))}
+				</div>
+			</section>
+		)}
+
+		{matchingRecipes.length === 0 && matchingProducts.length === 0 && (
+			<div class="empty-state">
+				<p>No recipes currently found for <strong>{label}</strong>. Try browsing our recipe catalog!</p>
+			</div>
+		)}
+	</div>
+</Base>
+
+<style>
+	.main-content {
+		max-width: 1200px;
+		margin: 0 auto;
+		padding: 3rem 1.5rem;
+	}
+	.back-link {
+		color: var(--color-brand, #0066cc);
+		text-decoration: none;
+		font-weight: 600;
+		font-size: 0.875rem;
+		display: inline-block;
+		margin-bottom: 1rem;
+	}
+	.page-header {
+		text-align: center;
+		max-width: 680px;
+		margin: 0 auto 3rem auto;
+	}
+	.badge {
+		background: rgba(0, 102, 204, 0.08);
+		color: var(--color-brand, #0066cc);
+		font-weight: 700;
+		font-size: 0.75rem;
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+		padding: 0.35rem 0.85rem;
+		border-radius: 20px;
+		display: inline-block;
+		margin-bottom: 0.75rem;
+	}
+	.page-title {
+		font-size: 2.5rem;
+		font-weight: 700;
+		color: var(--color-text, #0f172a);
+		margin: 0 0 1rem 0;
+	}
+	.page-description {
+		font-size: 1.125rem;
+		color: var(--color-text-secondary, #475569);
+		line-height: 1.6;
+		margin: 0;
+	}
+	.section-block {
+		margin-bottom: 3.5rem;
+	}
+	.section-title {
+		font-size: 1.5rem;
+		font-weight: 700;
+		margin-bottom: 1.5rem;
+		color: var(--color-text, #0f172a);
+		border-bottom: 2px solid var(--color-brand, #0066cc);
+		padding-bottom: 0.5rem;
+		display: inline-block;
+	}
+	.recipes-grid,
+	.products-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+		gap: 2rem;
+	}
+	.empty-state {
+		text-align: center;
+		padding: 4rem 1rem;
+		color: var(--color-muted, #64748b);
+	}
+</style>

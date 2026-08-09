@@ -94,7 +94,7 @@
 				},
 				{
 					"slug": "ingredients",
-					"label": "Ingredients List",
+					"label": "Ingredients List (Amounts & Quantities)",
 					"type": "text",
 					"required": true
 				},
@@ -238,6 +238,55 @@
 				{
 					"slug": "meal-kits",
 					"label": "Meal Kit Favorites"
+				}
+			]
+		},
+		{
+			"name": "ingredient",
+			"label": "Ingredients Taxonomy",
+			"labelSingular": "Ingredient",
+			"hierarchical": false,
+			"collections": ["recipes", "products"],
+			"terms": [
+				{
+					"slug": "bread-flour",
+					"label": "Organic Bread Flour"
+				},
+				{
+					"slug": "whole-rye",
+					"label": "Whole Grain Rye Flour"
+				},
+				{
+					"slug": "sourdough-starter",
+					"label": "Active Sourdough Starter"
+				},
+				{
+					"slug": "cardamom",
+					"label": "Green Cardamom Seeds"
+				},
+				{
+					"slug": "cinnamon",
+					"label": "Ceylon Cinnamon"
+				},
+				{
+					"slug": "meyer-lemon",
+					"label": "Meyer Lemon Zest"
+				},
+				{
+					"slug": "irish-butter",
+					"label": "Cultured Irish Butter"
+				},
+				{
+					"slug": "whole-chicken",
+					"label": "Whole Free-Range Chicken"
+				},
+				{
+					"slug": "san-marzano",
+					"label": "San Marzano Tomatoes"
+				},
+				{
+					"slug": "mozzarella",
+					"label": "Fresh Buffalo Mozzarella"
 				}
 			]
 		},

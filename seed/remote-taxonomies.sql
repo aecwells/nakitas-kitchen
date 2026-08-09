@@ -3,10 +3,11 @@ UPDATE _emdash_taxonomy_defs
 SET collections = '["posts","recipes","products"]' 
 WHERE name IN ('category', 'tag');
 
--- Insert new taxonomy definitions for difficulty and dietary
+-- Insert new taxonomy definitions for difficulty, dietary, and ingredient
 INSERT OR IGNORE INTO _emdash_taxonomy_defs (id, name, label, label_singular, hierarchical, collections, locale, translation_group) VALUES
 ('taxdef_difficulty', 'difficulty', 'Baking Difficulty', 'Difficulty', 0, '["recipes"]', 'en', 'taxdef_difficulty'),
-('taxdef_dietary', 'dietary', 'Dietary & Lifestyle', 'Dietary', 0, '["recipes","products"]', 'en', 'taxdef_dietary');
+('taxdef_dietary', 'dietary', 'Dietary & Lifestyle', 'Dietary', 0, '["recipes","products"]', 'en', 'taxdef_dietary'),
+('taxdef_ingredient', 'ingredient', 'Ingredients Taxonomy', 'Ingredient', 0, '["recipes","products"]', 'en', 'taxdef_ingredient');
 
 -- Insert food & baking categories into taxonomies table
 INSERT OR REPLACE INTO taxonomies (id, name, slug, label, locale, translation_group) VALUES
@@ -14,6 +15,19 @@ INSERT OR REPLACE INTO taxonomies (id, name, slug, label, locale, translation_gr
 ('cat_pastries', 'category', 'pastries', 'Pastries & Sweets', 'en', 'cat_pastries'),
 ('cat_cookies', 'category', 'cookies', 'Cookies & Biscuits', 'en', 'cat_cookies'),
 ('cat_pantry', 'category', 'pantry', 'Pantry & Spreads', 'en', 'cat_pantry');
+
+-- Insert ingredient taxonomy terms into taxonomies table
+INSERT OR REPLACE INTO taxonomies (id, name, slug, label, locale, translation_group) VALUES
+('ing_breadflour', 'ingredient', 'bread-flour', 'Organic Bread Flour', 'en', 'ing_breadflour'),
+('ing_wholerye', 'ingredient', 'whole-rye', 'Whole Grain Rye Flour', 'en', 'ing_wholerye'),
+('ing_starter', 'ingredient', 'sourdough-starter', 'Active Sourdough Starter', 'en', 'ing_starter'),
+('ing_cardamom', 'ingredient', 'cardamom', 'Green Cardamom Seeds', 'en', 'ing_cardamom'),
+('ing_cinnamon', 'ingredient', 'cinnamon', 'Ceylon Cinnamon', 'en', 'ing_cinnamon'),
+('ing_lemon', 'ingredient', 'meyer-lemon', 'Meyer Lemon Zest', 'en', 'ing_lemon'),
+('ing_butter', 'ingredient', 'irish-butter', 'Cultured Irish Butter', 'en', 'ing_butter'),
+('ing_chicken', 'ingredient', 'whole-chicken', 'Whole Free-Range Chicken', 'en', 'ing_chicken'),
+('ing_tomatoes', 'ingredient', 'san-marzano', 'San Marzano Tomatoes', 'en', 'ing_tomatoes'),
+('ing_mozzarella', 'ingredient', 'mozzarella', 'Fresh Buffalo Mozzarella', 'en', 'ing_mozzarella');
 
 -- Insert difficulty terms into taxonomies table
 INSERT OR REPLACE INTO taxonomies (id, name, slug, label, locale, translation_group) VALUES
@@ -35,32 +49,36 @@ INSERT OR REPLACE INTO taxonomies (id, name, slug, label, locale, translation_gr
 ('tag_cottage', 'tag', 'cottage-bakery', 'Cottage Bakery Feature', 'en', 'tag_cottage'),
 ('tag_preorder', 'tag', 'preorder', 'Weekly Pre-Order', 'en', 'tag_preorder');
 
--- Link sample recipes to difficulty, dietary, and categories in content_taxonomies
+-- Link sample recipes to ingredients in content_taxonomies
 INSERT OR REPLACE INTO content_taxonomies (collection, entry_id, taxonomy_id, status) VALUES
-('recipes', 'rec-1', 'cat_breads', 'published'),
-('recipes', 'rec-1', 'diff_advanced', 'published'),
-('recipes', 'rec-1', 'diet_organic', 'published'),
-('recipes', 'rec-1', 'tag_sourdough', 'published'),
-('recipes', 'rec-1', 'tag_coldferment', 'published'),
+('recipes', 'rec-1', 'ing_breadflour', 'published'),
+('recipes', 'rec-1', 'ing_wholerye', 'published'),
+('recipes', 'rec-1', 'ing_starter', 'published'),
 
-('recipes', 'rec-2', 'cat_pastries', 'published'),
-('recipes', 'rec-2', 'diff_medium', 'published'),
-('recipes', 'rec-2', 'diet_organic', 'published'),
-('recipes', 'rec-2', 'tag_cottage', 'published'),
-('recipes', 'rec-2', 'tag_preorder', 'published'),
+('recipes', 'rec-2', 'ing_breadflour', 'published'),
+('recipes', 'rec-2', 'ing_cardamom', 'published'),
+('recipes', 'rec-2', 'ing_cinnamon', 'published'),
+('recipes', 'rec-2', 'ing_butter', 'published'),
 
-('recipes', 'rec-3', 'cat_cookies', 'published'),
-('recipes', 'rec-3', 'diff_easy', 'published'),
-('recipes', 'rec-3', 'diet_organic', 'published'),
-('recipes', 'rec-3', 'tag_cottage', 'published'),
+('recipes', 'rec-3', 'ing_breadflour', 'published'),
+('recipes', 'rec-3', 'ing_lemon', 'published'),
+('recipes', 'rec-3', 'ing_butter', 'published'),
 
-('products', 'prod-1', 'cat_breads', 'published'),
-('products', 'prod-1', 'diet_organic', 'published'),
-('products', 'prod-1', 'tag_sourdough', 'published'),
+('recipes', 'rec-4', 'ing_chicken', 'published'),
+('recipes', 'rec-4', 'ing_butter', 'published'),
 
-('products', 'prod-2', 'cat_pastries', 'published'),
-('products', 'prod-2', 'diet_organic', 'published'),
-('products', 'prod-2', 'tag_preorder', 'published'),
+('recipes', 'rec-5', 'ing_starter', 'published'),
+('recipes', 'rec-5', 'ing_tomatoes', 'published'),
+('recipes', 'rec-5', 'ing_mozzarella', 'published'),
 
-('products', 'prod-3', 'cat_cookies', 'published'),
-('products', 'prod-3', 'diet_organic', 'published');
+('products', 'prod-1', 'ing_breadflour', 'published'),
+('products', 'prod-1', 'ing_wholerye', 'published'),
+('products', 'prod-1', 'ing_starter', 'published'),
+
+('products', 'prod-2', 'ing_breadflour', 'published'),
+('products', 'prod-2', 'ing_cardamom', 'published'),
+('products', 'prod-2', 'ing_butter', 'published'),
+
+('products', 'prod-3', 'ing_breadflour', 'published'),
+('products', 'prod-3', 'ing_lemon', 'published'),
+('products', 'prod-3', 'ing_butter', 'published');
