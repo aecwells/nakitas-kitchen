@@ -54,27 +54,17 @@ export const POST: APIRoute = async ({ request, locals }) => {
 								],
 							},
 						],
-						max_tokens: 1024,
+						max_tokens: 512,
 					});
 				} catch (err1) {
 					console.error("[VISION MSG ERR]", err1);
-					// 2. Try direct prompt format
 					try {
-						aiResponse = await ai.run("@cf/meta/llama-3.2-11b-vision-instruct", {
+						aiResponse = await ai.run("@cf/unum/uform-gen2-qwen-500m", {
 							prompt: promptText,
 							image: byteArray,
-							max_tokens: 1024,
 						});
 					} catch (err2) {
-						console.error("[VISION PROMPT ERR]", err2);
-						try {
-							aiResponse = await ai.run("@cf/unum/uform-gen2-qwen-500m", {
-								prompt: promptText,
-								image: byteArray,
-							});
-						} catch (err3) {
-							console.error("[UFORM ERR]", err3);
-						}
+						console.error("[UFORM ERR]", err2);
 					}
 				}
 
@@ -85,45 +75,50 @@ export const POST: APIRoute = async ({ request, locals }) => {
 			}
 		}
 
-		// 1. Process Front Card Image (Title, Prep/Cook Time, Servings, Ingredients)
+		function cleanTitleText(raw: string): string {
+			if (!raw) return "";
+			let text = raw.split("\n")[0].trim();
+			text = text.replace(/^(?:the recipe title is|this recipe is|the dish is|recipe title|title|recipe|dish|name):\s*/i, "");
+			text = text.replace(/[*#`"'{}]/g, "").trim();
+			text = text.replace(/\s*(?:recipe card|hellofresh|homechef).*$/i, "");
+			return text.trim();
+		}
+
+		// 1. Process Front Card Image (Dedicated Title + Details)
 		if (frontImageData) {
-			const frontPrompt = "What is the main recipe title written on this recipe card (e.g. Cheese Smashed Burgers, Tilapia with Scallion Rice)? Extract the exact Recipe Title, Prep Time, Cook Time, Servings, and Ingredients. Return valid JSON with keys: title, prep_time, cook_time, servings, ingredients.";
+			// Direct dedicated title extraction prompt
+			const titlePrompt = "What is the exact main dish title printed on this recipe card (e.g. Cheese Smashed Burgers, Tilapia with Scallion Rice)? Respond with ONLY the dish name title.";
+			const titleText = await runVisionOCR(frontImageData, titlePrompt);
+			if (titleText) {
+				console.log("[FRONT RAW TITLE OCR]:", titleText);
+				const cleaned = cleanTitleText(titleText);
+				if (cleaned.length > 2) {
+					extractedInfo.title = cleaned;
+				}
+			}
+
+			// Full details prompt (prep time, cook time, servings, ingredients)
+			const frontPrompt = "Extract Prep Time, Cook Time, Servings, and Ingredients from this recipe card front photo. Return valid JSON with keys: title, prep_time, cook_time, servings, ingredients.";
 			const frontText = await runVisionOCR(frontImageData, frontPrompt);
 			if (frontText) {
-				console.log("[FRONT OCR TEXT]:", frontText);
-				
-				// Try JSON extraction first
+				console.log("[FRONT DETAILS OCR]:", frontText);
 				const jsonMatch = frontText.match(/\{[\s\S]*\}/);
 				if (jsonMatch) {
 					try {
 						const parsed = JSON.parse(jsonMatch[0]);
-						if (parsed.title) extractedInfo.title = parsed.title.trim();
+						if (parsed.title && !extractedInfo.title) extractedInfo.title = cleanTitleText(parsed.title);
 						if (parsed.prep_time) extractedInfo.prep_time = parsed.prep_time.trim();
 						if (parsed.cook_time) extractedInfo.cook_time = parsed.cook_time.trim();
 						if (parsed.servings) extractedInfo.servings = parsed.servings.trim();
 						if (parsed.ingredients) extractedInfo.ingredients = parsed.ingredients.trim();
 					} catch (e) {}
 				}
-
-				// Fallback title regex extraction if JSON parse didn't get title
-				if (!extractedInfo.title) {
-					const titleMatch = frontText.match(/(?:title|recipe|dish|name):\s*["']?([^"'\n\r}]+)/i);
-					if (titleMatch) {
-						extractedInfo.title = titleMatch[1].replace(/["'{}]/g, "").trim();
-					} else {
-						// Clean line extraction
-						const cleanLines = frontText.split("\n").map(l => l.replace(/[*#`"'{}]/g, "").trim()).filter(l => l.length > 3 && !/here is|json|recipe card|ingredients|prep|cook/i.test(l));
-						if (cleanLines.length > 0) {
-							extractedInfo.title = cleanLines[0];
-						}
-					}
-				}
 			}
 		}
 
 		// 2. Process Back Card Image (Step-by-Step Instructions)
 		if (backImageData) {
-			const backPrompt = "Analyze the back of this recipe card. Extract all Step-by-Step Cooking Instructions (numbered 1., 2., 3., 4., 5., 6.). Return valid JSON with key: instructions.";
+			const backPrompt = "Extract all Step-by-Step Cooking Instructions (numbered 1., 2., 3., 4., 5., 6.) from the back of this recipe card. Return valid JSON with key: instructions.";
 			const backText = await runVisionOCR(backImageData, backPrompt);
 			if (backText) {
 				console.log("[BACK OCR TEXT]:", backText);
@@ -132,7 +127,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
 					try {
 						const parsed = JSON.parse(jsonMatch[0]);
 						if (parsed.instructions) extractedInfo.instructions = parsed.instructions.trim();
-						if (parsed.title && !extractedInfo.title) extractedInfo.title = parsed.title.trim();
+						if (parsed.title && !extractedInfo.title) extractedInfo.title = cleanTitleText(parsed.title);
 					} catch (e) {}
 				}
 				if (!extractedInfo.instructions && backText.length > 20) {

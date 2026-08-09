@@ -202,7 +202,7 @@ import Base from "../../layouts/Base.astro";
 			const srcVal = sourceSelect?.value || "HelloFresh";
 
 			// 1. INSTANT 0ms AUTOFILL (Guarantees form fields are 100% populated immediately on photo upload/rotate)
-			if (titleInput && (!titleInput.value || titleInput.value.includes("Scanned Recipe"))) {
+			if (titleInput && (!titleInput.value || titleInput.value.includes("Card Recipe") || titleInput.value.includes("Scanned Recipe"))) {
 				titleInput.value = `${srcVal} Card Recipe - ${new Date().toLocaleDateString("en-US", { month: "short", day: "numeric" })}`;
 			}
 			if (prepTimeInput && !prepTimeInput.value) {
