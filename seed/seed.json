@@ -270,12 +270,56 @@
 				{
 					"type": "custom",
 					"label": "Recipes",
-					"url": "/recipes"
+					"url": "/recipes",
+					"children": [
+						{
+							"type": "custom",
+							"label": "All Recipes",
+							"url": "/recipes"
+						},
+						{
+							"type": "custom",
+							"label": "Artisan Country Sourdough Boule",
+							"url": "/recipes/artisan-sourdough-boule"
+						},
+						{
+							"type": "custom",
+							"label": "Swedish Cardamom Cinnamon Knots",
+							"url": "/recipes/cardamom-cinnamon-knots"
+						},
+						{
+							"type": "custom",
+							"label": "Meyer Lemon Thyme Shortbread",
+							"url": "/recipes/meyer-lemon-shortbread"
+						}
+					]
 				},
 				{
 					"type": "custom",
 					"label": "Cottage Bakery Shop",
-					"url": "/shop"
+					"url": "/shop",
+					"children": [
+						{
+							"type": "custom",
+							"label": "Weekly Pre-Order Menu",
+							"url": "/shop"
+						},
+						{
+							"type": "custom",
+							"label": "Country Sourdough Loaf ($12.00)",
+							"url": "/shop/artisan-sourdough-loaf"
+						},
+						{
+							"type": "custom",
+							"label": "Cardamom Cinnamon Knots 4-Pack ($16.00)",
+							"url": "/shop/cardamom-cinnamon-knots-4pack"
+						},
+						{
+							"type": "custom",
+							"label": "Meyer Lemon Shortbread Box ($14.00)",
+							"url": "/shop/meyer-lemon-shortbread-box"
+						}
+					]
 				},
 				{
 					"type": "custom",

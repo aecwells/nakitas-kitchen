@@ -120,10 +120,43 @@ const isLoggedIn = !!Astro.locals.user;
 					/>
 					<div class="nav-links">
 						{
-							menu?.items.map((item) => (
-								<a href={item.url} target={item.target}>
-									{item.label}
-								</a>
+							menu?.items.map((item: any) => (
+								item.children && item.children.length > 0 ? (
+									<div class="nav-item-dropdown">
+										<a href={item.url} target={item.target} class="nav-link-parent">
+											<span>{item.label}</span>
+											<svg class="chevron" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+												<path d="M6 9l6 6 6-6"/>
+											</svg>
+										</a>
+										<div class="mega-menu-panel">
+											<div class="mega-menu-grid">
+												<div class="mega-col-links">
+													<span class="mega-heading">{item.label}</span>
+													<div class="mega-links-list">
+														{item.children.map((child: any) => (
+															<a href={child.url} target={child.target} class="mega-link-item">
+																<span class="mega-link-title">{child.label}</span>
+															</a>
+														))}
+													</div>
+												</div>
+												<div class="mega-col-card">
+													<div class="mega-card-content">
+														<span class="mega-badge">Nakita's Kitchen</span>
+														<h4>Fresh Small-Batch Baking</h4>
+														<p>Handcrafted under Cottage License #CFO-LA-2026-9481.</p>
+														<a href={item.url} class="mega-card-link">Browse All &rarr;</a>
+													</div>
+												</div>
+											</div>
+										</div>
+									</div>
+								) : (
+									<a href={item.url} target={item.target} class="nav-link-single">
+										{item.label}
+									</a>
+								)
 							))
 						}
 					</div>
@@ -493,18 +526,152 @@ const isLoggedIn = !!Astro.locals.user;
 
 			.nav-links {
 				display: flex;
-				gap: var(--spacing-5);
+				align-items: center;
+				gap: var(--spacing-6);
 				font-size: var(--font-size-sm);
 			}
 
-			.nav-links a {
+			.nav-item-dropdown {
+				position: relative;
+			}
+
+			.nav-link-parent,
+			.nav-link-single {
+				display: flex;
+				align-items: center;
+				gap: 0.3rem;
 				text-decoration: none;
 				color: var(--color-text);
+				font-weight: 500;
+				padding: 0.5rem 0;
 				transition: color var(--transition-fast);
 			}
 
-			.nav-links a:hover {
+			.nav-link-parent:hover,
+			.nav-link-single:hover,
+			.nav-item-dropdown:hover .nav-link-parent {
 				color: var(--color-brand);
+			}
+
+			.chevron {
+				transition: transform 0.2s ease;
+			}
+
+			.nav-item-dropdown:hover .chevron {
+				transform: rotate(180deg);
+			}
+
+			/* Mega Menu Dropdown Panel */
+			.mega-menu-panel {
+				position: absolute;
+				top: 100%;
+				left: 50%;
+				transform: translateX(-50%) translateY(8px);
+				opacity: 0;
+				visibility: hidden;
+				width: 440px;
+				background: var(--color-bg, #ffffff);
+				border: 1px solid var(--color-border, #e2e8f0);
+				border-radius: var(--radius-lg, 12px);
+				box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
+				padding: 1.25rem;
+				z-index: 1000;
+				transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s ease;
+				pointer-events: none;
+			}
+
+			.nav-item-dropdown:hover .mega-menu-panel,
+			.nav-item-dropdown:focus-within .mega-menu-panel {
+				opacity: 1;
+				visibility: visible;
+				transform: translateX(-50%) translateY(0);
+				pointer-events: auto;
+			}
+
+			.mega-menu-grid {
+				display: grid;
+				grid-template-columns: 1fr 160px;
+				gap: 1.25rem;
+			}
+
+			.mega-col-links {
+				display: flex;
+				flex-direction: column;
+			}
+
+			.mega-heading {
+				font-size: var(--font-size-xs, 0.75rem);
+				font-weight: 700;
+				text-transform: uppercase;
+				letter-spacing: 0.08em;
+				color: var(--color-muted, #64748b);
+				margin-bottom: 0.75rem;
+			}
+
+			.mega-links-list {
+				display: flex;
+				flex-direction: column;
+				gap: 0.4rem;
+			}
+
+			.mega-link-item {
+				text-decoration: none;
+				padding: 0.4rem 0.6rem;
+				border-radius: 6px;
+				transition: background 0.15s ease, color 0.15s ease;
+			}
+
+			.mega-link-item:hover {
+				background: var(--color-surface, #f8fafc);
+			}
+
+			.mega-link-title {
+				font-size: 0.875rem;
+				font-weight: 600;
+				color: var(--color-text, #0f172a);
+				display: block;
+			}
+
+			.mega-link-item:hover .mega-link-title {
+				color: var(--color-brand, #0066cc);
+			}
+
+			.mega-col-card {
+				background: var(--color-bg-subtle, #f1f5f9);
+				border-radius: 8px;
+				padding: 0.85rem;
+				display: flex;
+				flex-direction: column;
+				justify-content: space-between;
+			}
+
+			.mega-badge {
+				font-size: 0.6875rem;
+				font-weight: 700;
+				text-transform: uppercase;
+				color: var(--color-brand, #0066cc);
+				letter-spacing: 0.05em;
+			}
+
+			.mega-card-content h4 {
+				font-size: 0.8125rem;
+				font-weight: 700;
+				margin: 0.2rem 0;
+				color: var(--color-text, #0f172a);
+			}
+
+			.mega-card-content p {
+				font-size: 0.75rem;
+				color: var(--color-muted, #64748b);
+				margin: 0 0 0.6rem 0;
+				line-height: 1.3;
+			}
+
+			.mega-card-link {
+				font-size: 0.75rem;
+				font-weight: 700;
+				color: var(--color-brand, #0066cc);
+				text-decoration: none;
 			}
 
 			.nav-admin {
