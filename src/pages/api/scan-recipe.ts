@@ -71,9 +71,19 @@ export const POST: APIRoute = async ({ request, locals }) => {
 			alt: `${title} (Back Instructions Photo)`,
 		});
 
-		// Insert into D1
-		// @ts-ignore
-		const db = locals?.runtime?.env?.DB;
+		// Retrieve Cloudflare D1 Database binding DB safely
+		let db: any = null;
+		try {
+			// @ts-ignore
+			const cfWorkers = await import("cloudflare:workers");
+			db = cfWorkers?.env?.DB;
+		} catch (e) {
+			// fallback
+		}
+
+		if (!db) {
+			db = (locals as any)?.env?.DB || (locals as any)?.runtime?.env?.DB;
+		}
 
 		if (db) {
 			await db.prepare(`
