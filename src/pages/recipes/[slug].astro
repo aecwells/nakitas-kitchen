@@ -31,6 +31,9 @@ try {
 
 const bylines = data.bylines ?? [];
 const difficulty = difficultyTerms && difficultyTerms.length > 0 ? difficultyTerms[0].label : null;
+
+// Baker's percentage calculations for sourdough/bread recipes
+const isSourdough = slug.includes("sourdough") || (data.ingredients && data.ingredients.toLowerCase().includes("sourdough"));
 ---
 
 <Base
@@ -67,6 +70,12 @@ const difficulty = difficultyTerms && difficultyTerms.length > 0 ? difficultyTer
 					</div>
 				)}
 
+				{data.recipe_source && (
+					<span class="source-badge-meta">
+						📌 Source: {data.recipe_source}
+					</span>
+				)}
+
 				{difficulty && (
 					<span class="difficulty-badge">
 						⚡ Difficulty: {difficulty}
@@ -82,6 +91,13 @@ const difficulty = difficultyTerms && difficultyTerms.length > 0 ? difficultyTer
 					<span>Print Recipe</span>
 				</button>
 			</div>
+
+			{data.equipment && (
+				<div class="equipment-banner">
+					<span class="equip-icon">⚙️</span>
+					<span>Recommended Equipment: <strong>{data.equipment}</strong></span>
+				</div>
+			)}
 
 			{data.excerpt && <p class="recipe-excerpt">{data.excerpt}</p>}
 
@@ -104,6 +120,12 @@ const difficulty = difficultyTerms && difficultyTerms.length > 0 ? difficultyTer
 						<span class="spec-value">{data.servings}</span>
 					</div>
 				)}
+				{isSourdough && (
+					<div class="spec-item baker-math">
+						<span class="spec-label">Baker's Math</span>
+						<span class="spec-value highlight">75% Hydration • 20% Starter • 2% Salt</span>
+					</div>
+				)}
 			</div>
 		</header>
 
@@ -118,9 +140,17 @@ const difficulty = difficultyTerms && difficultyTerms.length > 0 ? difficultyTer
 				<div class="ingredients-box">
 					<div class="ingredients-header">
 						<h3 class="ingredients-title">Ingredients</h3>
-						<!-- Recipe Batch Scaling Control -->
+					</div>
+
+					<!-- Interactive Unit & Scale Controls -->
+					<div class="measurement-toolbar">
+						<div class="unit-toggle-group">
+							<button type="button" class="unit-btn active" id="unit-metric">⚖️ Metric (g/ml)</button>
+							<button type="button" class="unit-btn" id="unit-imperial">🥣 US (oz/cups)</button>
+						</div>
+
 						<div class="scaler-controls">
-							<span class="scaler-label">Scale:</span>
+							<span class="scaler-label">Batch:</span>
 							<button type="button" class="scale-btn active" data-scale="1">1x</button>
 							<button type="button" class="scale-btn" data-scale="2">2x</button>
 							<button type="button" class="scale-btn" data-scale="3">3x</button>
@@ -209,28 +239,68 @@ const difficulty = difficultyTerms && difficultyTerms.length > 0 ? difficultyTer
 </Base>
 
 <script>
-	// Interactive Recipe Batch Quantity Scaler
+	// Interactive Unit Converter (Metric vs US Imperial) and Batch Scaler
 	document.addEventListener("DOMContentLoaded", () => {
 		const scaleBtns = document.querySelectorAll<HTMLButtonElement>(".scale-btn");
+		const unitMetricBtn = document.getElementById("unit-metric");
+		const unitImperialBtn = document.getElementById("unit-imperial");
 		const ingredientElements = document.querySelectorAll<HTMLElement>(".ingredient-text");
+
+		let currentScale = 1;
+		let currentUnitSystem: "metric" | "imperial" = "metric";
+
+		function updateIngredients() {
+			ingredientElements.forEach((el) => {
+				const raw = el.dataset.rawText || el.innerText;
+
+				if (currentUnitSystem === "imperial") {
+					// Convert grams (g) to ounces (oz) and milliliters (ml) to fl oz
+					let converted = raw.replace(/(\d+(?:\.\d+)?)\s*g\b/gi, (_, g) => {
+						const oz = (parseFloat(g) * 0.035274 * currentScale).toFixed(1);
+						return `${oz} oz`;
+					}).replace(/(\d+(?:\.\d+)?)\s*ml\b/gi, (_, ml) => {
+						const flOz = (parseFloat(ml) * 0.033814 * currentScale).toFixed(1);
+						return `${flOz} fl oz`;
+					});
+
+					if (converted === raw) {
+						// Scale plain numbers if no g/ml unit match
+						converted = raw.replace(/(\d+(?:\.\d+)?)/g, (_, num) => {
+							return (parseFloat(num) * currentScale).toString();
+						});
+					}
+					el.innerText = converted;
+				} else {
+					// Metric mode with scaling
+					const scaled = raw.replace(/(\d+(?:\.\d+)?)/g, (_, num) => {
+						return (parseFloat(num) * currentScale).toString();
+					});
+					el.innerText = scaled;
+				}
+			});
+		}
 
 		scaleBtns.forEach((btn) => {
 			btn.addEventListener("click", () => {
-				const scale = parseFloat(btn.dataset.scale || "1");
-
+				currentScale = parseFloat(btn.dataset.scale || "1");
 				scaleBtns.forEach((b) => b.classList.remove("active"));
 				btn.classList.add("active");
-
-				ingredientElements.forEach((el) => {
-					const raw = el.dataset.rawText || el.innerText;
-					// Scale any leading numbers (e.g., "400g", "100g", "2.5 tsp")
-					const scaled = raw.replace(/(\d+(?:\.\d+)?)/g, (match) => {
-						const num = parseFloat(match);
-						return (num * scale).toString();
-					});
-					el.innerText = scaled;
-				});
+				updateIngredients();
 			});
+		});
+
+		unitMetricBtn?.addEventListener("click", () => {
+			currentUnitSystem = "metric";
+			unitMetricBtn.classList.add("active");
+			unitImperialBtn?.classList.remove("active");
+			updateIngredients();
+		});
+
+		unitImperialBtn?.addEventListener("click", () => {
+			currentUnitSystem = "imperial";
+			unitImperialBtn.classList.add("active");
+			unitMetricBtn?.classList.remove("active");
+			updateIngredients();
 		});
 	});
 </script>
@@ -296,6 +366,14 @@ const difficulty = difficultyTerms && difficultyTerms.length > 0 ? difficultyTer
 		font-weight: 600;
 		color: var(--color-text, #0f172a);
 	}
+	.source-badge-meta {
+		font-size: 0.8125rem;
+		font-weight: 600;
+		background: rgba(0, 102, 204, 0.1);
+		color: var(--color-brand, #0066cc);
+		padding: 0.2rem 0.6rem;
+		border-radius: 6px;
+	}
 	.difficulty-badge {
 		font-size: 0.8125rem;
 		font-weight: 600;
@@ -320,6 +398,18 @@ const difficulty = difficultyTerms && difficultyTerms.length > 0 ? difficultyTer
 	}
 	.print-btn:hover {
 		background: var(--color-bg-subtle, #f8fafc);
+	}
+	.equipment-banner {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		background: #fff7ed;
+		border: 1px solid #ffedd5;
+		color: #c2410c;
+		border-radius: 8px;
+		padding: 0.6rem 1rem;
+		font-size: 0.875rem;
+		margin-bottom: 1.25rem;
 	}
 	.recipe-excerpt {
 		font-size: 1.25rem;
@@ -354,6 +444,9 @@ const difficulty = difficultyTerms && difficultyTerms.length > 0 ? difficultyTer
 		font-weight: 700;
 		color: var(--color-text, #0f172a);
 	}
+	.baker-math .highlight {
+		color: var(--color-brand, #0066cc);
+	}
 	.hero-image-container {
 		aspect-ratio: 21 / 9;
 		overflow: hidden;
@@ -368,7 +461,7 @@ const difficulty = difficultyTerms && difficultyTerms.length > 0 ? difficultyTer
 	}
 	.recipe-layout {
 		display: grid;
-		grid-template-columns: 340px 1fr;
+		grid-template-columns: 350px 1fr;
 		gap: 3rem;
 		align-items: start;
 	}
@@ -386,12 +479,9 @@ const difficulty = difficultyTerms && difficultyTerms.length > 0 ? difficultyTer
 		top: 2rem;
 	}
 	.ingredients-header {
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
 		border-bottom: 2px solid var(--color-brand, #0066cc);
 		padding-bottom: 0.5rem;
-		margin-bottom: 1rem;
+		margin-bottom: 0.75rem;
 	}
 	.ingredients-title {
 		font-size: 1.25rem;
@@ -399,24 +489,59 @@ const difficulty = difficultyTerms && difficultyTerms.length > 0 ? difficultyTer
 		margin: 0;
 		color: var(--color-text, #0f172a);
 	}
+	.measurement-toolbar {
+		display: flex;
+		flex-direction: column;
+		gap: 0.6rem;
+		margin-bottom: 1.25rem;
+		background: var(--color-bg-subtle, #f8fafc);
+		padding: 0.75rem;
+		border-radius: 8px;
+		border: 1px solid var(--color-border, #e2e8f0);
+	}
+	.unit-toggle-group {
+		display: flex;
+		gap: 0.25rem;
+		background: var(--color-bg, #ffffff);
+		padding: 0.2rem;
+		border-radius: 6px;
+		border: 1px solid var(--color-border, #cbd5e1);
+	}
+	.unit-btn {
+		flex: 1;
+		background: transparent;
+		border: none;
+		font-size: 0.75rem;
+		font-weight: 700;
+		padding: 0.35rem 0.5rem;
+		border-radius: 4px;
+		cursor: pointer;
+		color: var(--color-muted, #64748b);
+		transition: all 0.15s ease;
+	}
+	.unit-btn.active {
+		background: var(--color-brand, #0066cc);
+		color: #ffffff;
+	}
 	.scaler-controls {
 		display: flex;
 		align-items: center;
-		gap: 0.25rem;
+		justify-content: flex-end;
+		gap: 0.3rem;
 	}
 	.scaler-label {
 		font-size: 0.75rem;
 		font-weight: 600;
 		color: var(--color-muted, #64748b);
-		margin-right: 0.2rem;
+		margin-right: 0.3rem;
 	}
 	.scale-btn {
-		background: var(--color-bg-subtle, #f1f5f9);
+		background: var(--color-bg, #ffffff);
 		border: 1px solid var(--color-border, #cbd5e1);
 		border-radius: 4px;
 		font-size: 0.75rem;
 		font-weight: 700;
-		padding: 0.15rem 0.45rem;
+		padding: 0.2rem 0.5rem;
 		cursor: pointer;
 	}
 	.scale-btn.active {
@@ -546,7 +671,7 @@ const difficulty = difficultyTerms && difficultyTerms.length > 0 ? difficultyTer
 	}
 
 	@media print {
-		.header-nav-row, .meta-bar, .shop-match-box, .comments-section, .scaler-controls {
+		.header-nav-row, .meta-bar, .shop-match-box, .comments-section, .measurement-toolbar {
 			display: none !important;
 		}
 		.recipe-layout {
