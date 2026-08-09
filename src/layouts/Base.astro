@@ -343,15 +343,10 @@ const isLoggedIn = !!Astro.locals.user;
 		<script>
 			// Theme switcher
 			const THEME_REGEX = /theme=([^;]+)/;
-			const themeBtns =
-				document.querySelectorAll<HTMLButtonElement>(".theme-btn");
+			const themeBtns = document.querySelectorAll<HTMLButtonElement>(".theme-btn");
 			const root = document.documentElement;
 
-			function setCookie(
-				name: string,
-				value: string,
-				maxAge: number = 31536000
-			) {
+			function setCookie(name: string, value: string, maxAge: number = 31536000) {
 				const secure = location.protocol === "https:" ? "; Secure" : "";
 				if (value === "") {
 					document.cookie = `${name}=; path=/; max-age=0; SameSite=Lax${secure}`;
@@ -383,7 +378,7 @@ const isLoggedIn = !!Astro.locals.user;
 				return match ? match[1] : "system";
 			}
 
-			// Initialize
+			// Initialize Theme
 			const storedTheme = getStoredTheme();
 			setTheme(storedTheme);
 
@@ -393,7 +388,7 @@ const isLoggedIn = !!Astro.locals.user;
 				});
 			});
 
-			// Global Lightbox & Pan-Zoom Controller
+			// Global Lightbox Controller
 			let currentScale = 1;
 			const lbModal = document.getElementById("lightbox-modal");
 			const lbBackdrop = document.getElementById("lightbox-backdrop");
@@ -406,10 +401,10 @@ const isLoggedIn = !!Astro.locals.user;
 			const lbViewport = document.getElementById("lightbox-viewport");
 
 			function openLightbox(src: string, alt: string) {
-				if (!lbModal || !lbImg) return;
+				if (!lbModal || !lbImg || !src || src.trim() === "" || src.includes("undefined")) return;
 				lbImg.src = src;
 				currentScale = 1;
-				lbImg.style.transform = `scale(1)`;
+				lbImg.style.transform = "scale(1)";
 				if (lbCaption) lbCaption.innerText = alt || "Full Screen Image Inspection";
 				lbModal.removeAttribute("hidden");
 				document.body.style.overflow = "hidden";
@@ -419,6 +414,7 @@ const isLoggedIn = !!Astro.locals.user;
 				if (!lbModal) return;
 				lbModal.setAttribute("hidden", "true");
 				document.body.style.overflow = "";
+				if (lbImg) lbImg.src = "";
 			}
 
 			function updateZoom(delta: number) {
@@ -426,14 +422,15 @@ const isLoggedIn = !!Astro.locals.user;
 				if (lbImg) lbImg.style.transform = `scale(${currentScale})`;
 			}
 
-			lbZoomIn?.addEventListener("click", () => updateZoom(0.3));
-			lbZoomOut?.addEventListener("click", () => updateZoom(-0.3));
-			lbZoomReset?.addEventListener("click", () => {
+			lbZoomIn?.addEventListener("click", (e) => { e.stopPropagation(); updateZoom(0.3); });
+			lbZoomOut?.addEventListener("click", (e) => { e.stopPropagation(); updateZoom(-0.3); });
+			lbZoomReset?.addEventListener("click", (e) => {
+				e.stopPropagation();
 				currentScale = 1;
 				if (lbImg) lbImg.style.transform = "scale(1)";
 			});
-			lbClose?.addEventListener("click", closeLightbox);
-			lbBackdrop?.addEventListener("click", closeLightbox);
+			lbClose?.addEventListener("click", (e) => { e.stopPropagation(); closeLightbox(); });
+			lbBackdrop?.addEventListener("click", (e) => { e.stopPropagation(); closeLightbox(); });
 
 			document.addEventListener("keydown", (e) => {
 				if (e.key === "Escape") closeLightbox();
@@ -446,11 +443,13 @@ const isLoggedIn = !!Astro.locals.user;
 			}, { passive: false });
 
 			document.addEventListener("click", (e) => {
-				const target = (e.target as HTMLElement).closest(".scanned-card-item img, .hero-image-container img, .zoomable-img img, .product-gallery img");
-				if (target && target instanceof HTMLImageElement && !target.closest(".gallery-thumb")) {
-					const src = target.src;
-					const alt = target.alt || "Scanned Recipe Card Preview";
-					openLightbox(src, alt);
+				const target = e.target as HTMLElement;
+				// Never trigger lightbox opening if clicking inside the lightbox itself!
+				if (target.closest("#lightbox-modal")) return;
+
+				const img = target.closest(".scanned-card-item img, .main-gallery-view img, .zoomable-img img") as HTMLImageElement;
+				if (img && img.src && !img.closest(".gallery-thumb") && !img.src.includes("undefined")) {
+					openLightbox(img.src, img.alt);
 				}
 			});
 		</script>
