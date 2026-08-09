@@ -56,6 +56,58 @@ function getIngredientIcon(text: string) {
 	if (t.includes("egg")) return "🥚";
 	return "▫️";
 }
+
+// Parse content into renderable blocks or step cards
+let parsedContent: any = data.content;
+if (typeof parsedContent === "string") {
+	try {
+		parsedContent = JSON.parse(parsedContent);
+	} catch (e) {
+		// keep string
+	}
+}
+
+let recipeSteps: { number: number; title: string; text: string }[] = [];
+
+if (Array.isArray(parsedContent)) {
+	let currentStep: { number: number; title: string; text: string } | null = null;
+	let stepCounter = 1;
+
+	parsedContent.forEach((block: any) => {
+		if (block._type === "block") {
+			const blockText = block.children?.map((c: any) => c.text).join("") || "";
+			if (block.style === "h2" || block.style === "h3" || /^\d+\./.test(blockText)) {
+				if (currentStep) recipeSteps.push(currentStep);
+				currentStep = {
+					number: stepCounter++,
+					title: blockText.replace(/^\d+\.\s*/, ""),
+					text: "",
+				};
+			} else if (currentStep) {
+				currentStep.text += (currentStep.text ? "\n" : "") + blockText;
+			} else if (blockText.trim()) {
+				currentStep = {
+					number: stepCounter++,
+					title: `Step ${stepCounter}`,
+					text: blockText,
+				};
+			}
+		}
+	});
+	if (currentStep) recipeSteps.push(currentStep);
+} else if (typeof parsedContent === "string" && parsedContent.trim()) {
+	const rawSteps = parsedContent.split("\n\n").filter(Boolean);
+	recipeSteps = rawSteps.map((stepStr, idx) => {
+		const lines = stepStr.trim().split("\n");
+		const titleLine = lines[0].replace(/^\d+\.\s*/, "");
+		const bodyText = lines.slice(1).join(" ") || titleLine;
+		return {
+			number: idx + 1,
+			title: lines.length > 1 ? titleLine : `Step ${idx + 1}`,
+			text: bodyText,
+		};
+	});
+}
 ---
 
 <Base
@@ -240,13 +292,28 @@ function getIngredientIcon(text: string) {
 			</aside>
 
 			<main class="recipe-body">
-				<h2 class="section-heading">Instructions & Baking Notes</h2>
-				{data.content ? (
+				<h2 class="section-heading">Step-by-Step Cooking Instructions</h2>
+
+				{recipeSteps.length > 0 ? (
+					<div class="cooking-steps-container">
+						{recipeSteps.map((step) => (
+							<div class="step-card">
+								<div class="step-number-badge">
+									<span>{step.number}</span>
+								</div>
+								<div class="step-details">
+									<h3 class="step-title">{step.title}</h3>
+									<p class="step-text">{step.text}</p>
+								</div>
+							</div>
+						))}
+					</div>
+				) : data.content ? (
 					<div class="portable-content">
-						<PortableText content={data.content} />
+						<PortableText content={Array.isArray(parsedContent) ? parsedContent : []} />
 					</div>
 				) : (
-					<p>No instructions available.</p>
+					<p class="empty-notice">No instructions available for this recipe.</p>
 				)}
 
 				{data.card_scan_image && (
@@ -700,8 +767,52 @@ function getIngredientIcon(text: string) {
 	.section-heading {
 		font-size: 1.75rem;
 		font-weight: 700;
-		margin: 0 0 1.25rem 0;
+		margin: 0 0 1.5rem 0;
 		color: var(--color-text, #0f172a);
+	}
+	.cooking-steps-container {
+		display: flex;
+		flex-direction: column;
+		gap: 1.25rem;
+		margin-bottom: 2.5rem;
+	}
+	.step-card {
+		display: flex;
+		gap: 1.25rem;
+		background: var(--color-surface, #ffffff);
+		border: 1px solid var(--color-border, #e2e8f0);
+		border-radius: 12px;
+		padding: 1.25rem 1.5rem;
+		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+	}
+	.step-number-badge {
+		width: 38px;
+		height: 38px;
+		border-radius: 50%;
+		background: var(--color-brand, #0066cc);
+		color: #ffffff;
+		font-weight: 700;
+		font-size: 1.125rem;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		flex-shrink: 0;
+	}
+	.step-details {
+		flex: 1;
+	}
+	.step-title {
+		font-size: 1.25rem;
+		font-weight: 700;
+		margin: 0 0 0.4rem 0;
+		color: var(--color-text, #0f172a);
+	}
+	.step-text {
+		font-size: 0.96875rem;
+		line-height: 1.65;
+		color: var(--color-text-secondary, #475569);
+		margin: 0;
+		white-space: pre-wrap;
 	}
 	.scanned-card-inspection {
 		margin-top: 2.5rem;
