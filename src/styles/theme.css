@@ -1,0 +1,57 @@
+/*
+  theme.css -- your theme overrides. This is the file to edit to
+  retheme the site.
+
+  Every design token lives in src/styles/tokens.css (colors, type
+  scale, spacing, layout, shadows) with its default value. Override any
+  of them here: declarations in this file are unlayered, so they always
+  beat the @layer base defaults in tokens.css.
+
+  Colors are defined with light-dark(). Overriding with a plain color
+  changes light and dark mode at once; use light-dark(<light>, <dark>)
+  to set different values per mode.
+
+  Webfonts are loaded in astro.config.mjs (--font-body, --font-mono).
+  Swap the loaded font there; use overrides here for system fonts or a
+  separate heading face.
+
+  Example:
+
+  :root {
+    --color-brand: light-dark(#0f766e, #2dd4bf);
+    --font-heading: "Iowan Old Style", Georgia, serif;
+    --radius: 8px;
+  }
+*/
+
+:root {
+	/* Culinary warm theme palette */
+	--color-bg: light-dark(#fdfbf7, #181412);
+	--color-bg-subtle: light-dark(#f5efe6, #211c18);
+	--color-surface: light-dark(#ede4da, #2b241f);
+	--color-text: light-dark(#2c1d18, #f5efe9);
+	--color-text-secondary: light-dark(#6b544b, #bdab9f);
+	--color-muted: light-dark(#998074, #8c776c);
+	--color-border: light-dark(#e6d9cc, #382d27);
+	--color-border-subtle: light-dark(#f0e6dc, #2b221d);
+
+	/* Warm spice & terracotta brand accents */
+	--color-brand: light-dark(#c2410c, #f97316);
+	--color-brand-hover: light-dark(#9a3412, #fb923c);
+	--color-on-brand: #ffffff;
+	--color-brand-ring: color-mix(in srgb, var(--color-brand) 30%, transparent);
+
+	/* Typography */
+	--font-heading: "Playfair Display", Georgia, serif;
+	--font-weight-heading: 600;
+	--font-weight-display: 700;
+}
+
+.nav-admin {
+	margin-inline-start: var(--spacing-5);
+}
+
+h1, h2, h3, h4, h5, h6 {
+	font-family: var(--font-heading);
+	letter-spacing: -0.01em;
+}
