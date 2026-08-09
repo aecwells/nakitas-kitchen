@@ -1,0 +1,83 @@
+---
+import { getEmDashCollection } from "emdash";
+import Base from "../../layouts/Base.astro";
+import RecipeCard from "../../components/RecipeCard.astro";
+
+const { entries: recipes, cacheHint } = await getEmDashCollection("recipes", {
+	orderBy: { createdAt: "desc" },
+});
+
+Astro.cache.set(cacheHint);
+---
+
+<Base title="Recipes | Nakita's Kitchen" description="Handcrafted sourdough, baking recipes, and culinary guides from Nakita's Kitchen.">
+	<div class="container main-content">
+		<header class="page-header">
+			<span class="badge">From Our Kitchen</span>
+			<h1 class="page-title">Recipes & Baking Guides</h1>
+			<p class="page-description">
+				Explore our collection of slow-fermented sourdoughs, heritage grain pastries, and seasonal kitchen recipes. Tested and perfected in our cottage kitchen.
+			</p>
+		</header>
+
+		{recipes && recipes.length > 0 ? (
+			<div class="recipes-grid">
+				{recipes.map((recipe) => (
+					<RecipeCard recipe={recipe} />
+				))}
+			</div>
+		) : (
+			<div class="empty-state">
+				<p>No recipes found yet. Check back soon for fresh baking guides!</p>
+			</div>
+		)}
+	</div>
+</Base>
+
+<style>
+	.main-content {
+		max-width: 1200px;
+		margin: 0 auto;
+		padding: 3rem 1.5rem;
+	}
+	.page-header {
+		text-align: center;
+		max-width: 680px;
+		margin: 0 auto 3rem auto;
+	}
+	.badge {
+		background: rgba(0, 102, 204, 0.08);
+		color: var(--color-brand, #0066cc);
+		font-weight: 600;
+		font-size: 0.8125rem;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		padding: 0.3rem 0.8rem;
+		border-radius: 20px;
+		display: inline-block;
+		margin-bottom: 0.75rem;
+	}
+	.page-title {
+		font-size: 2.5rem;
+		font-weight: 700;
+		color: var(--color-text, #0f172a);
+		margin: 0 0 1rem 0;
+		letter-spacing: -0.02em;
+	}
+	.page-description {
+		font-size: 1.125rem;
+		color: var(--color-text-secondary, #475569);
+		line-height: 1.6;
+		margin: 0;
+	}
+	.recipes-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+		gap: 2rem;
+	}
+	.empty-state {
+		text-align: center;
+		padding: 4rem 1rem;
+		color: var(--color-muted, #64748b);
+	}
+</style>

@@ -1,0 +1,111 @@
+---
+import { getEmDashCollection } from "emdash";
+import Base from "../../layouts/Base.astro";
+import ProductCard from "../../components/ProductCard.astro";
+
+const { entries: products, cacheHint } = await getEmDashCollection("products", {
+	orderBy: { createdAt: "desc" },
+});
+
+Astro.cache.set(cacheHint);
+---
+
+<Base title="Cottage Bakery Shop | Nakita's Kitchen" description="Pre-order fresh artisanal sourdough, brioche knots, and shortbread baked under Cottage Food License #CFO-LA-2026-9481.">
+	<div class="container main-content">
+		<header class="page-header">
+			<div class="header-badge">Cottage Food Bakery</div>
+			<h1 class="page-title">Weekly Bake Pre-Orders</h1>
+			<p class="page-description">
+				All items are freshly baked in small batches under Cottage License #CFO-LA-2026-9481 using organic flours and wholesome ingredients. Pre-order by Thursday for Saturday morning pickup.
+			</p>
+		</header>
+
+		{products && products.length > 0 ? (
+			<div class="products-grid">
+				{products.map((product) => (
+					<ProductCard product={product} />
+				))}
+			</div>
+		) : (
+			<div class="empty-state">
+				<p>No products currently available for pre-order. Check back soon!</p>
+			</div>
+		)}
+
+		<section class="cottage-info-banner">
+			<h3>Cottage Food Operation Information</h3>
+			<p>
+				Food items sold through Nakita's Kitchen are produced under Cottage Food License #CFO-LA-2026-9481. Every item clearly lists all ingredients in descending order of predominance and highlights common food allergens for full consumer safety and regulatory compliance.
+			</p>
+		</section>
+	</div>
+</Base>
+
+<style>
+	.main-content {
+		max-width: 1200px;
+		margin: 0 auto;
+		padding: 3rem 1.5rem;
+	}
+	.page-header {
+		text-align: center;
+		max-width: 720px;
+		margin: 0 auto 3rem auto;
+	}
+	.header-badge {
+		background: #22c55e;
+		color: #ffffff;
+		font-weight: 700;
+		font-size: 0.75rem;
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+		padding: 0.35rem 0.85rem;
+		border-radius: 20px;
+		display: inline-block;
+		margin-bottom: 0.75rem;
+	}
+	.page-title {
+		font-size: 2.75rem;
+		font-weight: 700;
+		color: var(--color-text, #0f172a);
+		margin: 0 0 1rem 0;
+		letter-spacing: -0.02em;
+	}
+	.page-description {
+		font-size: 1.125rem;
+		color: var(--color-text-secondary, #475569);
+		line-height: 1.6;
+		margin: 0;
+	}
+	.products-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+		gap: 2rem;
+		margin-bottom: 4rem;
+	}
+	.empty-state {
+		text-align: center;
+		padding: 4rem 1rem;
+		color: var(--color-muted, #64748b);
+	}
+	.cottage-info-banner {
+		background: var(--color-bg-subtle, #f8fafc);
+		border: 1px solid var(--color-border, #e2e8f0);
+		border-radius: 16px;
+		padding: 2rem;
+		text-align: center;
+		max-width: 800px;
+		margin: 0 auto;
+	}
+	.cottage-info-banner h3 {
+		margin: 0 0 0.5rem 0;
+		font-weight: 700;
+		color: var(--color-text, #0f172a);
+	}
+	.cottage-info-banner p {
+		margin: 0;
+		font-size: 0.9375rem;
+		color: var(--color-text-secondary, #475569);
+		line-height: 1.6;
+	}
+</style>

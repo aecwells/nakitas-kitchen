@@ -1,0 +1,202 @@
+---
+import { getEmDashEntry } from "emdash";
+import { Image } from "emdash/ui";
+import Base from "../../layouts/Base.astro";
+import CottageIngredientNotice from "../../components/CottageIngredientNotice.astro";
+
+const { slug } = Astro.params;
+if (!slug) return Astro.redirect("/404");
+
+const { entry: product, cacheHint } = await getEmDashEntry("products", slug);
+if (!product) return Astro.redirect("/404");
+
+Astro.cache.set(cacheHint);
+const data = product.data;
+---
+
+<Base title={`${data.title} | Nakita's Kitchen Shop`} description={data.description || data.title}>
+	<div class="product-detail-page container">
+		<a href="/shop" class="back-link">&larr; Back to Cottage Bakery Shop</a>
+
+		<div class="product-grid">
+			<div class="product-gallery">
+				{data.featured_image ? (
+					<div class="image-wrapper">
+						<Image image={data.featured_image} alt={data.title} />
+					</div>
+				) : (
+					<div class="image-placeholder">No Image Available</div>
+				)}
+			</div>
+
+			<div class="product-info">
+				<span class="badge-cottage">Cottage Bakery Item</span>
+				<h1 class="product-title">{data.title}</h1>
+				<div class="price-row">
+					<span class="product-price">${data.price}</span>
+					{data.net_weight && <span class="product-weight">Portion: {data.net_weight}</span>}
+				</div>
+
+				{data.description && <p class="product-description">{data.description}</p>}
+
+				<!-- Stripe Checkout Integration Ready Action -->
+				<div class="checkout-card">
+					<div class="stock-label">
+						<span class="dot">●</span> {data.in_stock ? "Available for Saturday Pickup / Pre-Order" : "Currently Out of Stock"}
+					</div>
+
+					<button
+						type="button"
+						class="checkout-btn"
+						disabled={!data.in_stock}
+						data-stripe-price-id={data.stripe_price_id}
+						onclick="alert('Stripe Checkout Connection: Pre-order registration for ' + this.getAttribute('data-stripe-price-id') + ' ready!')"
+					>
+						<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+							<path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+							<line x1="3" y1="6" x2="21" y2="6"/>
+							<path d="M16 10a4 4 0 0 1-8 0"/>
+						</svg>
+						<span>{data.in_stock ? "Pre-Order Now with Stripe" : "Sold Out"}</span>
+					</button>
+
+					<p class="pickup-note">
+						📍 Pickup location: Local Porch / Saturday Farmers Market. Direct pre-order under Cottage License.
+					</p>
+				</div>
+
+				<!-- Cottage License & Ingredients Notice (Dynamically pulls from recipe if matched) -->
+				<CottageIngredientNotice
+					matchedRecipeSlug={data.matched_recipe_slug}
+					explicitIngredients={data.explicit_ingredients}
+					allergens={data.allergens}
+					cottageLicenseNumber={data.cottage_license_number}
+				/>
+			</div>
+		</div>
+	</div>
+</Base>
+
+<style>
+	.product-detail-page {
+		max-width: 1100px;
+		margin: 0 auto;
+		padding: 2.5rem 1.5rem 4rem 1.5rem;
+	}
+	.back-link {
+		color: var(--color-brand, #0066cc);
+		text-decoration: none;
+		font-weight: 600;
+		font-size: 0.875rem;
+		display: inline-block;
+		margin-bottom: 1.5rem;
+	}
+	.product-grid {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 3.5rem;
+		align-items: start;
+	}
+	@media (max-width: 860px) {
+		.product-grid {
+			grid-template-columns: 1fr;
+			gap: 2rem;
+		}
+	}
+	.product-gallery .image-wrapper {
+		aspect-ratio: 4 / 3;
+		border-radius: 16px;
+		overflow: hidden;
+		background: var(--color-bg-subtle, #f1f5f9);
+		border: 1px solid var(--color-border, #e2e8f0);
+	}
+	.product-gallery img {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+	}
+	.badge-cottage {
+		font-size: 0.75rem;
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+		color: #22c55e;
+		display: inline-block;
+		margin-bottom: 0.5rem;
+	}
+	.product-title {
+		font-size: 2.5rem;
+		font-weight: 700;
+		color: var(--color-text, #0f172a);
+		margin: 0 0 1rem 0;
+		line-height: 1.2;
+		letter-spacing: -0.02em;
+	}
+	.price-row {
+		display: flex;
+		align-items: baseline;
+		gap: 1rem;
+		margin-bottom: 1.25rem;
+	}
+	.product-price {
+		font-size: 2rem;
+		font-weight: 800;
+		color: var(--color-brand, #0066cc);
+	}
+	.product-weight {
+		font-size: 0.9375rem;
+		color: var(--color-muted, #64748b);
+	}
+	.product-description {
+		font-size: 1.0625rem;
+		color: var(--color-text-secondary, #475569);
+		line-height: 1.6;
+		margin: 0 0 1.75rem 0;
+	}
+	.checkout-card {
+		background: var(--color-bg-subtle, #f8fafc);
+		border: 1px solid var(--color-border, #e2e8f0);
+		border-radius: 12px;
+		padding: 1.25rem 1.5rem;
+		margin-bottom: 2rem;
+	}
+	.stock-label {
+		font-size: 0.875rem;
+		font-weight: 600;
+		color: #16a34a;
+		margin-bottom: 0.75rem;
+		display: flex;
+		align-items: center;
+		gap: 0.4rem;
+	}
+	.checkout-btn {
+		width: 100%;
+		background: var(--color-brand, #0066cc);
+		color: #ffffff;
+		border: none;
+		border-radius: 8px;
+		padding: 0.9rem 1.5rem;
+		font-size: 1.0625rem;
+		font-weight: 700;
+		cursor: pointer;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.6rem;
+		transition: background-color 0.2s ease, transform 0.1s ease;
+	}
+	.checkout-btn:hover:not(:disabled) {
+		background: var(--color-brand-hover, #0052a3);
+		transform: translateY(-1px);
+	}
+	.checkout-btn:disabled {
+		background: var(--color-muted, #94a3b8);
+		cursor: not-allowed;
+	}
+	.pickup-note {
+		font-size: 0.8125rem;
+		color: var(--color-muted, #64748b);
+		margin: 0.75rem 0 0 0;
+		text-align: center;
+	}
+</style>

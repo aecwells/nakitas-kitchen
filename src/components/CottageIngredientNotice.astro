@@ -1,0 +1,134 @@
+---
+import { getEmDashEntry } from "emdash";
+
+interface Props {
+	cottageLicenseNumber?: string;
+	matchedRecipeSlug?: string;
+	explicitIngredients?: string;
+	allergens?: string;
+}
+
+const {
+	cottageLicenseNumber = "CFO-LA-2026-9481",
+	matchedRecipeSlug,
+	explicitIngredients,
+	allergens,
+} = Astro.props;
+
+let ingredientsText = explicitIngredients || "";
+let recipeTitle = "";
+
+if (matchedRecipeSlug) {
+	try {
+		const { entry: recipe } = await getEmDashEntry("recipes", matchedRecipeSlug);
+		if (recipe?.data?.ingredients) {
+			ingredientsText = recipe.data.ingredients;
+			recipeTitle = recipe.data.title;
+		}
+	} catch (e) {
+		// Fallback to explicit ingredients if match fails
+	}
+}
+---
+
+<div class="cottage-notice-box">
+	<div class="notice-header">
+		<span class="notice-badge">Cottage Food Operation</span>
+		<span class="license-no">License #{cottageLicenseNumber}</span>
+	</div>
+
+	{recipeTitle && (
+		<div class="recipe-match-indicator">
+			<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+				<path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+			</svg>
+			<span>Ingredients pulled from matching recipe: <strong>{recipeTitle}</strong></span>
+		</div>
+	)}
+
+	<div class="ingredients-section">
+		<h4 class="section-title">Full Ingredients Declaration:</h4>
+		<pre class="ingredients-content">{ingredientsText || "Ingredients available upon request."}</pre>
+	</div>
+
+	{allergens && (
+		<div class="allergen-alert">
+			<strong>Allergen Warning:</strong> {allergens}
+		</div>
+	)}
+
+	<p class="statutory-declaration">
+		<em>"Made in a Home Kitchen that has not been inspected by the Department of State or Local Health Services."</em>
+	</p>
+</div>
+
+<style>
+	.cottage-notice-box {
+		background: var(--color-bg-subtle, #f8fafc);
+		border: 1px solid var(--color-border, #e2e8f0);
+		border-radius: 12px;
+		padding: 1.25rem 1.5rem;
+		margin-top: 1.5rem;
+		font-size: 0.9375rem;
+	}
+	.notice-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		margin-bottom: 0.75rem;
+	}
+	.notice-badge {
+		background: var(--color-brand, #0066cc);
+		color: #fff;
+		font-weight: 600;
+		font-size: 0.75rem;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		padding: 0.25rem 0.6rem;
+		border-radius: 4px;
+	}
+	.license-no {
+		font-family: var(--font-mono, monospace);
+		font-size: 0.8125rem;
+		color: var(--color-muted, #64748b);
+	}
+	.recipe-match-indicator {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		color: var(--color-brand, #0066cc);
+		font-size: 0.875rem;
+		margin-bottom: 0.75rem;
+		padding: 0.4rem 0.75rem;
+		background: rgba(0, 102, 204, 0.08);
+		border-radius: 6px;
+	}
+	.section-title {
+		font-weight: 600;
+		margin: 0 0 0.4rem 0;
+		color: var(--color-text, #1e293b);
+	}
+	.ingredients-content {
+		font-family: var(--font-body, inherit);
+		white-space: pre-wrap;
+		margin: 0 0 1rem 0;
+		color: var(--color-text-secondary, #475569);
+		line-height: 1.5;
+	}
+	.allergen-alert {
+		background: #fff3cd;
+		color: #856404;
+		border-left: 4px solid #ffeba2;
+		padding: 0.6rem 0.8rem;
+		border-radius: 4px;
+		margin-bottom: 0.75rem;
+		font-size: 0.875rem;
+	}
+	.statutory-declaration {
+		font-size: 0.8125rem;
+		color: var(--color-muted, #64748b);
+		margin: 0;
+		border-top: 1px dashed var(--color-border, #cbd5e1);
+		padding-top: 0.6rem;
+	}
+</style>

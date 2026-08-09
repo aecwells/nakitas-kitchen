@@ -2,13 +2,13 @@
 	"$schema": "https://emdashcms.com/seed.schema.json",
 	"version": "1",
 	"meta": {
-		"name": "Blog Starter",
-		"description": "A blog with posts and pages",
-		"author": "EmDash"
+		"name": "Nakita's Kitchen Starter",
+		"description": "Bakery recipes, blog, and cottage food storefront",
+		"author": "Nakita's Kitchen"
 	},
 	"settings": {
 		"title": "Nakita's Kitchen",
-		"tagline": "Delicious recipes, culinary stories, and home cooking tips from Nakita"
+		"tagline": "Handcrafted sourdough, artisanal baked goods, and cottage kitchen recipes"
 	},
 	"collections": [
 		{
@@ -44,6 +44,134 @@
 			]
 		},
 		{
+			"slug": "recipes",
+			"label": "Recipes",
+			"labelSingular": "Recipe",
+			"supports": ["drafts", "revisions", "search", "seo"],
+			"fields": [
+				{
+					"slug": "title",
+					"label": "Title",
+					"type": "string",
+					"required": true,
+					"searchable": true
+				},
+				{
+					"slug": "featured_image",
+					"label": "Featured Image",
+					"type": "image"
+				},
+				{
+					"slug": "prep_time",
+					"label": "Prep Time",
+					"type": "string"
+				},
+				{
+					"slug": "cook_time",
+					"label": "Cook Time",
+					"type": "string"
+				},
+				{
+					"slug": "servings",
+					"label": "Yield / Servings",
+					"type": "string"
+				},
+				{
+					"slug": "ingredients",
+					"label": "Ingredients List",
+					"type": "text",
+					"required": true
+				},
+				{
+					"slug": "allergens",
+					"label": "Allergen Disclosures",
+					"type": "string"
+				},
+				{
+					"slug": "content",
+					"label": "Baking Notes & Instructions",
+					"type": "portableText",
+					"searchable": true
+				},
+				{
+					"slug": "excerpt",
+					"label": "Summary Excerpt",
+					"type": "text"
+				},
+				{
+					"slug": "cottage_license_notice",
+					"label": "Cottage Food Notice",
+					"type": "string"
+				}
+			]
+		},
+		{
+			"slug": "products",
+			"label": "Store Products",
+			"labelSingular": "Store Product",
+			"supports": ["drafts", "revisions", "search", "seo"],
+			"fields": [
+				{
+					"slug": "title",
+					"label": "Product Name",
+					"type": "string",
+					"required": true,
+					"searchable": true
+				},
+				{
+					"slug": "price",
+					"label": "Price ($)",
+					"type": "string",
+					"required": true
+				},
+				{
+					"slug": "featured_image",
+					"label": "Product Image",
+					"type": "image"
+				},
+				{
+					"slug": "description",
+					"label": "Description",
+					"type": "text"
+				},
+				{
+					"slug": "net_weight",
+					"label": "Net Weight / Portion",
+					"type": "string"
+				},
+				{
+					"slug": "cottage_license_number",
+					"label": "Cottage License Number",
+					"type": "string"
+				},
+				{
+					"slug": "matched_recipe_slug",
+					"label": "Matching Recipe Slug (Pulls Ingredients)",
+					"type": "string"
+				},
+				{
+					"slug": "explicit_ingredients",
+					"label": "Fallback / Custom Ingredients List",
+					"type": "text"
+				},
+				{
+					"slug": "allergens",
+					"label": "Allergen Disclosures",
+					"type": "string"
+				},
+				{
+					"slug": "in_stock",
+					"label": "Available for Pre-Order",
+					"type": "boolean"
+				},
+				{
+					"slug": "stripe_price_id",
+					"label": "Stripe Price ID",
+					"type": "string"
+				}
+			]
+		},
+		{
 			"slug": "pages",
 			"label": "Pages",
 			"labelSingular": "Page",
@@ -71,19 +199,23 @@
 			"label": "Categories",
 			"labelSingular": "Category",
 			"hierarchical": true,
-			"collections": ["posts"],
+			"collections": ["posts", "recipes", "products"],
 			"terms": [
 				{
-					"slug": "development",
-					"label": "Development"
+					"slug": "breads",
+					"label": "Breads & Sourdough"
 				},
 				{
-					"slug": "design",
-					"label": "Design"
+					"slug": "pastries",
+					"label": "Pastries & Sweets"
 				},
 				{
-					"slug": "notes",
-					"label": "Notes"
+					"slug": "cookies",
+					"label": "Cookies & Biscuits"
+				},
+				{
+					"slug": "pantry",
+					"label": "Pantry & Spreads"
 				}
 			]
 		},
@@ -92,38 +224,37 @@
 			"label": "Tags",
 			"labelSingular": "Tag",
 			"hierarchical": false,
-			"collections": ["posts"],
+			"collections": ["posts", "recipes", "products"],
 			"terms": [
 				{
-					"slug": "webdev",
-					"label": "Web Development"
+					"slug": "sourdough",
+					"label": "Wild Yeast Sourdough"
 				},
 				{
-					"slug": "opinion",
-					"label": "Opinion"
+					"slug": "organic",
+					"label": "Organic Flour"
 				},
 				{
-					"slug": "tools",
-					"label": "Tools"
+					"slug": "cottage-bakery",
+					"label": "Cottage Bakery"
 				},
 				{
-					"slug": "creativity",
-					"label": "Creativity"
+					"slug": "preorder",
+					"label": "Weekly Pre-Order"
 				}
 			]
 		}
 	],
 	"bylines": [
 		{
-			"id": "byline-editorial",
-			"slug": "emdash-editorial",
-			"displayName": "EmDash Editorial"
+			"id": "byline-nakita",
+			"slug": "nakita",
+			"displayName": "Nakita"
 		},
 		{
-			"id": "byline-guest",
-			"slug": "guest-contributor",
-			"displayName": "Guest Contributor",
-			"isGuest": true
+			"id": "byline-kitchen",
+			"slug": "nakitas-kitchen-team",
+			"displayName": "Nakita's Kitchen Team"
 		}
 	],
 	"menus": [
@@ -138,13 +269,23 @@
 				},
 				{
 					"type": "custom",
-					"label": "About",
-					"url": "/pages/about"
+					"label": "Recipes",
+					"url": "/recipes"
 				},
 				{
 					"type": "custom",
-					"label": "Posts",
+					"label": "Cottage Bakery Shop",
+					"url": "/shop"
+				},
+				{
+					"type": "custom",
+					"label": "Stories & Posts",
 					"url": "/posts"
+				},
+				{
+					"type": "custom",
+					"label": "About",
+					"url": "/pages/about"
 				}
 			]
 		}
@@ -164,29 +305,6 @@
 					"type": "component",
 					"componentId": "core:categories",
 					"title": "Categories"
-				},
-				{
-					"type": "component",
-					"componentId": "core:tags",
-					"title": "Tags"
-				},
-				{
-					"type": "component",
-					"componentId": "core:recent-posts",
-					"title": "Recent Posts",
-					"settings": {
-						"count": 5,
-						"showDate": true
-					}
-				},
-				{
-					"type": "component",
-					"componentId": "core:archives",
-					"title": "Archives",
-					"settings": {
-						"type": "monthly",
-						"limit": 6
-					}
 				}
 			]
 		},
@@ -197,7 +315,7 @@
 			"widgets": [
 				{
 					"type": "content",
-					"title": "About",
+					"title": "Cottage Kitchen Disclosure",
 					"content": [
 						{
 							"_type": "block",
@@ -205,7 +323,7 @@
 							"children": [
 								{
 									"_type": "span",
-									"text": "A blog about software, design, and the occasional stray thought.",
+									"text": "Nakita's Kitchen is a registered Cottage Food Operation (License #CFO-LA-2026-9481). Food items are prepared in a home kitchen that is not subject to state licensing or inspection.",
 									"_key": "k1"
 								}
 							],
@@ -218,10 +336,10 @@
 	],
 	"sections": [
 		{
-			"slug": "newsletter-signup",
-			"title": "Newsletter Signup",
-			"description": "A call-to-action block for newsletter subscriptions",
-			"keywords": ["newsletter", "subscribe", "email", "cta"],
+			"slug": "bakery-announcement",
+			"title": "Weekly Bake Schedule",
+			"description": "Weekly sourdough bake drops and pickup hours",
+			"keywords": ["bake", "schedule", "sourdough", "pickup"],
 			"source": "theme",
 			"content": [
 				{
@@ -230,7 +348,7 @@
 					"children": [
 						{
 							"_type": "span",
-							"text": "Stay in the loop",
+							"text": "Fresh Bake Pickups Every Saturday",
 							"_key": "k1"
 						}
 					],
@@ -242,32 +360,11 @@
 					"children": [
 						{
 							"_type": "span",
-							"text": "Get notified when new posts are published. No spam, unsubscribe anytime.",
+							"text": "Pre-order by Thursday 5 PM for Saturday morning porch pickup or local farmers market drop-off.",
 							"_key": "k3"
 						}
 					],
 					"_key": "k2"
-				}
-			]
-		},
-		{
-			"slug": "about-author",
-			"title": "About the Author",
-			"description": "Brief author bio for use in posts or pages",
-			"keywords": ["author", "bio", "about"],
-			"source": "theme",
-			"content": [
-				{
-					"_type": "block",
-					"style": "normal",
-					"children": [
-						{
-							"_type": "span",
-							"text": "A software developer who writes about building things on the web. Based somewhere with good coffee and reliable internet.",
-							"_key": "k1"
-						}
-					],
-					"_key": "k0"
 				}
 			]
 		}
@@ -279,7 +376,7 @@
 				"slug": "about",
 				"status": "published",
 				"data": {
-					"title": "About",
+					"title": "About Nakita's Kitchen",
 					"content": [
 						{
 							"_type": "block",
@@ -287,7 +384,7 @@
 							"children": [
 								{
 									"_type": "span",
-									"text": "A place for writing about software, design, and the occasional stray thought. No posting schedule, no newsletter funnel. Just things I wanted to write down.",
+									"text": "Welcome to Nakita's Kitchen! We are an artisanal cottage bakery dedicated to slow-fermented sourdoughs, heritage grain pastries, and seasonal preserves baked in small batches.",
 									"_key": "k1"
 								}
 							],
@@ -299,7 +396,7 @@
 							"children": [
 								{
 									"_type": "span",
-									"text": "Built with Astro and EmDash. The source is open if you want to see how it works.",
+									"text": "All items are baked locally under Cottage Food License #CFO-LA-2026-9481 using organic stone-ground flours, local dairy, and unrefined sugars.",
 									"_key": "k3"
 								}
 							],
@@ -309,628 +406,312 @@
 				}
 			}
 		],
-		"posts": [
+		"recipes": [
 			{
-				"id": "post-1",
-				"slug": "building-for-the-long-term",
+				"id": "rec-1",
+				"slug": "artisan-sourdough-boule",
 				"status": "published",
 				"data": {
-					"title": "Building for the Long Term",
-					"excerpt": "The frameworks will change. The databases will change. What survives is the clarity of your thinking.",
+					"title": "Artisan Country Sourdough Boule",
+					"excerpt": "A crispy, blistered crust with an open, airy crumb and subtle tang crafted over 36 hours of cold fermentation.",
+					"prep_time": "30 mins + 24hr ferment",
+					"cook_time": "45 mins",
+					"servings": "1 loaf (approx 750g)",
+					"allergens": "Contains: Wheat (Gluten).",
+					"cottage_license_notice": "Baked in a Cottage Food Operation (License #CFO-LA-2026-9481).",
+					"ingredients": "• 400g Organic Unbleached Bread Flour\n• 100g Whole Grain Rye Flour\n• 375g Filtered Water (75% hydration)\n• 100g Active Sourdough Starter\n• 10g Fine Sea Salt",
 					"featured_image": {
 						"$media": {
-							"url": "https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=1200&h=800&fit=crop",
-							"alt": "Code on a monitor in a dark room",
-							"filename": "building-long-term.jpg"
+							"url": "https://images.unsplash.com/photo-1589367920969-ab8e050bbb04?w=1200&h=800&fit=crop",
+							"alt": "Freshly baked sourdough loaf with golden blistered crust",
+							"filename": "sourdough-boule.jpg"
 						}
 					},
 					"content": [
 						{
 							"_type": "block",
-							"style": "normal",
-							"children": [
-								{
-									"_type": "span",
-									"text": "Every few years the industry collectively decides that everything we've been doing is wrong and there's a better way. New frameworks, new paradigms, new build tools. The churn is relentless, and if you're not careful, you spend more time migrating than building.",
-									"_key": "k1"
-								}
-							],
+							"style": "h2",
+							"children": [{ "_type": "span", "text": "1. Autolyse & Levain Building", "_key": "k1" }],
 							"_key": "k0"
 						},
 						{
 							"_type": "block",
 							"style": "normal",
-							"children": [
-								{
-									"_type": "span",
-									"text": "I've been writing software long enough to have seen several of these cycles. jQuery to Backbone to Angular to React to whatever comes next. Each transition felt urgent at the time. Looking back, the things that actually mattered were rarely about the framework.",
-									"_key": "k3"
-								}
-							],
+							"children": [{ "_type": "span", "text": "Mix the bread flour, rye flour, and water until no dry spots remain. Rest for 45 minutes to autolyse. Fold in active levain and salt gently.", "_key": "k3" }],
 							"_key": "k2"
 						},
 						{
 							"_type": "block",
 							"style": "h2",
-							"children": [
-								{
-									"_type": "span",
-									"text": "What survives",
-									"_key": "k5"
-								}
-							],
+							"children": [{ "_type": "span", "text": "2. Bulk Fermentation & Folds", "_key": "k5" }],
 							"_key": "k4"
 						},
 						{
 							"_type": "block",
 							"style": "normal",
-							"children": [
-								{
-									"_type": "span",
-									"text": "Clean data models survive. Clear boundaries between systems survive. Good naming survives. The decision to keep things simple when you could have made them clever - that definitely survives.",
-									"_key": "k7"
-								}
-							],
+							"children": [{ "_type": "span", "text": "Perform 4 stretch-and-folds spaced 30 minutes apart over 2.5 hours. Allow the dough to rise in a warm spot until expanded by 50%.", "_key": "k7" }],
 							"_key": "k6"
 						},
 						{
 							"_type": "block",
-							"style": "normal",
-							"children": [
-								{
-									"_type": "span",
-									"text": "What doesn't survive is code that was written to impress, abstractions built for problems that never materialized, and architectures designed around a framework's opinions rather than the domain's reality.",
-									"_key": "k9"
-								}
-							],
+							"style": "h2",
+							"children": [{ "_type": "span", "text": "3. Shaping & Dutch Oven Bake", "_key": "k9" }],
 							"_key": "k8"
 						},
 						{
 							"_type": "block",
 							"style": "normal",
-							"children": [
-								{
-									"_type": "span",
-									"text": "The best code I've written is boring. It reads like prose, does one thing well, and doesn't require a PhD in category theory to understand. The worst code I've written was technically impressive at the time.",
-									"_key": "k11"
-								}
-							],
+							"children": [{ "_type": "span", "text": "Pre-shape into a round, rest 20 mins, then shape tightly into a banneton basket. Cold retard in the fridge overnight. Bake at 450°F (230°C) covered in a preheated Dutch oven for 20 mins with steam, then uncovered for 25 mins until mahogany golden.", "_key": "k11" }],
 							"_key": "k10"
 						}
 					]
 				},
+				"bylines": [{ "byline": "byline-nakita" }],
+				"taxonomies": {
+					"category": ["breads"],
+					"tag": ["sourdough", "organic", "cottage-bakery"]
+				}
+			},
+			{
+				"id": "rec-2",
+				"slug": "cardamom-cinnamon-knots",
+				"status": "published",
+				"data": {
+					"title": "Swedish Cardamom Cinnamon Knots",
+					"excerpt": "Soft enriched brioche dough laced with freshly crushed green cardamom pods and organic Ceylon cinnamon.",
+					"prep_time": "40 mins",
+					"cook_time": "22 mins",
+					"servings": "8 individual knots",
+					"allergens": "Contains: Wheat, Whole Milk, Butter (Milk), Eggs.",
+					"cottage_license_notice": "Baked in a Cottage Food Operation (License #CFO-LA-2026-9481).",
+					"ingredients": "• 500g Organic All-Purpose Flour\n• 250g Whole Milk (Warm)\n• 80g Grass-Fed European Butter (Softened)\n• 70g Organic Cane Sugar\n• 1 Egg (Free-Range)\n• 2 tsp Crushed Green Cardamom Seeds\n• 1.5 tsp Active Dry Yeast\n• 1 tsp Sea Salt\n• Filling: Butter, Brown Sugar, Ground Cinnamon, Cardamom",
+					"featured_image": {
+						"$media": {
+							"url": "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=1200&h=800&fit=crop",
+							"alt": "Golden Swedish cardamom knots dusted with pearl sugar",
+							"filename": "cardamom-knots.jpg"
+						}
+					},
+					"content": [
+						{
+							"_type": "block",
+							"style": "h2",
+							"children": [{ "_type": "span", "text": "1. Dough Kneading & First Rise", "_key": "k1" }],
+							"_key": "k0"
+						},
+						{
+							"_type": "block",
+							"style": "normal",
+							"children": [{ "_type": "span", "text": "Whisk warm milk, yeast, and sugar. Knead with flour, cardamom, and egg for 8 minutes until smooth. Gradually incorporate softened butter until shiny and elastic. Let rise 1.5 hours.", "_key": "k3" }],
+							"_key": "k2"
+						},
+						{
+							"_type": "block",
+							"style": "h2",
+							"children": [{ "_type": "span", "text": "2. Filling & Knot Shaping", "_key": "k5" }],
+							"_key": "k4"
+						},
+						{
+							"_type": "block",
+							"style": "normal",
+							"children": [{ "_type": "span", "text": "Roll into a 12x18 inch rectangle. Spread spiced butter filling evenly. Fold into thirds like a letter, cut strips, twist, and tie into traditional Swedish knots.", "_key": "k7" }],
+							"_key": "k6"
+						},
+						{
+							"_type": "block",
+							"style": "h2",
+							"children": [{ "_type": "span", "text": "3. Baking & Vanilla Glaze", "_key": "k9" }],
+							"_key": "k8"
+						},
+						{
+							"_type": "block",
+							"style": "normal",
+							"children": [{ "_type": "span", "text": "Proof for 45 minutes, egg wash, and sprinkle with Swedish pearl sugar. Bake at 375°F (190°C) for 20-22 minutes until deep amber golden.", "_key": "k11" }],
+							"_key": "k10"
+						}
+					]
+				},
+				"bylines": [{ "byline": "byline-nakita" }],
+				"taxonomies": {
+					"category": ["pastries"],
+					"tag": ["cottage-bakery", "preorder"]
+				}
+			},
+			{
+				"id": "rec-3",
+				"slug": "meyer-lemon-shortbread",
+				"status": "published",
+				"data": {
+					"title": "Meyer Lemon Thyme Shortbread",
+					"excerpt": "Melt-in-your-mouth tender shortbread cookies infusing fresh Meyer lemon zest and subtle garden thyme.",
+					"prep_time": "15 mins + 1hr chill",
+					"cook_time": "18 mins",
+					"servings": "12 thick cookies",
+					"allergens": "Contains: Wheat, Butter (Milk).",
+					"cottage_license_notice": "Baked in a Cottage Food Operation (License #CFO-LA-2026-9481).",
+					"ingredients": "• 250g Organic Pastry Flour\n• 175g Cultured Irish Butter (Cold & Cubed)\n• 70g Powdered Cane Sugar\n• Zest of 2 Fresh Meyer Lemons\n• 1 tsp Chopped Fresh Lemon Thyme\n• 1/2 tsp Vanilla Bean Paste\n• Flaky Sea Salt for topping",
+					"featured_image": {
+						"$media": {
+							"url": "https://images.unsplash.com/photo-1558961363-fa8fdf82db35?w=1200&h=800&fit=crop",
+							"alt": "Lemon shortbread cookies arranged neatly on parchment paper",
+							"filename": "lemon-shortbread.jpg"
+						}
+					},
+					"content": [
+						{
+							"_type": "block",
+							"style": "h2",
+							"children": [{ "_type": "span", "text": "1. Creaming & Dough Preparation", "_key": "k1" }],
+							"_key": "k0"
+						},
+						{
+							"_type": "block",
+							"style": "normal",
+							"children": [{ "_type": "span", "text": "Rub lemon zest and thyme into powdered sugar until fragrant. Beat with cold butter and vanilla until pale. Fold in flour gently until a cohesive dough forms.", "_key": "k3" }],
+							"_key": "k2"
+						},
+						{
+							"_type": "block",
+							"style": "h2",
+							"children": [{ "_type": "span", "text": "2. Chilling & Slow Bake", "_key": "k5" }],
+							"_key": "k4"
+						},
+						{
+							"_type": "block",
+							"style": "normal",
+							"children": [{ "_type": "span", "text": "Shape into a log, wrap in parchment, and chill for 1 hour until firm. Slice into 1/2-inch thick rounds. Bake at 325°F (160°C) for 18 minutes until barely golden on the edges.", "_key": "k7" }],
+							"_key": "k6"
+						}
+					]
+				},
+				"bylines": [{ "byline": "byline-nakita" }],
+				"taxonomies": {
+					"category": ["cookies"],
+					"tag": ["organic", "cottage-bakery"]
+				}
+			}
+		],
+		"products": [
+			{
+				"id": "prod-1",
+				"slug": "artisan-sourdough-loaf",
+				"status": "published",
+				"data": {
+					"title": "Country Sourdough Loaf",
+					"price": "12.00",
+					"net_weight": "24 oz (680g)",
+					"description": "Naturally leavened 36-hour cold fermented bread baked in a stone oven. Crisp crust with an airy, tender interior.",
+					"cottage_license_number": "CFO-LA-2026-9481",
+					"matched_recipe_slug": "artisan-sourdough-boule",
+					"allergens": "Contains: Wheat (Gluten).",
+					"in_stock": true,
+					"stripe_price_id": "price_1SourdoughBouleDemo",
+					"featured_image": {
+						"$media": {
+							"url": "https://images.unsplash.com/photo-1589367920969-ab8e050bbb04?w=1200&h=800&fit=crop",
+							"alt": "Fresh sourdough loaf",
+							"filename": "sourdough-product.jpg"
+						}
+					}
+				},
+				"taxonomies": {
+					"category": ["breads"],
+					"tag": ["sourdough", "preorder"]
+				}
+			},
+			{
+				"id": "prod-2",
+				"slug": "cardamom-cinnamon-knots-4pack",
+				"status": "published",
+				"data": {
+					"title": "Cardamom Cinnamon Knots (4-Pack)",
+					"price": "16.00",
+					"net_weight": "16 oz (450g)",
+					"description": "Four buttery brioche knots infused with organic cardamom and Ceylon cinnamon. Finished with Swedish pearl sugar.",
+					"cottage_license_number": "CFO-LA-2026-9481",
+					"matched_recipe_slug": "cardamom-cinnamon-knots",
+					"allergens": "Contains: Wheat, Whole Milk, Butter (Milk), Eggs.",
+					"in_stock": true,
+					"stripe_price_id": "price_1CardamomKnotsDemo",
+					"featured_image": {
+						"$media": {
+							"url": "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=1200&h=800&fit=crop",
+							"alt": "Cardamom knots 4 pack",
+							"filename": "knots-product.jpg"
+						}
+					}
+				},
+				"taxonomies": {
+					"category": ["pastries"],
+					"tag": ["preorder"]
+				}
+			},
+			{
+				"id": "prod-3",
+				"slug": "meyer-lemon-shortbread-box",
+				"status": "published",
+				"data": {
+					"title": "Meyer Lemon Shortbread Box (8-Pack)",
+					"price": "14.00",
+					"net_weight": "12 oz (340g)",
+					"description": "Tender, buttery shortbread cookies scented with organic Meyer lemon zest and fresh thyme. Packed in an eco-friendly bakery box.",
+					"cottage_license_number": "CFO-LA-2026-9481",
+					"matched_recipe_slug": "meyer-lemon-shortbread",
+					"allergens": "Contains: Wheat, Butter (Milk).",
+					"in_stock": true,
+					"stripe_price_id": "price_1ShortbreadBoxDemo",
+					"featured_image": {
+						"$media": {
+							"url": "https://images.unsplash.com/photo-1558961363-fa8fdf82db35?w=1200&h=800&fit=crop",
+							"alt": "Meyer Lemon Shortbread box",
+							"filename": "shortbread-product.jpg"
+						}
+					}
+				},
+				"taxonomies": {
+					"category": ["cookies"],
+					"tag": ["organic"]
+				}
+			}
+		],
+		"posts": [
+			{
+				"id": "post-1",
+				"slug": "welcome-to-nakitas-kitchen",
+				"status": "published",
+				"data": {
+					"title": "Welcome to Nakita's Kitchen",
+					"excerpt": "Exploring the magic of wild yeast, slow fermentation, and seasonal baking from our cottage kitchen.",
+					"featured_image": {
+						"$media": {
+							"url": "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=1200&h=800&fit=crop",
+							"alt": "Baking flour and sourdough dough on marble counter",
+							"filename": "welcome-baking.jpg"
+						}
+					},
+					"content": [
+						{
+							"_type": "block",
+							"style": "normal",
+							"children": [
+								{
+									"_type": "span",
+									"text": "Baking has always been about patience and intention. In our cottage kitchen, every loaf of sourdough takes over 36 hours from starter feed to final bake. We believe in unhurried food made with honest ingredients.",
+									"_key": "k1"
+								}
+							],
+							"_key": "k0"
+						}
+					]
+				},
 				"bylines": [
 					{
-						"byline": "byline-editorial"
-					},
-					{
-						"byline": "byline-guest",
-						"roleLabel": "Guest essay"
+						"byline": "byline-nakita"
 					}
 				],
 				"taxonomies": {
-					"category": ["development"],
-					"tag": ["opinion"]
-				}
-			},
-			{
-				"id": "post-2",
-				"slug": "the-case-for-static",
-				"status": "published",
-				"data": {
-					"title": "The Case for Static",
-					"excerpt": "Static sites aren't a step backwards. They're what you get when you take performance and simplicity seriously.",
-					"featured_image": {
-						"$media": {
-							"url": "https://images.unsplash.com/photo-1499750310107-5fef28a66643?w=1200&h=800&fit=crop",
-							"alt": "Laptop and coffee on a wooden table",
-							"filename": "case-for-static.jpg"
-						}
-					},
-					"content": [
-						{
-							"_type": "block",
-							"style": "normal",
-							"children": [
-								{
-									"_type": "span",
-									"text": "There's a certain irony in the fact that the web started static, went dynamic, and is now swinging back toward static again. But the static sites of today aren't the hand-coded HTML pages of 1998. They're generated, optimized, and deployed to edge networks that serve them in milliseconds.",
-									"_key": "k1"
-								}
-							],
-							"_key": "k0"
-						},
-						{
-							"_type": "block",
-							"style": "normal",
-							"children": [
-								{
-									"_type": "span",
-									"text": "The pitch for server-rendered everything was compelling: dynamic content, personalization, real-time data. But most sites don't need most of that most of the time. A blog post doesn't need to be rendered on every request. A product page doesn't change every second.",
-									"_key": "k3"
-								}
-							],
-							"_key": "k2"
-						},
-						{
-							"_type": "block",
-							"style": "h2",
-							"children": [
-								{
-									"_type": "span",
-									"text": "The performance argument",
-									"_key": "k5"
-								}
-							],
-							"_key": "k4"
-						},
-						{
-							"_type": "block",
-							"style": "normal",
-							"children": [
-								{
-									"_type": "span",
-									"text": "A static file served from a CDN is as fast as the web gets. No cold starts, no database queries, no server-side rendering overhead. The Time to First Byte is essentially the network latency to your nearest edge node. You can't beat physics.",
-									"_key": "k7"
-								}
-							],
-							"_key": "k6"
-						},
-						{
-							"_type": "block",
-							"style": "normal",
-							"children": [
-								{
-									"_type": "span",
-									"text": "And when you do need dynamic behavior, you can add it surgically. An island of interactivity in a sea of static HTML. The best of both worlds, without paying the cost of either at all times.",
-									"_key": "k9"
-								}
-							],
-							"_key": "k8"
-						}
-					]
-				},
-				"bylines": [
-					{
-						"byline": "byline-editorial"
-					}
-				],
-				"taxonomies": {
-					"category": ["development"],
-					"tag": ["webdev", "opinion"]
-				}
-			},
-			{
-				"id": "post-3",
-				"slug": "learning-in-public",
-				"status": "published",
-				"data": {
-					"title": "Learning in Public",
-					"excerpt": "Writing about what you're learning is the fastest way to find out what you don't actually understand.",
-					"featured_image": {
-						"$media": {
-							"url": "https://images.unsplash.com/photo-1432821596592-e2c18b78144f?w=1200&h=800&fit=crop",
-							"alt": "Notebook and pen on a desk",
-							"filename": "learning-in-public.jpg"
-						}
-					},
-					"content": [
-						{
-							"_type": "block",
-							"style": "normal",
-							"children": [
-								{
-									"_type": "span",
-									"text": "I started writing about things I was learning not because I had anything original to say, but because I kept forgetting what I'd figured out. The blog posts were notes to my future self, published publicly more out of laziness than courage.",
-									"_key": "k1"
-								}
-							],
-							"_key": "k0"
-						},
-						{
-							"_type": "block",
-							"style": "normal",
-							"children": [
-								{
-									"_type": "span",
-									"text": "What I didn't expect was how much the writing itself would accelerate the learning. There's a particular kind of clarity that comes from trying to explain something to someone else. The gaps in your understanding, which you can happily ignore when the knowledge lives only in your head, become painfully obvious when you try to put it into sentences.",
-									"_key": "k3"
-								}
-							],
-							"_key": "k2"
-						},
-						{
-							"_type": "block",
-							"style": "h2",
-							"children": [
-								{
-									"_type": "span",
-									"text": "The fear of being wrong",
-									"_key": "k5"
-								}
-							],
-							"_key": "k4"
-						},
-						{
-							"_type": "block",
-							"style": "normal",
-							"children": [
-								{
-									"_type": "span",
-									"text": "The biggest barrier isn't time or writing skill. It's the fear of publishing something that turns out to be wrong. But here's the thing: being wrong publicly is one of the most efficient ways to learn. Someone will correct you, often kindly, and you'll remember that correction forever.",
-									"_key": "k7"
-								}
-							],
-							"_key": "k6"
-						},
-						{
-							"_type": "block",
-							"style": "normal",
-							"children": [
-								{
-									"_type": "span",
-									"text": "The posts that helped me most weren't written by experts. They were written by people one step ahead of me on the same path, in language that hadn't yet been polished into abstraction. There's a place for that kind of writing, and it's more valuable than most people realize.",
-									"_key": "k9"
-								}
-							],
-							"_key": "k8"
-						}
-					]
-				},
-				"taxonomies": {
-					"category": ["notes"],
-					"tag": ["opinion"]
-				}
-			},
-			{
-				"id": "post-4",
-				"slug": "small-tools-big-impact",
-				"status": "published",
-				"data": {
-					"title": "Small Tools, Big Impact",
-					"excerpt": "The best developer tools do one thing well and get out of your way. A love letter to focused software.",
-					"featured_image": {
-						"$media": {
-							"url": "https://images.unsplash.com/photo-1575026615908-666710ae5e47?w=1200&h=800&fit=crop",
-							"alt": "Wrenches and hand tools hanging on a workshop wall",
-							"filename": "small-tools.jpg"
-						}
-					},
-					"content": [
-						{
-							"_type": "block",
-							"style": "normal",
-							"children": [
-								{
-									"_type": "span",
-									"text": "There's a class of software that doesn't get enough appreciation. Not the frameworks or the platforms or the IDEs, but the small, sharp tools that solve one problem so well you stop thinking about them. They become invisible, which is the highest compliment you can pay a tool.",
-									"_key": "k1"
-								}
-							],
-							"_key": "k0"
-						},
-						{
-							"_type": "block",
-							"style": "normal",
-							"children": [
-								{
-									"_type": "span",
-									"text": "I'm talking about things like ripgrep, which searches code so fast it changed how I think about searching. Or jq, which makes JSON feel like a first-class data format in the terminal. Or curl, which has been quietly powering the internet's plumbing for decades.",
-									"_key": "k3"
-								}
-							],
-							"_key": "k2"
-						},
-						{
-							"_type": "block",
-							"style": "h2",
-							"children": [
-								{
-									"_type": "span",
-									"text": "The Unix philosophy, revisited",
-									"_key": "k5"
-								}
-							],
-							"_key": "k4"
-						},
-						{
-							"_type": "block",
-							"style": "normal",
-							"children": [
-								{
-									"_type": "span",
-									"text": "Do one thing well. The advice is old enough to be a cliche, but the best modern tools still follow it. They don't try to be platforms. They don't have plugin ecosystems or configuration languages or startup wizards. They do their job and they compose with other tools that do theirs.",
-									"_key": "k7"
-								}
-							],
-							"_key": "k6"
-						},
-						{
-							"_type": "block",
-							"style": "normal",
-							"children": [
-								{
-									"_type": "span",
-									"text": "The temptation is always to add more. One more feature, one more option, one more integration. But every addition is a decision someone has to make, a path through the code that has to be maintained, a thing that can break. The best tools resist this. They stay small, and in staying small, they stay reliable.",
-									"_key": "k9"
-								}
-							],
-							"_key": "k8"
-						}
-					]
-				},
-				"taxonomies": {
-					"category": ["development"],
-					"tag": ["tools"]
-				}
-			},
-			{
-				"id": "post-5",
-				"slug": "designing-with-constraints",
-				"status": "published",
-				"data": {
-					"title": "Designing with Constraints",
-					"excerpt": "Limitations aren't obstacles to creativity. They're the structure that makes creativity possible.",
-					"featured_image": {
-						"$media": {
-							"url": "https://images.unsplash.com/photo-1513542789411-b6a5d4f31634?w=1200&h=800&fit=crop",
-							"alt": "Pencils and design tools on a desk",
-							"filename": "designing-with-constraints.jpg"
-						}
-					},
-					"content": [
-						{
-							"_type": "block",
-							"style": "normal",
-							"children": [
-								{
-									"_type": "span",
-									"text": "Give a designer a blank canvas and unlimited time, and they'll often produce something mediocre. Give them a tight brief, a small screen, and a deadline, and they'll surprise you. This isn't a paradox - it's how creativity actually works.",
-									"_key": "k1"
-								}
-							],
-							"_key": "k0"
-						},
-						{
-							"_type": "block",
-							"style": "normal",
-							"children": [
-								{
-									"_type": "span",
-									"text": "Constraints force decisions. When you can't use more than two typefaces, you have to choose carefully. When the page has to load in under a second, every element earns its place. When the interface has to work on a 320px screen, you discover what's truly essential.",
-									"_key": "k3"
-								}
-							],
-							"_key": "k2"
-						},
-						{
-							"_type": "block",
-							"style": "h2",
-							"children": [
-								{
-									"_type": "span",
-									"text": "Embracing the box",
-									"_key": "k5"
-								}
-							],
-							"_key": "k4"
-						},
-						{
-							"_type": "block",
-							"style": "normal",
-							"children": [
-								{
-									"_type": "span",
-									"text": "The web itself is a constraint. HTML flows in one direction. CSS has a box model. Browsers have viewport sizes and font rendering quirks. You can fight these constraints or you can work with them, and the results are dramatically different.",
-									"_key": "k7"
-								}
-							],
-							"_key": "k6"
-						},
-						{
-							"_type": "block",
-							"style": "normal",
-							"children": [
-								{
-									"_type": "span",
-									"text": "The designs I admire most don't look like they were forced through a framework. They look like they grew naturally from the medium, respecting its grain rather than working against it. That only happens when you treat constraints as creative partners rather than enemies.",
-									"_key": "k9"
-								}
-							],
-							"_key": "k8"
-						}
-					]
-				},
-				"taxonomies": {
-					"category": ["design"],
-					"tag": ["creativity"]
-				}
-			},
-			{
-				"id": "post-6",
-				"slug": "a-weekend-with-a-side-project",
-				"status": "published",
-				"data": {
-					"title": "A Weekend with a Side Project",
-					"excerpt": "No stakeholders, no deadlines, no Jira tickets. Just you and a dumb idea that might turn into something.",
-					"featured_image": {
-						"$media": {
-							"url": "https://images.unsplash.com/photo-1542831371-29b0f74f9713?w=1200&h=800&fit=crop",
-							"alt": "Code on a screen with a dark theme",
-							"filename": "weekend-side-project.jpg"
-						}
-					},
-					"content": [
-						{
-							"_type": "block",
-							"style": "normal",
-							"children": [
-								{
-									"_type": "span",
-									"text": "Saturday morning. Coffee's made, the house is quiet, and I've got an idea that's been nagging at me all week. Not a good idea, necessarily - just a persistent one. A small tool that does a thing I keep doing manually. How hard could it be?",
-									"_key": "k1"
-								}
-							],
-							"_key": "k0"
-						},
-						{
-							"_type": "block",
-							"style": "normal",
-							"children": [
-								{
-									"_type": "span",
-									"text": "This is the best kind of programming. No requirements document, no sprint planning, no pull request reviews. Just a text editor and a problem. The freedom to make terrible architectural decisions, rewrite everything twice, and follow tangents that turn out to be dead ends.",
-									"_key": "k3"
-								}
-							],
-							"_key": "k2"
-						},
-						{
-							"_type": "block",
-							"style": "h2",
-							"children": [
-								{
-									"_type": "span",
-									"text": "Why side projects matter",
-									"_key": "k5"
-								}
-							],
-							"_key": "k4"
-						},
-						{
-							"_type": "block",
-							"style": "normal",
-							"children": [
-								{
-									"_type": "span",
-									"text": "Side projects are where you learn things your day job would never teach you. Not because the problems are harder, but because you're free to take risks. Try a language you've never used. Build something without a framework. Deploy to a platform you've only read about. The stakes are zero, which makes the learning maximum.",
-									"_key": "k7"
-								}
-							],
-							"_key": "k6"
-						},
-						{
-							"_type": "block",
-							"style": "normal",
-							"children": [
-								{
-									"_type": "span",
-									"text": "By Sunday evening, the thing sort of works. It's rough, the error handling is nonexistent, and the README is a single sentence. But it solves the problem I set out to solve, and I learned three things I didn't know on Friday. Not a bad weekend.",
-									"_key": "k9"
-								}
-							],
-							"_key": "k8"
-						}
-					]
-				},
-				"taxonomies": {
-					"category": ["development"],
-					"tag": ["creativity"]
-				}
-			},
-			{
-				"id": "post-7",
-				"slug": "notes-on-simplicity",
-				"status": "published",
-				"data": {
-					"title": "Notes on Simplicity",
-					"excerpt": "Simplicity isn't the absence of complexity. It's the result of understanding a problem well enough to solve it cleanly.",
-					"featured_image": {
-						"$media": {
-							"url": "https://images.unsplash.com/photo-1559051668-e1fa58f25786?w=1200&h=800&fit=crop",
-							"alt": "Geometric pattern carved into white paper",
-							"filename": "notes-on-simplicity.jpg"
-						}
-					},
-					"content": [
-						{
-							"_type": "block",
-							"style": "normal",
-							"children": [
-								{
-									"_type": "span",
-									"text": "Every piece of software starts simple. A few files, a clear purpose, a small surface area. Then features get added, edge cases get handled, and before long you're looking at something that requires a diagram to understand. This isn't inevitable, but it takes discipline to prevent.",
-									"_key": "k1"
-								}
-							],
-							"_key": "k0"
-						},
-						{
-							"_type": "block",
-							"style": "normal",
-							"children": [
-								{
-									"_type": "span",
-									"text": "The hard part of simplicity isn't the initial design. It's the ongoing resistance to complication. Every feature request, every bug fix, every refactor is an opportunity to add complexity. Saying no is the most important design skill, and the least celebrated.",
-									"_key": "k3"
-								}
-							],
-							"_key": "k2"
-						},
-						{
-							"_type": "block",
-							"style": "h2",
-							"children": [
-								{
-									"_type": "span",
-									"text": "Removing as a feature",
-									"_key": "k5"
-								}
-							],
-							"_key": "k4"
-						},
-						{
-							"_type": "block",
-							"style": "normal",
-							"children": [
-								{
-									"_type": "span",
-									"text": "The best version of a product often has fewer features than the previous one. Not because features were missing, but because someone had the courage to remove things that weren't earning their keep. Every feature has a cost - in maintenance, in cognitive load, in the weight of the interface.",
-									"_key": "k7"
-								}
-							],
-							"_key": "k6"
-						},
-						{
-							"_type": "block",
-							"style": "normal",
-							"children": [
-								{
-									"_type": "span",
-									"text": "Simplicity is a practice, not a destination. You never arrive at simple. You just keep asking: is this necessary? Could this be clearer? Is there a way to solve this problem by removing something instead of adding something? The answer is yes more often than you'd expect.",
-									"_key": "k9"
-								}
-							],
-							"_key": "k8"
-						}
-					]
-				},
-				"taxonomies": {
-					"category": ["notes"],
-					"tag": ["opinion"]
-				}
-			},
-			{
-				"id": "post-draft",
-				"slug": "work-in-progress",
-				"status": "draft",
-				"data": {
-					"title": "Work in Progress",
-					"excerpt": "This post is still being written.",
-					"content": [
-						{
-							"_type": "block",
-							"style": "normal",
-							"children": [
-								{
-									"_type": "span",
-									"text": "This is a draft post that won't appear in the public listing.",
-									"_key": "k1"
-								}
-							],
-							"_key": "k0"
-						}
-					]
+					"category": ["breads"],
+					"tag": ["sourdough", "cottage-bakery"]
 				}
 			}
 		]

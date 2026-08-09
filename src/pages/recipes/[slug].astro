@@ -1,0 +1,280 @@
+---
+import { getEmDashEntry, getEmDashCollection } from "emdash";
+import { Image, PortableText } from "emdash/ui";
+import Base from "../../layouts/Base.astro";
+
+const { slug } = Astro.params;
+if (!slug) return Astro.redirect("/404");
+
+const { entry: recipe, cacheHint } = await getEmDashEntry("recipes", slug);
+if (!recipe) return Astro.redirect("/404");
+
+Astro.cache.set(cacheHint);
+const data = recipe.data;
+
+// Check if there is a matching shop product
+let matchingProduct = null;
+try {
+	const { entries: products } = await getEmDashCollection("products", { limit: 50 });
+	matchingProduct = products?.find((p: any) => p.data?.matched_recipe_slug === slug);
+} catch (e) {
+	// ignore match error
+}
+---
+
+<Base title={`${data.title} | Nakita's Kitchen`} description={data.excerpt || data.title}>
+	<article class="recipe-detail-page">
+		<header class="recipe-header container">
+			<a href="/recipes" class="back-link">&larr; Back to Recipes</a>
+			<h1 class="recipe-title">{data.title}</h1>
+			{data.excerpt && <p class="recipe-excerpt">{data.excerpt}</p>}
+
+			<div class="recipe-specs-card">
+				{data.prep_time && (
+					<div class="spec-item">
+						<span class="spec-label">Prep Time</span>
+						<span class="spec-value">{data.prep_time}</span>
+					</div>
+				)}
+				{data.cook_time && (
+					<div class="spec-item">
+						<span class="spec-label">Cook Time</span>
+						<span class="spec-value">{data.cook_time}</span>
+					</div>
+				)}
+				{data.servings && (
+					<div class="spec-item">
+						<span class="spec-label">Yield / Servings</span>
+						<span class="spec-value">{data.servings}</span>
+					</div>
+				)}
+			</div>
+		</header>
+
+		{data.featured_image && (
+			<div class="hero-image-container container">
+				<Image image={data.featured_image} alt={data.title} />
+			</div>
+		)}
+
+		<div class="recipe-layout container">
+			<aside class="recipe-ingredients-sidebar">
+				<div class="ingredients-box">
+					<h3 class="ingredients-title">Ingredients</h3>
+					{data.ingredients ? (
+						<ul class="ingredients-list">
+							{data.ingredients.split("\n").filter(Boolean).map((ing: string) => (
+								<li class="ingredient-item">
+									<label class="checkbox-label">
+										<input type="checkbox" />
+										<span>{ing.replace(/^•\s*/, "")}</span>
+									</label>
+								</li>
+							))}
+						</ul>
+					) : (
+						<p>No ingredients listed.</p>
+					)}
+
+					{data.allergens && (
+						<div class="allergen-box">
+							<strong>Allergens:</strong> {data.allergens}
+						</div>
+					)}
+
+					{matchingProduct && (
+						<div class="shop-match-box">
+							<h4>Available for Pre-Order!</h4>
+							<p>Don't want to bake it yourself? Order freshly baked {matchingProduct.data.title} directly from our cottage bakery.</p>
+							<a href={`/shop/${matchingProduct.id}`} class="buy-link">Order Pre-Order (${matchingProduct.data.price}) &rarr;</a>
+						</div>
+					)}
+				</div>
+			</aside>
+
+			<main class="recipe-body">
+				<h2 class="section-heading">Instructions & Baking Notes</h2>
+				{data.content ? (
+					<div class="portable-content">
+						<PortableText content={data.content} />
+					</div>
+				) : (
+					<p>No instructions available.</p>
+				)}
+
+				{data.cottage_license_notice && (
+					<footer class="recipe-footer-notice">
+						<p><em>{data.cottage_license_notice}</em></p>
+					</footer>
+				)}
+			</main>
+		</div>
+	</article>
+</Base>
+
+<style>
+	.recipe-detail-page {
+		padding: 2.5rem 0 4rem 0;
+	}
+	.container {
+		max-width: 1100px;
+		margin: 0 auto;
+		padding: 0 1.5rem;
+	}
+	.back-link {
+		color: var(--color-brand, #0066cc);
+		text-decoration: none;
+		font-weight: 600;
+		font-size: 0.875rem;
+		display: inline-block;
+		margin-bottom: 1rem;
+	}
+	.recipe-title {
+		font-size: 2.75rem;
+		font-weight: 700;
+		color: var(--color-text, #0f172a);
+		margin: 0 0 0.75rem 0;
+		line-height: 1.2;
+		letter-spacing: -0.02em;
+	}
+	.recipe-excerpt {
+		font-size: 1.25rem;
+		color: var(--color-text-secondary, #475569);
+		line-height: 1.5;
+		margin: 0 0 1.5rem 0;
+		max-width: 780px;
+	}
+	.recipe-specs-card {
+		display: flex;
+		gap: 2rem;
+		background: var(--color-bg-subtle, #f8fafc);
+		border: 1px solid var(--color-border, #e2e8f0);
+		border-radius: 12px;
+		padding: 1rem 1.5rem;
+		margin-bottom: 2rem;
+		flex-wrap: wrap;
+	}
+	.spec-item {
+		display: flex;
+		flex-direction: column;
+	}
+	.spec-label {
+		font-size: 0.75rem;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		color: var(--color-muted, #64748b);
+		font-weight: 600;
+	}
+	.spec-value {
+		font-size: 1rem;
+		font-weight: 700;
+		color: var(--color-text, #0f172a);
+	}
+	.hero-image-container {
+		aspect-ratio: 21 / 9;
+		overflow: hidden;
+		border-radius: 16px;
+		margin-bottom: 2.5rem;
+		background: var(--color-bg-subtle, #f1f5f9);
+	}
+	.hero-image-container img {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+	}
+	.recipe-layout {
+		display: grid;
+		grid-template-columns: 320px 1fr;
+		gap: 3rem;
+		align-items: start;
+	}
+	@media (max-width: 860px) {
+		.recipe-layout {
+			grid-template-columns: 1fr;
+		}
+	}
+	.ingredients-box {
+		background: var(--color-surface, #ffffff);
+		border: 1px solid var(--color-border, #e2e8f0);
+		border-radius: 12px;
+		padding: 1.5rem;
+		position: sticky;
+		top: 2rem;
+	}
+	.ingredients-title {
+		font-size: 1.25rem;
+		font-weight: 700;
+		margin: 0 0 1rem 0;
+		color: var(--color-text, #0f172a);
+		border-bottom: 2px solid var(--color-brand, #0066cc);
+		padding-bottom: 0.5rem;
+	}
+	.ingredients-list {
+		list-style: none;
+		padding: 0;
+		margin: 0 0 1.5rem 0;
+	}
+	.ingredient-item {
+		margin-bottom: 0.6rem;
+		font-size: 0.9375rem;
+		color: var(--color-text-secondary, #334155);
+		line-height: 1.4;
+	}
+	.checkbox-label {
+		display: flex;
+		align-items: flex-start;
+		gap: 0.6rem;
+		cursor: pointer;
+	}
+	.checkbox-label input {
+		margin-top: 0.2rem;
+		cursor: pointer;
+	}
+	.allergen-box {
+		background: #fff8e6;
+		color: #856404;
+		padding: 0.75rem;
+		border-radius: 8px;
+		font-size: 0.84375rem;
+		margin-bottom: 1rem;
+	}
+	.shop-match-box {
+		background: rgba(0, 102, 204, 0.06);
+		border: 1px solid rgba(0, 102, 204, 0.2);
+		border-radius: 8px;
+		padding: 1rem;
+	}
+	.shop-match-box h4 {
+		margin: 0 0 0.3rem 0;
+		font-weight: 700;
+		color: var(--color-brand, #0066cc);
+	}
+	.shop-match-box p {
+		margin: 0 0 0.75rem 0;
+		font-size: 0.84375rem;
+		color: var(--color-text-secondary, #475569);
+	}
+	.buy-link {
+		display: inline-block;
+		background: var(--color-brand, #0066cc);
+		color: #ffffff;
+		text-decoration: none;
+		font-weight: 600;
+		font-size: 0.8125rem;
+		padding: 0.5rem 0.8rem;
+		border-radius: 6px;
+	}
+	.section-heading {
+		font-size: 1.75rem;
+		font-weight: 700;
+		margin: 0 0 1.25rem 0;
+		color: var(--color-text, #0f172a);
+	}
+	.recipe-footer-notice {
+		margin-top: 3rem;
+		padding-top: 1rem;
+		border-top: 1px dashed var(--color-border, #cbd5e1);
+		font-size: 0.84375rem;
+		color: var(--color-muted, #64748b);
+	}
+</style>

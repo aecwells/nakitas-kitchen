@@ -1,0 +1,146 @@
+---
+import { Image } from "emdash/ui";
+
+interface Props {
+	product: any;
+}
+
+const { product } = Astro.props;
+const data = product.data;
+---
+
+<article class="product-card">
+	<a href={`/shop/${product.id}`} class="card-link">
+		{data.featured_image && (
+			<div class="card-image">
+				<Image image={data.featured_image} alt={data.title} />
+				<span class="price-tag">${data.price}</span>
+			</div>
+		)}
+
+		<div class="card-body">
+			<div class="card-header">
+				<span class="cottage-tag">Cottage Bakery</span>
+				{data.net_weight && <span class="weight-tag">{data.net_weight}</span>}
+			</div>
+
+			<h3 class="card-title">{data.title}</h3>
+			{data.description && <p class="card-description">{data.description}</p>}
+
+			<div class="card-footer">
+				<span class={`stock-status ${data.in_stock ? "in-stock" : "out-of-stock"}`}>
+					{data.in_stock ? "● Available for Pre-Order" : "○ Sold Out"}
+				</span>
+				<span class="view-btn">View Details & Ingredients &rarr;</span>
+			</div>
+		</div>
+	</a>
+</article>
+
+<style>
+	.product-card {
+		background: var(--color-surface, #ffffff);
+		border: 1px solid var(--color-border, #e2e8f0);
+		border-radius: 12px;
+		overflow: hidden;
+		transition: transform 0.2s ease, box-shadow 0.2s ease;
+	}
+	.product-card:hover {
+		transform: translateY(-3px);
+		box-shadow: 0 10px 28px rgba(0, 0, 0, 0.08);
+	}
+	.card-link {
+		text-decoration: none;
+		color: inherit;
+		display: flex;
+		flex-direction: column;
+		height: 100%;
+	}
+	.card-image {
+		position: relative;
+		aspect-ratio: 16 / 10;
+		overflow: hidden;
+		background: var(--color-bg-subtle, #f1f5f9);
+	}
+	.card-image img {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		transition: transform 0.3s ease;
+	}
+	.product-card:hover .card-image img {
+		transform: scale(1.03);
+	}
+	.price-tag {
+		position: absolute;
+		bottom: 0.75rem;
+		right: 0.75rem;
+		background: rgba(15, 23, 42, 0.85);
+		backdrop-filter: blur(4px);
+		color: #ffffff;
+		font-weight: 700;
+		font-size: 1rem;
+		padding: 0.3rem 0.75rem;
+		border-radius: 6px;
+	}
+	.card-body {
+		padding: 1.25rem;
+		display: flex;
+		flex-direction: column;
+		flex-grow: 1;
+	}
+	.card-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		margin-bottom: 0.5rem;
+	}
+	.cottage-tag {
+		font-size: 0.75rem;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		font-weight: 600;
+		color: var(--color-brand, #0066cc);
+	}
+	.weight-tag {
+		font-size: 0.75rem;
+		color: var(--color-muted, #64748b);
+	}
+	.card-title {
+		font-size: 1.25rem;
+		font-weight: 600;
+		margin: 0 0 0.5rem 0;
+		color: var(--color-text, #0f172a);
+	}
+	.product-card:hover .card-title {
+		color: var(--color-brand, #0066cc);
+	}
+	.card-description {
+		font-size: 0.9375rem;
+		color: var(--color-text-secondary, #475569);
+		margin: 0 0 1rem 0;
+		line-height: 1.5;
+		flex-grow: 1;
+	}
+	.card-footer {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		border-top: 1px solid var(--color-border-subtle, #f1f5f9);
+		padding-top: 0.75rem;
+		font-size: 0.8125rem;
+	}
+	.stock-status {
+		font-weight: 600;
+	}
+	.in-stock {
+		color: #16a34a;
+	}
+	.out-of-stock {
+		color: #dc2626;
+	}
+	.view-btn {
+		color: var(--color-brand, #0066cc);
+		font-weight: 600;
+	}
+</style>
