@@ -9,7 +9,7 @@ import Base from "../../layouts/Base.astro";
 			<div class="badge">Two-Sided AI Recipe Importer</div>
 			<h1 class="page-title">Scan Recipe Card (Front & Back)</h1>
 			<p class="page-description">
-				Upload photos of your <strong>Card Front</strong> (dish photo, prep/cook time, ingredients) and <strong>Card Back</strong> (step-by-step instructions). Our AI Vision scanner will <strong>auto-fill 100% of the form fields</strong> below!
+				Drag & drop or upload photos of your <strong>Card Front</strong> (dish photo, prep/cook time, ingredients) and <strong>Card Back</strong> (step-by-step instructions). Our AI Vision scanner will <strong>auto-fill 100% of the form fields</strong> below!
 			</p>
 		</header>
 
@@ -27,9 +27,9 @@ import Base from "../../layouts/Base.astro";
 							<input type="file" id="card_front_image" name="card_front_image" accept="image/*" capture="environment" class="file-input" />
 							<div class="upload-prompt" id="front-prompt">
 								<div class="upload-icon">🖼️</div>
-								<h4>Snap Card Front</h4>
+								<h4>Snap or Drag Card Front</h4>
 								<p>Dish photo, prep time & ingredients</p>
-								<span class="upload-btn-fake">Take Photo / Choose</span>
+								<span class="upload-btn-fake">Choose or Drag File</span>
 							</div>
 							<div class="image-preview" id="front-preview" hidden>
 								<img id="front-preview-img" src="" alt="Front Card Preview" />
@@ -45,9 +45,9 @@ import Base from "../../layouts/Base.astro";
 							<input type="file" id="card_back_image" name="card_back_image" accept="image/*" capture="environment" class="file-input" />
 							<div class="upload-prompt" id="back-prompt">
 								<div class="upload-icon">📝</div>
-								<h4>Snap Card Back</h4>
+								<h4>Snap or Drag Card Back</h4>
 								<p>Steps 1-6 & chef diagrams</p>
-								<span class="upload-btn-fake">Take Photo / Choose</span>
+								<span class="upload-btn-fake">Choose or Drag File</span>
 							</div>
 							<div class="image-preview" id="back-preview" hidden>
 								<img id="back-preview-img" src="" alt="Back Card Preview" />
@@ -139,6 +139,7 @@ import Base from "../../layouts/Base.astro";
 		const frontPreviewImg = document.getElementById("front-preview-img") as HTMLImageElement;
 		const removeFrontBtn = document.getElementById("remove-front-btn");
 		const frontHiddenInput = document.getElementById("front_image_data") as HTMLInputElement;
+		const frontArea = document.getElementById("front-area");
 
 		const backInput = document.getElementById("card_back_image") as HTMLInputElement;
 		const backPrompt = document.getElementById("back-prompt");
@@ -146,6 +147,7 @@ import Base from "../../layouts/Base.astro";
 		const backPreviewImg = document.getElementById("back-preview-img") as HTMLImageElement;
 		const removeBackBtn = document.getElementById("remove-back-btn");
 		const backHiddenInput = document.getElementById("back_image_data") as HTMLInputElement;
+		const backArea = document.getElementById("back-area");
 
 		const autofillBanner = document.getElementById("autofill-banner");
 		const titleInput = document.getElementById("title") as HTMLInputElement;
@@ -186,23 +188,61 @@ import Base from "../../layouts/Base.astro";
 			}, 300);
 		}
 
-		// Front photo upload listener
-		frontInput?.addEventListener("change", () => {
-			const file = frontInput.files?.[0];
-			if (file) {
+		function handleFileProcess(file: File, inputEl: HTMLInputElement, hiddenInput: HTMLInputElement, previewImg: HTMLImageElement, promptEl: HTMLElement | null, previewEl: HTMLElement | null) {
+			if (file && file.type.startsWith("image/")) {
 				const reader = new FileReader();
 				reader.onload = (e) => {
 					if (e.target?.result) {
 						const resultStr = e.target.result as string;
-						if (frontPreviewImg) frontPreviewImg.src = resultStr;
-						if (frontHiddenInput) frontHiddenInput.value = resultStr;
-						frontPrompt?.setAttribute("hidden", "true");
-						frontPreview?.removeAttribute("hidden");
+						if (previewImg) previewImg.src = resultStr;
+						if (hiddenInput) hiddenInput.value = resultStr;
+						promptEl?.setAttribute("hidden", "true");
+						previewEl?.removeAttribute("hidden");
 						triggerSmartAutoFill();
 					}
 				};
 				reader.readAsDataURL(file);
 			}
+		}
+
+		// Drag and Drop Event Listener Setup
+		function setupDropzone(area: HTMLElement, inputEl: HTMLInputElement, hiddenInput: HTMLInputElement, previewImg: HTMLImageElement, promptEl: HTMLElement | null, previewEl: HTMLElement | null) {
+			["dragenter", "dragover"].forEach((eventName) => {
+				area.addEventListener(eventName, (e) => {
+					e.preventDefault();
+					e.stopPropagation();
+					area.classList.add("drag-over");
+				}, false);
+			});
+
+			["dragleave", "drop"].forEach((eventName) => {
+				area.addEventListener(eventName, (e) => {
+					e.preventDefault();
+					e.stopPropagation();
+					area.classList.remove("drag-over");
+				}, false);
+			});
+
+			area.addEventListener("drop", (e: DragEvent) => {
+				const dt = e.dataTransfer;
+				const files = dt?.files;
+				if (files && files.length > 0) {
+					const file = files[0];
+					const dataTransfer = new DataTransfer();
+					dataTransfer.items.add(file);
+					inputEl.files = dataTransfer.files;
+					handleFileProcess(file, inputEl, hiddenInput, previewImg, promptEl, previewEl);
+				}
+			}, false);
+		}
+
+		if (frontArea) setupDropzone(frontArea, frontInput, frontHiddenInput, frontPreviewImg, frontPrompt, frontPreview);
+		if (backArea) setupDropzone(backArea, backInput, backHiddenInput, backPreviewImg, backPrompt, backPreview);
+
+		// File picker change listeners
+		frontInput?.addEventListener("change", () => {
+			const file = frontInput.files?.[0];
+			if (file) handleFileProcess(file, frontInput, frontHiddenInput, frontPreviewImg, frontPrompt, frontPreview);
 		});
 
 		removeFrontBtn?.addEventListener("click", (e) => {
@@ -213,23 +253,9 @@ import Base from "../../layouts/Base.astro";
 			frontPreview?.setAttribute("hidden", "true");
 		});
 
-		// Back photo upload listener
 		backInput?.addEventListener("change", () => {
 			const file = backInput.files?.[0];
-			if (file) {
-				const reader = new FileReader();
-				reader.onload = (e) => {
-					if (e.target?.result) {
-						const resultStr = e.target.result as string;
-						if (backPreviewImg) backPreviewImg.src = resultStr;
-						if (backHiddenInput) backHiddenInput.value = resultStr;
-						backPrompt?.setAttribute("hidden", "true");
-						backPreview?.removeAttribute("hidden");
-						triggerSmartAutoFill();
-					}
-				};
-				reader.readAsDataURL(file);
-			}
+			if (file) handleFileProcess(file, backInput, backHiddenInput, backPreviewImg, backPrompt, backPreview);
 		});
 
 		removeBackBtn?.addEventListener("click", (e) => {
@@ -348,14 +374,18 @@ import Base from "../../layouts/Base.astro";
 		text-align: center;
 		position: relative;
 		cursor: pointer;
-		transition: background 0.2s ease;
+		transition: all 0.2s ease;
 		min-height: 200px;
 		display: flex;
 		align-items: center;
 		justify-content: center;
 	}
-	.upload-area:hover {
-		background: rgba(0, 102, 204, 0.05);
+	.upload-area:hover,
+	.upload-area.drag-over {
+		background: rgba(0, 102, 204, 0.08);
+		border-color: var(--color-brand-hover, #0052a3);
+		transform: scale(1.01);
+		box-shadow: 0 0 0 4px var(--color-brand-ring, rgba(0, 102, 204, 0.15));
 	}
 	.file-input {
 		position: absolute;
@@ -365,6 +395,7 @@ import Base from "../../layouts/Base.astro";
 		height: 100%;
 		opacity: 0;
 		cursor: pointer;
+		z-index: 10;
 	}
 	.upload-icon {
 		font-size: 2.5rem;
@@ -404,6 +435,8 @@ import Base from "../../layouts/Base.astro";
 		font-size: 0.75rem;
 		font-weight: 600;
 		cursor: pointer;
+		position: relative;
+		z-index: 20;
 	}
 	.autofill-banner {
 		background: rgba(0, 102, 204, 0.08);
