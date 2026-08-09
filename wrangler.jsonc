@@ -3,27 +3,32 @@
 	"name": "nakitas-kitchen",
 	"main": "./src/worker.ts",
 	"compatibility_date": "2026-02-24",
-	"compatibility_flags": ["nodejs_compat"],
+	"compatibility_flags": [
+		"nodejs_compat"
+	],
 	"d1_databases": [
 		{
 			"binding": "DB",
 			"database_name": "nakitas-kitchen-db",
-		},
+			"database_id": "ec6c9e66-bfbc-4bee-8b3f-f33cd1621663"
+		}
 	],
 	"r2_buckets": [
 		{
 			"binding": "MEDIA",
-			"bucket_name": "nakitas-kitchen-media",
-		},
+			"bucket_name": "nakitas-kitchen-media"
+		}
 	],
 	// Worker Loader for plugin sandboxing
 	"worker_loaders": [
 		{
-			"binding": "LOADER",
-		},
+			"binding": "LOADER"
+		}
 	],
 	// Drives scheduled publishing, plugin cron, and maintenance (see src/worker.ts)
 	"triggers": {
-		"crons": ["* * * * *"],
-	},
+		"crons": [
+			"* * * * *"
+		]
+	}
 }
