@@ -92,25 +92,62 @@ const getSubCategories = (parentSlug: string, parentId?: string) => {
 					</div>
 				</div>
 
-				<!-- Ingredient Variation & Form Types Widget -->
+				<!-- Interactive Parent -> Sub-Type Drill-Down Ingredient Widget -->
 				<div class="sidebar-widget">
-					<h4 class="widget-title">🌿 Ingredient Form & Variations</h4>
-					<div class="variation-chips">
-						<span class="var-group-label">Vanilla:</span>
-						<button type="button" class="var-chip" data-var="vanilla paste">Paste</button>
-						<button type="button" class="var-chip" data-var="vanilla extract">Extract</button>
-						
-						<span class="var-group-label">Lettuce:</span>
-						<button type="button" class="var-chip" data-var="romaine">Romaine</button>
-						<button type="button" class="var-chip" data-var="iceberg">Iceberg</button>
+					<h4 class="widget-title">🌿 Ingredients & Sub-Types</h4>
+					<p class="widget-hint">Click an ingredient to select specific sub-types & forms:</p>
+					
+					<div class="parent-ingredient-chips">
+						<button type="button" class="ing-parent-btn active" data-ing="all">All</button>
+						<button type="button" class="ing-parent-btn" data-ing="vanilla">🍦 Vanilla</button>
+						<button type="button" class="ing-parent-btn" data-ing="lettuce">🥬 Lettuce</button>
+						<button type="button" class="ing-parent-btn" data-ing="flour">🌾 Flour</button>
+						<button type="button" class="ing-parent-btn" data-ing="cheese">🧀 Cheese</button>
+						<button type="button" class="ing-parent-btn" data-ing="beef">🥩 Beef</button>
+					</div>
 
-						<span class="var-group-label">Flour Type:</span>
-						<button type="button" class="var-chip" data-var="bread flour">Bread Flour</button>
-						<button type="button" class="var-chip" data-var="rye">Whole Rye</button>
+					<!-- Sub-Type Drawers -->
+					<div class="subtype-drawer" id="subtype-drawer-vanilla" hidden>
+						<span class="subtype-label">Vanilla Sub-Types:</span>
+						<div class="subtype-chips">
+							<button type="button" class="var-chip" data-var="vanilla paste">🍨 Paste</button>
+							<button type="button" class="var-chip" data-var="vanilla extract">💧 Liquid Extract</button>
+							<button type="button" class="var-chip" data-var="vanilla pod">🫘 Whole Pod</button>
+						</div>
+					</div>
 
-						<span class="var-group-label">Cheese Type:</span>
-						<button type="button" class="var-chip" data-var="white cheddar">White Cheddar</button>
-						<button type="button" class="var-chip" data-var="mozzarella">Mozzarella</button>
+					<div class="subtype-drawer" id="subtype-drawer-lettuce" hidden>
+						<span class="subtype-label">Lettuce Varieties:</span>
+						<div class="subtype-chips">
+							<button type="button" class="var-chip" data-var="romaine">🥬 Romaine</button>
+							<button type="button" class="var-chip" data-var="iceberg">🥗 Iceberg</button>
+							<button type="button" class="var-chip" data-var="butterhead">🥬 Butterhead</button>
+						</div>
+					</div>
+
+					<div class="subtype-drawer" id="subtype-drawer-flour" hidden>
+						<span class="subtype-label">Flour Types:</span>
+						<div class="subtype-chips">
+							<button type="button" class="var-chip" data-var="bread flour">🌾 Bread Flour</button>
+							<button type="button" class="var-chip" data-var="rye">🌾 Whole Rye</button>
+							<button type="button" class="var-chip" data-var="ap flour">🌾 All-Purpose</button>
+						</div>
+					</div>
+
+					<div class="subtype-drawer" id="subtype-drawer-cheese" hidden>
+						<span class="subtype-label">Cheese Sub-Types:</span>
+						<div class="subtype-chips">
+							<button type="button" class="var-chip" data-var="white cheddar">🧀 White Cheddar</button>
+							<button type="button" class="var-chip" data-var="mozzarella">🧀 Fresh Mozzarella</button>
+						</div>
+					</div>
+
+					<div class="subtype-drawer" id="subtype-drawer-beef" hidden>
+						<span class="subtype-label">Beef Cuts & Forms:</span>
+						<div class="subtype-chips">
+							<button type="button" class="var-chip" data-var="ground beef">🥩 Ground Beef</button>
+							<button type="button" class="var-chip" data-var="brisket">🥩 Texas Brisket</button>
+						</div>
 					</div>
 				</div>
 
@@ -181,11 +218,14 @@ const getSubCategories = (parentSlug: string, parentId?: string) => {
 		const cooktimeSelect = document.getElementById("cooktime-filter-select") as HTMLSelectElement;
 		const allergenSelect = document.getElementById("allergen-filter-select") as HTMLSelectElement;
 		const treeBtns = document.querySelectorAll(".tree-btn, .tree-parent-btn, .tree-sub-btn");
+		const ingParentBtns = document.querySelectorAll(".ing-parent-btn");
 		const varChips = document.querySelectorAll(".var-chip");
 		const tagChips = document.querySelectorAll(".tag-cloud-chip");
 		const cards = document.querySelectorAll(".recipe-card");
+		const subtypeDrawers = document.querySelectorAll(".subtype-drawer");
 
 		let activeCat = "all";
+		let activeIngParent = "all";
 		let activeVar = "";
 		let activeTag = "";
 
@@ -222,6 +262,12 @@ const getSubCategories = (parentSlug: string, parentId?: string) => {
 					else matchesCat = title.includes(activeCat) || ingredients.includes(activeCat);
 				}
 
+				// Ingredient Parent Match
+				let matchesIngParent = true;
+				if (activeIngParent !== "all") {
+					matchesIngParent = ingredients.includes(activeIngParent) || title.includes(activeIngParent);
+				}
+
 				// Variation match
 				const matchesVar = !activeVar || ingredients.includes(activeVar) || title.includes(activeVar);
 
@@ -244,7 +290,7 @@ const getSubCategories = (parentSlug: string, parentId?: string) => {
 					matchesAllergen = !allergens.includes("wheat") && !allergens.includes("gluten") && !ingredients.includes("flour") && !ingredients.includes("bun");
 				}
 
-				if (matchesQuery && matchesSource && matchesCat && matchesVar && matchesTag && matchesCooktime && matchesAllergen) {
+				if (matchesQuery && matchesSource && matchesCat && matchesIngParent && matchesVar && matchesTag && matchesCooktime && matchesAllergen) {
 					el.style.display = "";
 				} else {
 					el.style.display = "none";
@@ -262,6 +308,27 @@ const getSubCategories = (parentSlug: string, parentId?: string) => {
 				treeBtns.forEach((b) => b.classList.remove("active"));
 				btn.classList.add("active");
 				activeCat = btn.getAttribute("data-cat") || "all";
+				applyFilters();
+			});
+		});
+
+		// Parent Ingredient Click Handler -> Expands Sub-Type Drawer
+		ingParentBtns.forEach((btn) => {
+			btn.addEventListener("click", () => {
+				ingParentBtns.forEach((b) => b.classList.remove("active"));
+				btn.classList.add("active");
+				activeIngParent = btn.getAttribute("data-ing") || "all";
+				activeVar = ""; // reset sub-variation when parent changes
+				varChips.forEach((c) => c.classList.remove("active"));
+
+				// Hide all drawers, then show selected
+				subtypeDrawers.forEach((drawer) => ((drawer as HTMLElement).hidden = true));
+
+				if (activeIngParent !== "all") {
+					const targetDrawer = document.getElementById(`subtype-drawer-${activeIngParent}`);
+					if (targetDrawer) targetDrawer.hidden = false;
+				}
+
 				applyFilters();
 			});
 		});
@@ -403,6 +470,13 @@ const getSubCategories = (parentSlug: string, parentId?: string) => {
 		margin: 0;
 	}
 
+	.widget-hint {
+		font-size: 0.75rem;
+		color: var(--color-muted, #64748b);
+		margin: -0.25rem 0 0.35rem 0;
+		line-height: 1.3;
+	}
+
 	.ingredient-search-box {
 		position: relative;
 		width: 100%;
@@ -504,34 +578,65 @@ const getSubCategories = (parentSlug: string, parentId?: string) => {
 		border-radius: 10px;
 	}
 
-	.tree-btn.active .count-pill, .tree-parent-btn.active .count-pill, .tree-sub-btn.active .count-pill {
-		background: rgba(255, 255, 255, 0.25);
-		color: #ffffff;
-	}
-
-	/* Variation Chips Styling */
-	.variation-chips, .tags-cloud {
+	/* Parent Ingredient Chips & Sub-Type Drawer Styling */
+	.parent-ingredient-chips {
 		display: flex;
 		flex-wrap: wrap;
 		gap: 0.35rem;
-		align-items: center;
 	}
 
-	.var-group-label {
-		width: 100%;
-		font-size: 0.7rem;
+	.ing-parent-btn {
+		background: var(--color-bg-subtle, #f8fafc);
+		border: 1px solid var(--color-border, #cbd5e1);
+		color: var(--color-text, #0f172a);
+		padding: 0.35rem 0.65rem;
+		border-radius: 12px;
+		font-size: 0.8rem;
 		font-weight: 700;
+		cursor: pointer;
+		transition: all 0.15s ease;
+	}
+
+	.ing-parent-btn:hover {
+		border-color: var(--color-brand, #0066cc);
+		color: var(--color-brand, #0066cc);
+	}
+
+	.ing-parent-btn.active {
+		background: var(--color-brand, #0066cc);
+		color: #ffffff;
+		border-color: var(--color-brand, #0066cc);
+	}
+
+	.subtype-drawer {
+		background: var(--color-bg-subtle, #f8fafc);
+		border: 1.5px dashed var(--color-brand, #0066cc);
+		border-radius: 10px;
+		padding: 0.65rem 0.75rem;
+		margin-top: 0.4rem;
+	}
+
+	.subtype-label {
+		display: block;
+		font-size: 0.725rem;
+		font-weight: 800;
 		text-transform: uppercase;
-		color: var(--color-muted, #64748b);
-		margin-top: 0.35rem;
+		color: var(--color-brand, #0066cc);
+		margin-bottom: 0.35rem;
+	}
+
+	.subtype-chips {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.35rem;
 	}
 
 	.var-chip, .tag-cloud-chip {
-		background: var(--color-bg-subtle, #f1f5f9);
+		background: #ffffff;
 		border: 1px solid var(--color-border, #cbd5e1);
 		color: var(--color-text, #0f172a);
 		padding: 0.25rem 0.55rem;
-		border-radius: 12px;
+		border-radius: 10px;
 		font-size: 0.75rem;
 		font-weight: 600;
 		cursor: pointer;
