@@ -239,6 +239,8 @@ Astro.cache.set(cacheHint);
 		border-radius: 16px;
 		padding: 1.25rem;
 		box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
+		box-sizing: border-box;
+		overflow: hidden;
 	}
 
 	.sidebar-widget {
@@ -247,11 +249,8 @@ Astro.cache.set(cacheHint);
 		gap: 0.5rem;
 		padding-bottom: 1rem;
 		border-bottom: 1px solid var(--color-border-subtle, #f1f5f9);
-	}
-
-	.sidebar-widget:last-child {
-		border-bottom: none;
-		padding-bottom: 0;
+		width: 100%;
+		box-sizing: border-box;
 	}
 
 	.widget-title {
@@ -265,6 +264,8 @@ Astro.cache.set(cacheHint);
 
 	.ingredient-search-box {
 		position: relative;
+		width: 100%;
+		box-sizing: border-box;
 	}
 
 	.search-icon {
@@ -277,8 +278,10 @@ Astro.cache.set(cacheHint);
 
 	.filter-text-input {
 		width: 100%;
+		max-width: 100%;
+		box-sizing: border-box;
 		padding: 0.6rem 0.6rem 0.6rem 2.2rem;
-		font-size: 0.875rem;
+		font-size: 0.85rem;
 		border: 1px solid var(--color-border, #cbd5e1);
 		border-radius: 8px;
 		background: var(--color-bg, #f8fafc);
