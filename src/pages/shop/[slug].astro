@@ -25,11 +25,13 @@ const isLoggedIn = !!Astro.locals.user;
 
 // Resolve active ingredients from matched recipe or fallback
 let activeIngredientsText = data.explicit_ingredients || "Organic Flour, Butter, Sugar, Sea Salt.";
+let matchedRecipeTitle = "";
 if (data.matched_recipe_slug) {
 	try {
 		const { entry: matchedRecipe } = await getEmDashEntry("recipes", data.matched_recipe_slug);
 		if (matchedRecipe?.data?.ingredients) {
 			activeIngredientsText = matchedRecipe.data.ingredients;
+			matchedRecipeTitle = matchedRecipe.data.title;
 		}
 	} catch (e) {}
 }
@@ -55,6 +57,7 @@ if (data.matched_recipe_slug) {
 		</div>
 
 		<div class="product-grid">
+			<!-- LEFT COLUMN: Product Visuals & Official Statutory Packaging Sticker -->
 			<div class="product-gallery">
 				{data.featured_image ? (
 					<div class="image-wrapper">
@@ -71,19 +74,36 @@ if (data.matched_recipe_slug) {
 						))}
 					</div>
 				)}
+
+				<!-- Official Cottage Bakery Packaging Sticker & Statutory Notice (Left Column) -->
+				<CottageIngredientNotice
+					productTitle={data.title}
+					productSlug={product.id}
+					netWeight={data.net_weight}
+					price={data.price}
+					matchedRecipeSlug={data.matched_recipe_slug}
+					explicitIngredients={data.explicit_ingredients}
+					allergens={data.allergens}
+					cottageLicenseNumber={data.cottage_license_number}
+					isLoggedIn={isLoggedIn}
+				/>
 			</div>
 
+			<!-- RIGHT COLUMN: Product Commerce, Description, Checkout & Recipe Synergy -->
 			<div class="product-info">
-				<span class="badge-cottage">Cottage Bakery Item</span>
+				<div class="product-header-badge">
+					<span class="badge-cottage">Cottage Bakery Item</span>
+					{data.net_weight && <span class="portion-badge">Portion: {data.net_weight}</span>}
+				</div>
+
 				<h1 class="product-title">{data.title}</h1>
 				<div class="price-row">
 					<span class="product-price">${data.price}</span>
-					{data.net_weight && <span class="product-weight">Portion: {data.net_weight}</span>}
 				</div>
 
 				{data.description && <p class="product-description">{data.description}</p>}
 
-				<!-- Stripe Checkout Card -->
+				<!-- Stripe Checkout Pre-Order Card -->
 				<div class="checkout-card">
 					<div class="stock-label">
 						<span class="dot">●</span> {data.in_stock ? "Available for Saturday Pickup / Pre-Order" : "Currently Out of Stock"}
@@ -101,41 +121,29 @@ if (data.matched_recipe_slug) {
 							<line x1="3" y1="6" x2="21" y2="6"/>
 							<path d="M16 10a4 4 0 0 1-8 0"/>
 						</svg>
-						<span>{data.in_stock ? "Pre-Order Now with Stripe" : "Sold Out"}</span>
+						<span>{data.in_stock ? `Pre-Order Now ($${data.price})` : "Sold Out"}</span>
 					</button>
 
-					<!-- Printable Sticker Label Trigger Button (GATED TO ADMIN ONLY) -->
-					{isLoggedIn && (
-						<div class="admin-sticker-bar">
-							<span class="admin-label-tag">🔒 Baker Admin Tool</span>
-							<button type="button" id="open-sticker-btn" class="print-sticker-cta-btn">
-								<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-									<polyline points="6 9 6 2 18 2 18 9"></polyline>
-									<path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
-									<rect x="6" y="14" width="12" height="8"></rect>
-								</svg>
-								<span>🖨️ Print Cottage Sales Sticker (3" x 4" QR Code)</span>
-							</button>
-						</div>
-					)}
-
 					<p class="pickup-note">
-						📍 Pickup location: Local Porch / Saturday Farmers Market. Direct pre-order under Cottage License.
+						📍 Pickup location: Local Porch / Saturday Farmers Market. Direct pre-order under Cottage License #CFO-LA-2026-9481.
 					</p>
 				</div>
 
-				<!-- Official Cottage Bakery Packaging Sticker & Statutory Notice -->
-				<CottageIngredientNotice
-					productTitle={data.title}
-					productSlug={product.id}
-					netWeight={data.net_weight}
-					price={data.price}
-					matchedRecipeSlug={data.matched_recipe_slug}
-					explicitIngredients={data.explicit_ingredients}
-					allergens={data.allergens}
-					cottageLicenseNumber={data.cottage_license_number}
-					isLoggedIn={isLoggedIn}
-				/>
+				<!-- Recipe Synergy Card (Direct Link to Recipe Guide) -->
+				{data.matched_recipe_slug && (
+					<div class="recipe-synergy-card">
+						<div class="synergy-header">
+							<span class="synergy-icon">📖</span>
+							<div>
+								<h4 class="synergy-title">Artisan Recipe & Baking Story</h4>
+								<p class="synergy-subtitle">See how we bake {matchedRecipeTitle || data.title}</p>
+							</div>
+						</div>
+						<a href={`/recipes/${data.matched_recipe_slug}`} class="synergy-btn">
+							<span>Read Step-by-Step Baking Guide &rarr;</span>
+						</a>
+					</div>
+				)}
 			</div>
 		</div>
 
@@ -176,7 +184,7 @@ if (data.matched_recipe_slug) {
 
 <style>
 	.product-detail-page {
-		max-width: 1100px;
+		max-width: 1180px;
 		margin: 0 auto;
 		padding: 2.5rem 1.5rem 4rem 1.5rem;
 	}
@@ -211,13 +219,14 @@ if (data.matched_recipe_slug) {
 	.product-grid {
 		display: grid;
 		grid-template-columns: 1fr 1fr;
-		gap: 3rem;
+		gap: 3.5rem;
 		margin-bottom: 4rem;
+		align-items: start;
 	}
 	.product-gallery {
 		display: flex;
 		flex-direction: column;
-		gap: 1rem;
+		gap: 1.25rem;
 	}
 	.image-wrapper {
 		border-radius: 16px;
@@ -225,6 +234,7 @@ if (data.matched_recipe_slug) {
 		background: var(--color-bg-subtle, #f8fafc);
 		border: 1px solid var(--color-border, #e2e8f0);
 		aspect-ratio: 4 / 3;
+		box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
 	}
 	.image-wrapper img {
 		width: 100%;
@@ -250,8 +260,15 @@ if (data.matched_recipe_slug) {
 		font-size: 0.8125rem;
 		color: var(--color-muted, #64748b);
 		background: var(--color-bg-subtle, #f1f5f9);
-		padding: 0.2rem 0.6rem;
-		border-radius: 6px;
+		padding: 0.25rem 0.65rem;
+		border-radius: 8px;
+		font-weight: 600;
+	}
+	.product-header-badge {
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+		margin-bottom: 0.75rem;
 	}
 	.badge-cottage {
 		background: #22c55e;
@@ -262,15 +279,19 @@ if (data.matched_recipe_slug) {
 		letter-spacing: 0.08em;
 		padding: 0.3rem 0.75rem;
 		border-radius: 20px;
-		display: inline-block;
-		margin-bottom: 0.75rem;
+	}
+	.portion-badge {
+		font-size: 0.8125rem;
+		color: var(--color-text-secondary, #64748b);
+		font-weight: 600;
 	}
 	.product-title {
-		font-size: 2.25rem;
+		font-size: 2.35rem;
 		font-weight: 800;
 		color: var(--color-text, #0f172a);
-		margin: 0 0 0.75rem 0;
+		margin: 0 0 0.5rem 0;
 		line-height: 1.2;
+		letter-spacing: -0.02em;
 	}
 	.price-row {
 		display: flex;
@@ -279,20 +300,15 @@ if (data.matched_recipe_slug) {
 		margin-bottom: 1.25rem;
 	}
 	.product-price {
-		font-size: 1.75rem;
+		font-size: 2rem;
 		font-weight: 800;
 		color: var(--color-brand, #0066cc);
 	}
-	.product-weight {
-		font-size: 0.9375rem;
-		color: var(--color-text-secondary, #64748b);
-		font-weight: 500;
-	}
 	.product-description {
 		font-size: 1.05rem;
-		line-height: 1.6;
+		line-height: 1.65;
 		color: var(--color-text-secondary, #334155);
-		margin-bottom: 1.5rem;
+		margin-bottom: 2rem;
 	}
 	.checkout-card {
 		background: var(--color-surface, #ffffff);
@@ -300,7 +316,7 @@ if (data.matched_recipe_slug) {
 		border-radius: 16px;
 		padding: 1.5rem;
 		box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
-		margin-bottom: 1.5rem;
+		margin-bottom: 1.75rem;
 	}
 	.stock-label {
 		font-size: 0.875rem;
@@ -316,7 +332,7 @@ if (data.matched_recipe_slug) {
 		background: var(--color-brand, #0066cc);
 		color: #ffffff;
 		border: none;
-		padding: 0.9rem 1.5rem;
+		padding: 0.95rem 1.5rem;
 		border-radius: 12px;
 		font-size: 1.05rem;
 		font-weight: 700;
@@ -336,47 +352,61 @@ if (data.matched_recipe_slug) {
 		background: var(--color-border, #cbd5e1);
 		cursor: not-allowed;
 	}
-	.admin-sticker-bar {
-		background: #fffbeb;
-		border: 1px dashed #d97706;
-		border-radius: 12px;
-		padding: 0.75rem;
-		margin-bottom: 0.75rem;
-	}
-	.admin-label-tag {
-		font-size: 0.6875rem;
-		font-weight: 700;
-		text-transform: uppercase;
-		color: #b45309;
-		display: block;
-		margin-bottom: 0.4rem;
-		letter-spacing: 0.05em;
-	}
-	.print-sticker-cta-btn {
-		width: 100%;
-		background: #d97706;
-		border: none;
-		color: #ffffff;
-		padding: 0.75rem 1rem;
-		border-radius: 8px;
-		font-size: 0.875rem;
-		font-weight: 700;
-		cursor: pointer;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		gap: 0.5rem;
-		transition: all 0.15s ease;
-	}
-	.print-sticker-cta-btn:hover {
-		background: #b45309;
-	}
 	.pickup-note {
 		font-size: 0.8125rem;
 		color: var(--color-muted, #64748b);
 		margin: 0;
 		line-height: 1.4;
 	}
+
+	.recipe-synergy-card {
+		background: var(--color-bg-subtle, #f8fafc);
+		border: 1.5px solid var(--color-brand, #0066cc);
+		border-radius: 16px;
+		padding: 1.25rem 1.5rem;
+	}
+
+	.synergy-header {
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+		margin-bottom: 0.85rem;
+	}
+
+	.synergy-icon {
+		font-size: 1.5rem;
+	}
+
+	.synergy-title {
+		font-size: 1.05rem;
+		font-weight: 700;
+		margin: 0;
+		color: var(--color-text, #0f172a);
+	}
+
+	.synergy-subtitle {
+		font-size: 0.8125rem;
+		color: var(--color-text-secondary, #475569);
+		margin: 0;
+	}
+
+	.synergy-btn {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		background: var(--color-brand, #0066cc);
+		color: #ffffff !important;
+		font-weight: 700;
+		font-size: 0.9375rem;
+		padding: 0.65rem 1.25rem;
+		border-radius: 10px;
+		text-decoration: none;
+		transition: background 0.15s ease;
+	}
+	.synergy-btn:hover {
+		background: var(--color-brand-hover, #004499);
+	}
+
 	.comments-section {
 		border-top: 1px solid var(--color-border, #e2e8f0);
 		padding-top: 3rem;
