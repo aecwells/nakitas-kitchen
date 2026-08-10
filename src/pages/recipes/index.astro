@@ -25,8 +25,20 @@ Astro.cache.set(cacheHint);
 			</p>
 		</header>
 
+		<!-- Interactive Filter Chips Bar -->
+		<div class="filter-bar">
+			<span class="filter-label">Filter Category & Source:</span>
+			<div class="chips-row">
+				<button type="button" class="recipe-filter-chip active" data-filter="all">All Recipes</button>
+				<button type="button" class="recipe-filter-chip" data-filter="sourdough">🍞 Sourdough & Breads</button>
+				<button type="button" class="recipe-filter-chip" data-filter="smoker">🔥 Outdoor Smoker</button>
+				<button type="button" class="recipe-filter-chip" data-filter="hellofresh">📦 HelloFresh Cards</button>
+				<button type="button" class="recipe-filter-chip" data-filter="stovetop">🍳 Stovetop & Oven</button>
+			</div>
+		</div>
+
 		{recipes && recipes.length > 0 ? (
-			<div class="recipes-grid">
+			<div class="recipes-grid" id="recipes-grid">
 				{recipes.map((recipe) => (
 					<RecipeCard recipe={recipe} />
 				))}
@@ -39,6 +51,42 @@ Astro.cache.set(cacheHint);
 	</div>
 </Base>
 
+<script>
+	document.addEventListener("DOMContentLoaded", () => {
+		const chips = document.querySelectorAll(".recipe-filter-chip");
+		const cards = document.querySelectorAll(".recipe-card");
+
+		chips.forEach((chip) => {
+			chip.addEventListener("click", () => {
+				chips.forEach((c) => c.classList.remove("active"));
+				chip.classList.add("active");
+
+				const filter = chip.getAttribute("data-filter");
+				cards.forEach((card) => {
+					const el = card as HTMLElement;
+					const source = (el.getAttribute("data-source") || "").toLowerCase();
+					const equip = (el.getAttribute("data-equipment") || "").toLowerCase();
+					const title = (el.getAttribute("data-title") || "").toLowerCase();
+
+					if (filter === "all") {
+						el.style.display = "";
+					} else if (filter === "sourdough" && (title.includes("sourdough") || title.includes("bread") || title.includes("boule") || title.includes("knot"))) {
+						el.style.display = "";
+					} else if (filter === "smoker" && (equip.includes("kamado") || equip.includes("smoke") || equip.includes("pellet") || title.includes("chicken") || title.includes("pizza"))) {
+						el.style.display = "";
+					} else if (filter === "hellofresh" && (source.includes("hellofresh") || title.includes("hellofresh") || title.includes("burger") || title.includes("pot pie"))) {
+						el.style.display = "";
+					} else if (filter === "stovetop" && (equip.includes("oven") || equip.includes("skillet") || equip.includes("pan") || title.includes("burger"))) {
+						el.style.display = "";
+					} else {
+						el.style.display = "none";
+					}
+				});
+			});
+		});
+	});
+</script>
+
 <style>
 	.main-content {
 		max-width: 1200px;
@@ -48,7 +96,7 @@ Astro.cache.set(cacheHint);
 	.page-header {
 		text-align: center;
 		max-width: 720px;
-		margin: 0 auto 3rem auto;
+		margin: 0 auto 2rem auto;
 	}
 	.header-top {
 		display: flex;
@@ -94,6 +142,46 @@ Astro.cache.set(cacheHint);
 		color: var(--color-text-secondary, #475569);
 		line-height: 1.6;
 		margin: 0;
+	}
+	.filter-bar {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.5rem;
+		margin-bottom: 2.5rem;
+	}
+	.filter-label {
+		font-size: 0.75rem;
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		color: var(--color-muted, #64748b);
+	}
+	.chips-row {
+		display: flex;
+		gap: 0.5rem;
+		flex-wrap: wrap;
+		justify-content: center;
+	}
+	.recipe-filter-chip {
+		background: var(--color-bg-subtle, #f1f5f9);
+		border: 1px solid var(--color-border, #cbd5e1);
+		color: var(--color-text, #0f172a);
+		padding: 0.4rem 0.9rem;
+		border-radius: 20px;
+		font-size: 0.85rem;
+		font-weight: 600;
+		cursor: pointer;
+		transition: all 0.15s ease;
+	}
+	.recipe-filter-chip:hover {
+		border-color: var(--color-brand, #0066cc);
+		color: var(--color-brand, #0066cc);
+	}
+	.recipe-filter-chip.active {
+		background: var(--color-brand, #0066cc);
+		color: #ffffff;
+		border-color: var(--color-brand, #0066cc);
 	}
 	.recipes-grid {
 		display: grid;

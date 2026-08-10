@@ -9,7 +9,7 @@ const { recipe } = Astro.props;
 const data = recipe.data;
 ---
 
-<article class="recipe-card">
+<article class="recipe-card" data-source={data.recipe_source || ""} data-equipment={data.equipment || ""} data-title={data.title || ""}>
 	<a href={`/recipes/${recipe.id}`} class="card-link">
 		{data.featured_image && (
 			<div class="card-image">

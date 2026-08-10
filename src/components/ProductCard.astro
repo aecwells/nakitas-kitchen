@@ -9,7 +9,7 @@ const { product } = Astro.props;
 const data = product.data;
 ---
 
-<article class="product-card">
+<article class="product-card" data-title={data.title || ""}>
 	<a href={`/shop/${product.id}`} class="card-link">
 		{data.featured_image && (
 			<div class="card-image">

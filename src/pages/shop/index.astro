@@ -20,8 +20,19 @@ Astro.cache.set(cacheHint);
 			</p>
 		</header>
 
+		<!-- Interactive Product Category Filter Chips -->
+		<div class="filter-bar">
+			<span class="filter-label">Filter Bakery Category:</span>
+			<div class="chips-row">
+				<button type="button" class="shop-filter-chip active" data-filter="all">All Bakery Items</button>
+				<button type="button" class="shop-filter-chip" data-filter="sourdough">🍞 Artisanal Sourdough</button>
+				<button type="button" class="shop-filter-chip" data-filter="pastry">🥐 Pastries & Knots</button>
+				<button type="button" class="shop-filter-chip" data-filter="cookies">🍪 Shortbread & Cookies</button>
+			</div>
+		</div>
+
 		{products && products.length > 0 ? (
-			<div class="products-grid">
+			<div class="products-grid" id="products-grid">
 				{products.map((product) => (
 					<ProductCard product={product} />
 				))}
@@ -41,6 +52,38 @@ Astro.cache.set(cacheHint);
 	</div>
 </Base>
 
+<script>
+	document.addEventListener("DOMContentLoaded", () => {
+		const chips = document.querySelectorAll(".shop-filter-chip");
+		const cards = document.querySelectorAll(".product-card");
+
+		chips.forEach((chip) => {
+			chip.addEventListener("click", () => {
+				chips.forEach((c) => c.classList.remove("active"));
+				chip.classList.add("active");
+
+				const filter = chip.getAttribute("data-filter");
+				cards.forEach((card) => {
+					const el = card as HTMLElement;
+					const title = (el.getAttribute("data-title") || "").toLowerCase();
+
+					if (filter === "all") {
+						el.style.display = "";
+					} else if (filter === "sourdough" && (title.includes("sourdough") || title.includes("loaf") || title.includes("boule"))) {
+						el.style.display = "";
+					} else if (filter === "pastry" && (title.includes("knot") || title.includes("brioche") || title.includes("cinnamon") || title.includes("pastry"))) {
+						el.style.display = "";
+					} else if (filter === "cookies" && (title.includes("shortbread") || title.includes("cookie") || title.includes("box"))) {
+						el.style.display = "";
+					} else {
+						el.style.display = "none";
+					}
+				});
+			});
+		});
+	});
+</script>
+
 <style>
 	.main-content {
 		max-width: 1200px;
@@ -50,7 +93,7 @@ Astro.cache.set(cacheHint);
 	.page-header {
 		text-align: center;
 		max-width: 720px;
-		margin: 0 auto 3rem auto;
+		margin: 0 auto 2rem auto;
 	}
 	.header-badge {
 		background: #22c55e;
@@ -77,6 +120,46 @@ Astro.cache.set(cacheHint);
 		line-height: 1.6;
 		margin: 0;
 	}
+	.filter-bar {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.5rem;
+		margin-bottom: 2.5rem;
+	}
+	.filter-label {
+		font-size: 0.75rem;
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		color: var(--color-muted, #64748b);
+	}
+	.chips-row {
+		display: flex;
+		gap: 0.5rem;
+		flex-wrap: wrap;
+		justify-content: center;
+	}
+	.shop-filter-chip {
+		background: var(--color-bg-subtle, #f1f5f9);
+		border: 1px solid var(--color-border, #cbd5e1);
+		color: var(--color-text, #0f172a);
+		padding: 0.4rem 0.9rem;
+		border-radius: 20px;
+		font-size: 0.85rem;
+		font-weight: 600;
+		cursor: pointer;
+		transition: all 0.15s ease;
+	}
+	.shop-filter-chip:hover {
+		border-color: var(--color-brand, #0066cc);
+		color: var(--color-brand, #0066cc);
+	}
+	.shop-filter-chip.active {
+		background: var(--color-brand, #0066cc);
+		color: #ffffff;
+		border-color: var(--color-brand, #0066cc);
+	}
 	.products-grid {
 		display: grid;
 		grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
@@ -98,14 +181,14 @@ Astro.cache.set(cacheHint);
 		margin: 0 auto;
 	}
 	.cottage-info-banner h3 {
-		margin: 0 0 0.5rem 0;
-		font-weight: 700;
+		font-size: 1.25rem;
+		margin-bottom: 0.5rem;
 		color: var(--color-text, #0f172a);
 	}
 	.cottage-info-banner p {
-		margin: 0;
 		font-size: 0.9375rem;
 		color: var(--color-text-secondary, #475569);
+		margin: 0;
 		line-height: 1.6;
 	}
 </style>
