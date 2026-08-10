@@ -16,10 +16,16 @@ const [
 Astro.cache.set(cacheHint);
 
 // Group categories into parent categories and sub-categories from EmDash CMS
-const parentCategories = categoryTerms.filter((term: any) => !term.parentId && !term.parent);
-const getSubCategories = (parentSlug: string, parentId?: string) => {
+const parentCategories = categoryTerms.filter(
+	(term: any) => !term.parent_id && !term.parentId && !term.parent
+);
+
+const getSubCategories = (parent: any) => {
 	return categoryTerms.filter(
-		(term: any) => term.parent === parentSlug || (parentId && term.parentId === parentId)
+		(term: any) =>
+			term.parent_id === parent.id ||
+			term.parentId === parent.id ||
+			term.parent === parent.slug
 	);
 };
 ---
@@ -69,7 +75,7 @@ const getSubCategories = (parentSlug: string, parentId?: string) => {
 						</button>
 						
 						{parentCategories.map((parent: any) => {
-							const subs = getSubCategories(parent.slug, parent.id);
+							const subs = getSubCategories(parent);
 							return (
 								<div class="tree-group">
 									<button type="button" class="tree-parent-btn" data-cat={parent.slug}>
@@ -92,10 +98,15 @@ const getSubCategories = (parentSlug: string, parentId?: string) => {
 					</div>
 				</div>
 
-				<!-- Interactive Parent -> Sub-Type Drill-Down Ingredient Widget -->
+				<!-- Multi-Select Parent -> Sub-Type Drill-Down Ingredient Widget -->
 				<div class="sidebar-widget">
-					<h4 class="widget-title">🌿 Ingredients & Sub-Types</h4>
-					<p class="widget-hint">Click an ingredient to select specific sub-types & forms:</p>
+					<div class="widget-header-row">
+						<h4 class="widget-title">🌿 Multi-Select Ingredients</h4>
+						<button type="button" id="clear-ingredients-btn" class="clear-selection-btn" hidden>
+							✕ Clear
+						</button>
+					</div>
+					<p class="widget-hint">Select multiple ingredients & forms to filter recipes:</p>
 					
 					<div class="parent-ingredient-chips">
 						<button type="button" class="ing-parent-btn active" data-ing="all">All</button>
@@ -108,7 +119,7 @@ const getSubCategories = (parentSlug: string, parentId?: string) => {
 
 					<!-- Sub-Type Drawers -->
 					<div class="subtype-drawer" id="subtype-drawer-vanilla" hidden>
-						<span class="subtype-label">Vanilla Sub-Types:</span>
+						<span class="subtype-label">Vanilla Sub-Types (Multi-Select):</span>
 						<div class="subtype-chips">
 							<button type="button" class="var-chip" data-var="vanilla paste">🍨 Paste</button>
 							<button type="button" class="var-chip" data-var="vanilla extract">💧 Liquid Extract</button>
@@ -117,7 +128,7 @@ const getSubCategories = (parentSlug: string, parentId?: string) => {
 					</div>
 
 					<div class="subtype-drawer" id="subtype-drawer-lettuce" hidden>
-						<span class="subtype-label">Lettuce Varieties:</span>
+						<span class="subtype-label">Lettuce Varieties (Multi-Select):</span>
 						<div class="subtype-chips">
 							<button type="button" class="var-chip" data-var="romaine">🥬 Romaine</button>
 							<button type="button" class="var-chip" data-var="iceberg">🥗 Iceberg</button>
@@ -126,7 +137,7 @@ const getSubCategories = (parentSlug: string, parentId?: string) => {
 					</div>
 
 					<div class="subtype-drawer" id="subtype-drawer-flour" hidden>
-						<span class="subtype-label">Flour Types:</span>
+						<span class="subtype-label">Flour Types (Multi-Select):</span>
 						<div class="subtype-chips">
 							<button type="button" class="var-chip" data-var="bread flour">🌾 Bread Flour</button>
 							<button type="button" class="var-chip" data-var="rye">🌾 Whole Rye</button>
@@ -135,7 +146,7 @@ const getSubCategories = (parentSlug: string, parentId?: string) => {
 					</div>
 
 					<div class="subtype-drawer" id="subtype-drawer-cheese" hidden>
-						<span class="subtype-label">Cheese Sub-Types:</span>
+						<span class="subtype-label">Cheese Sub-Types (Multi-Select):</span>
 						<div class="subtype-chips">
 							<button type="button" class="var-chip" data-var="white cheddar">🧀 White Cheddar</button>
 							<button type="button" class="var-chip" data-var="mozzarella">🧀 Fresh Mozzarella</button>
@@ -143,7 +154,7 @@ const getSubCategories = (parentSlug: string, parentId?: string) => {
 					</div>
 
 					<div class="subtype-drawer" id="subtype-drawer-beef" hidden>
-						<span class="subtype-label">Beef Cuts & Forms:</span>
+						<span class="subtype-label">Beef Cuts & Forms (Multi-Select):</span>
 						<div class="subtype-chips">
 							<button type="button" class="var-chip" data-var="ground beef">🥩 Ground Beef</button>
 							<button type="button" class="var-chip" data-var="brisket">🥩 Texas Brisket</button>
@@ -223,11 +234,23 @@ const getSubCategories = (parentSlug: string, parentId?: string) => {
 		const tagChips = document.querySelectorAll(".tag-cloud-chip");
 		const cards = document.querySelectorAll(".recipe-card");
 		const subtypeDrawers = document.querySelectorAll(".subtype-drawer");
+		const clearIngBtn = document.getElementById("clear-ingredients-btn");
 
 		let activeCat = "all";
 		let activeIngParent = "all";
-		let activeVar = "";
+		let selectedVars = new Set<string>();
 		let activeTag = "";
+
+		function updateClearBtn() {
+			if (clearIngBtn) {
+				if (selectedVars.size > 0 || activeIngParent !== "all") {
+					clearIngBtn.hidden = false;
+					clearIngBtn.textContent = `✕ Clear (${selectedVars.size})`;
+				} else {
+					clearIngBtn.hidden = true;
+				}
+			}
+		}
 
 		function applyFilters() {
 			const query = (searchInput?.value || "").toLowerCase().trim();
@@ -268,8 +291,13 @@ const getSubCategories = (parentSlug: string, parentId?: string) => {
 					matchesIngParent = ingredients.includes(activeIngParent) || title.includes(activeIngParent);
 				}
 
-				// Variation match
-				const matchesVar = !activeVar || ingredients.includes(activeVar) || title.includes(activeVar);
+				// Multi-Select Ingredients Variation Match (Requires card to match all selected variations)
+				let matchesVar = true;
+				if (selectedVars.size > 0) {
+					matchesVar = Array.from(selectedVars).every(
+						(v) => ingredients.includes(v) || title.includes(v)
+					);
+				}
 
 				// Tag match
 				const matchesTag = !activeTag || title.includes(activeTag) || ingredients.includes(activeTag);
@@ -318,8 +346,6 @@ const getSubCategories = (parentSlug: string, parentId?: string) => {
 				ingParentBtns.forEach((b) => b.classList.remove("active"));
 				btn.classList.add("active");
 				activeIngParent = btn.getAttribute("data-ing") || "all";
-				activeVar = ""; // reset sub-variation when parent changes
-				varChips.forEach((c) => c.classList.remove("active"));
 
 				// Hide all drawers, then show selected
 				subtypeDrawers.forEach((drawer) => ((drawer as HTMLElement).hidden = true));
@@ -329,22 +355,38 @@ const getSubCategories = (parentSlug: string, parentId?: string) => {
 					if (targetDrawer) targetDrawer.hidden = false;
 				}
 
+				updateClearBtn();
 				applyFilters();
 			});
 		});
 
+		// Multi-Select Variation Chips Click Handler
 		varChips.forEach((chip) => {
 			chip.addEventListener("click", () => {
+				const val = chip.getAttribute("data-var") || "";
 				if (chip.classList.contains("active")) {
 					chip.classList.remove("active");
-					activeVar = "";
+					selectedVars.delete(val);
 				} else {
-					varChips.forEach((c) => c.classList.remove("active"));
 					chip.classList.add("active");
-					activeVar = chip.getAttribute("data-var") || "";
+					selectedVars.add(val);
 				}
+				updateClearBtn();
 				applyFilters();
 			});
+		});
+
+		// Clear Selected Ingredients Button
+		clearIngBtn?.addEventListener("click", () => {
+			selectedVars.clear();
+			activeIngParent = "all";
+			ingParentBtns.forEach((b) => b.classList.remove("active"));
+			const allBtn = document.querySelector('.ing-parent-btn[data-ing="all"]');
+			allBtn?.classList.add("active");
+			varChips.forEach((c) => c.classList.remove("active"));
+			subtypeDrawers.forEach((drawer) => ((drawer as HTMLElement).hidden = true));
+			updateClearBtn();
+			applyFilters();
 		});
 
 		tagChips.forEach((chip) => {
@@ -461,6 +503,12 @@ const getSubCategories = (parentSlug: string, parentId?: string) => {
 		padding-bottom: 0;
 	}
 
+	.widget-header-row {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+	}
+
 	.widget-title {
 		font-size: 0.8125rem;
 		font-weight: 800;
@@ -468,6 +516,21 @@ const getSubCategories = (parentSlug: string, parentId?: string) => {
 		letter-spacing: 0.05em;
 		color: var(--color-text, #0f172a);
 		margin: 0;
+	}
+
+	.clear-selection-btn {
+		background: rgba(225, 29, 72, 0.1);
+		color: #e11d48;
+		border: 1px solid rgba(225, 29, 72, 0.3);
+		font-size: 0.7rem;
+		font-weight: 700;
+		padding: 0.15rem 0.5rem;
+		border-radius: 10px;
+		cursor: pointer;
+	}
+	.clear-selection-btn:hover {
+		background: #e11d48;
+		color: #ffffff;
 	}
 
 	.widget-hint {

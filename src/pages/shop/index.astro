@@ -1,13 +1,31 @@
 ---
-import { getEmDashCollection } from "emdash";
+import { getEmDashCollection, getTaxonomyTerms } from "emdash";
 import Base from "../../layouts/Base.astro";
 import ProductCard from "../../components/ProductCard.astro";
 
-const { entries: products, cacheHint } = await getEmDashCollection("products", {
-	orderBy: { createdAt: "desc" },
-});
+const [
+	{ entries: products, cacheHint },
+	categoryTerms,
+] = await Promise.all([
+	getEmDashCollection("products", { orderBy: { createdAt: "desc" } }),
+	getTaxonomyTerms("category").catch(() => []),
+]);
 
 Astro.cache.set(cacheHint);
+
+// Group categories into parent categories and sub-categories from EmDash CMS
+const parentCategories = categoryTerms.filter(
+	(term: any) => !term.parent_id && !term.parentId && !term.parent
+);
+
+const getSubCategories = (parent: any) => {
+	return categoryTerms.filter(
+		(term: any) =>
+			term.parent_id === parent.id ||
+			term.parentId === parent.id ||
+			term.parent === parent.slug
+	);
+};
 ---
 
 <Base title="Cottage Bakery Shop | Nakita's Kitchen" description="Pre-order fresh artisanal sourdough, brioche knots, and shortbread baked under Cottage Food License #CFO-LA-2026-9481.">
@@ -40,33 +58,47 @@ Astro.cache.set(cacheHint);
 					</div>
 				</div>
 
-				<!-- Hierarchical Sub-Categories Widget -->
+				<!-- Dynamic EmDash Categories & Sub-Categories Widget -->
 				<div class="sidebar-widget">
-					<h4 class="widget-title">🍞 Bakery Sub-Categories</h4>
+					<h4 class="widget-title">🍞 Bakery Categories (EmDash)</h4>
 					<div class="category-tree">
-						<button type="button" class="tree-btn active" data-cat="all">All Bakery Items</button>
+						<button type="button" class="tree-btn active" data-cat="all">
+							<span>All Bakery Items</span>
+							<span class="count-pill">{products.length}</span>
+						</button>
 						
-						<div class="tree-group">
-							<button type="button" class="tree-parent-btn" data-cat="breads">🍞 Breads & Sourdough</button>
-							<div class="tree-sub-group">
-								<button type="button" class="tree-sub-btn" data-cat="country-sourdough">↳ Country Sourdough</button>
-								<button type="button" class="tree-sub-btn" data-cat="jalapeno-cheddar">↳ Jalapeño Cheddar</button>
-							</div>
-						</div>
-
-						<div class="tree-group">
-							<button type="button" class="tree-parent-btn" data-cat="pastries">🥐 Pastries & Sweets</button>
-							<div class="tree-sub-group">
-								<button type="button" class="tree-sub-btn" data-cat="cardamom-knots">↳ Cardamom Knots</button>
-								<button type="button" class="tree-sub-btn" data-cat="shortbread-cookies">↳ Shortbread & Cookies</button>
-							</div>
-						</div>
+						{parentCategories.map((parent: any) => {
+							const subs = getSubCategories(parent);
+							return (
+								<div class="tree-group">
+									<button type="button" class="tree-parent-btn" data-cat={parent.slug}>
+										<span>{parent.label || parent.name}</span>
+										{parent.count !== undefined && <span class="count-pill">{parent.count}</span>}
+									</button>
+									{subs.length > 0 && (
+										<div class="tree-sub-group">
+											{subs.map((sub: any) => (
+												<button type="button" class="tree-sub-btn" data-cat={sub.slug}>
+													<span>↳ {sub.label || sub.name}</span>
+													{sub.count !== undefined && <span class="count-pill">{sub.count}</span>}
+												</button>
+											))}
+										</div>
+									)}
+								</div>
+							);
+						})}
 					</div>
 				</div>
 
-				<!-- Ingredient Variation & Form Types Widget -->
+				<!-- Multi-Select Ingredient Form & Variations Widget -->
 				<div class="sidebar-widget">
-					<h4 class="widget-title">🌿 Ingredient Form & Variations</h4>
+					<div class="widget-header-row">
+						<h4 class="widget-title">🌿 Multi-Select Ingredients</h4>
+						<button type="button" id="clear-shop-ingredients-btn" class="clear-selection-btn" hidden>
+							✕ Clear
+						</button>
+					</div>
 					<div class="variation-chips">
 						<span class="var-group-label">Flour Type:</span>
 						<button type="button" class="var-chip" data-var="bread flour">Organic Bread Flour</button>
@@ -144,9 +176,21 @@ Astro.cache.set(cacheHint);
 		const treeBtns = document.querySelectorAll(".tree-btn, .tree-parent-btn, .tree-sub-btn");
 		const varChips = document.querySelectorAll(".var-chip");
 		const cards = document.querySelectorAll(".product-card");
+		const clearBtn = document.getElementById("clear-shop-ingredients-btn");
 
 		let activeCat = "all";
-		let activeVar = "";
+		let selectedVars = new Set<string>();
+
+		function updateClearBtn() {
+			if (clearBtn) {
+				if (selectedVars.size > 0) {
+					clearBtn.hidden = false;
+					clearBtn.textContent = `✕ Clear (${selectedVars.size})`;
+				} else {
+					clearBtn.hidden = true;
+				}
+			}
+		}
 
 		function applyFilters() {
 			const query = (searchInput?.value || "").toLowerCase().trim();
@@ -171,13 +215,19 @@ Astro.cache.set(cacheHint);
 					if (activeCat === "breads") matchesCat = title.includes("sourdough") || title.includes("loaf");
 					else if (activeCat === "country-sourdough") matchesCat = title.includes("sourdough") || title.includes("country");
 					else if (activeCat === "jalapeno-cheddar") matchesCat = title.includes("jalapeno") || title.includes("cheddar");
-					else if (activeCat === "pastries") matchesCat = title.includes("knot") || title.includes("shortbread");
+					else if (activeCat === "pastries" || activeCat === "cookies") matchesCat = title.includes("knot") || title.includes("shortbread") || title.includes("cookie") || title.includes("box");
 					else if (activeCat === "cardamom-knots") matchesCat = title.includes("cardamom") || title.includes("knot");
-					else if (activeCat === "shortbread-cookies") matchesCat = title.includes("shortbread");
+					else if (activeCat === "shortbread-cookies") matchesCat = title.includes("shortbread") || title.includes("cookie");
+					else matchesCat = title.includes(activeCat) || description.includes(activeCat) || ingredients.includes(activeCat);
 				}
 
-				// Variation match
-				const matchesVar = !activeVar || ingredients.includes(activeVar) || title.includes(activeVar);
+				// Multi-Select Ingredients Match
+				let matchesVar = true;
+				if (selectedVars.size > 0) {
+					matchesVar = Array.from(selectedVars).every(
+						(v) => ingredients.includes(v) || title.includes(v) || description.includes(v)
+					);
+				}
 
 				let matchesWeight = true;
 				if (weightFilter === "loaf") matchesWeight = netweight.includes("24") || netweight.includes("680");
@@ -215,18 +265,27 @@ Astro.cache.set(cacheHint);
 			});
 		});
 
+		// Multi-Select Ingredient Chips Click Handler
 		varChips.forEach((chip) => {
 			chip.addEventListener("click", () => {
+				const val = chip.getAttribute("data-var") || "";
 				if (chip.classList.contains("active")) {
 					chip.classList.remove("active");
-					activeVar = "";
+					selectedVars.delete(val);
 				} else {
-					varChips.forEach((c) => c.classList.remove("active"));
 					chip.classList.add("active");
-					activeVar = chip.getAttribute("data-var") || "";
+					selectedVars.add(val);
 				}
+				updateClearBtn();
 				applyFilters();
 			});
+		});
+
+		clearBtn?.addEventListener("click", () => {
+			selectedVars.clear();
+			varChips.forEach((c) => c.classList.remove("active"));
+			updateClearBtn();
+			applyFilters();
 		});
 	});
 </script>
@@ -309,6 +368,12 @@ Astro.cache.set(cacheHint);
 		padding-bottom: 0;
 	}
 
+	.widget-header-row {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+	}
+
 	.widget-title {
 		font-size: 0.8125rem;
 		font-weight: 800;
@@ -316,6 +381,21 @@ Astro.cache.set(cacheHint);
 		letter-spacing: 0.05em;
 		color: var(--color-text, #0f172a);
 		margin: 0;
+	}
+
+	.clear-selection-btn {
+		background: rgba(225, 29, 72, 0.1);
+		color: #e11d48;
+		border: 1px solid rgba(225, 29, 72, 0.3);
+		font-size: 0.7rem;
+		font-weight: 700;
+		padding: 0.15rem 0.5rem;
+		border-radius: 10px;
+		cursor: pointer;
+	}
+	.clear-selection-btn:hover {
+		background: #e11d48;
+		color: #ffffff;
 	}
 
 	.ingredient-search-box {
@@ -363,6 +443,9 @@ Astro.cache.set(cacheHint);
 	}
 
 	.tree-btn, .tree-parent-btn {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
 		text-align: left;
 		background: var(--color-bg-subtle, #f8fafc);
 		border: 1px solid var(--color-border, #e2e8f0);
@@ -383,6 +466,9 @@ Astro.cache.set(cacheHint);
 	}
 
 	.tree-sub-btn {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
 		text-align: left;
 		background: transparent;
 		border: 1px solid transparent;
@@ -406,6 +492,13 @@ Astro.cache.set(cacheHint);
 		border-color: var(--color-brand, #0066cc);
 	}
 
+	.count-pill {
+		font-size: 0.7rem;
+		background: rgba(0, 0, 0, 0.08);
+		padding: 0.1rem 0.45rem;
+		border-radius: 10px;
+	}
+
 	/* Variation Chips Styling */
 	.variation-chips {
 		display: flex;
@@ -424,11 +517,11 @@ Astro.cache.set(cacheHint);
 	}
 
 	.var-chip {
-		background: var(--color-bg-subtle, #f1f5f9);
+		background: #ffffff;
 		border: 1px solid var(--color-border, #cbd5e1);
 		color: var(--color-text, #0f172a);
 		padding: 0.25rem 0.55rem;
-		border-radius: 12px;
+		border-radius: 10px;
 		font-size: 0.75rem;
 		font-weight: 600;
 		cursor: pointer;
