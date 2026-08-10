@@ -175,35 +175,60 @@ import Base from "../../layouts/Base.astro";
 		const sourceSelect = document.getElementById("source") as HTMLSelectElement;
 
 		// Fetch and render Available Kitchen Ingredients Chips
-		async function loadAvailableIngredients() {
+		let globalIngredientsList: string[] = [];
+
+		async function loadAvailableIngredients(extractedText?: string) {
 			const container = document.getElementById("ingredients-chip-container");
 			if (!container) return;
 
 			try {
-				const res = await fetch("/api/ingredients");
-				if (res.ok) {
-					const data = await res.json();
-					const list: string[] = data.ingredients || [];
-					if (list.length > 0) {
-						container.innerHTML = list
-							.map((ing) => `<button type="button" class="ing-chip" data-ing="${ing}">+ ${ing}</button>`)
-							.join(" ");
-
-						container.querySelectorAll(".ing-chip").forEach((btn) => {
-							btn.addEventListener("click", () => {
-								const ingName = btn.getAttribute("data-ing");
-								if (ingName && ingredientsInput) {
-									const cur = ingredientsInput.value.trim();
-									const newLine = `• ${ingName}`;
-									if (!cur) {
-										ingredientsInput.value = newLine;
-									} else if (!cur.includes(ingName)) {
-										ingredientsInput.value = cur + "\n" + newLine;
-									}
-								}
-							});
-						});
+				if (globalIngredientsList.length === 0) {
+					const res = await fetch("/api/ingredients");
+					if (res.ok) {
+						const data = await res.json();
+						globalIngredientsList = data.ingredients || [];
 					}
+				}
+
+				let activeTags: string[] = [];
+				if (extractedText) {
+					activeTags = extractedText
+						.split("\n")
+						.map((l) =>
+							l
+								.replace(/^[\s•\-\*\d\/A-Za-z]+\s+(?:oz|tbsp|tsp|cup|cups|lb|lbs|package|packages|cloves|ribs|person)?\s*/i, "")
+								.replace(/^[\s•\-\*\d\/]+/g, "")
+								.trim()
+						)
+						.filter((t) => t.length > 2);
+				}
+
+				const mergedList = Array.from(new Set([...activeTags, ...globalIngredientsList]));
+
+				if (mergedList.length > 0) {
+					container.innerHTML = mergedList
+						.map((ing) => {
+							const isActive = activeTags.some((t) => t.toLowerCase() === ing.toLowerCase() || ing.toLowerCase().includes(t.toLowerCase()));
+							const cls = isActive ? "ing-chip active-card-chip" : "ing-chip";
+							const icon = isActive ? "✔" : "+";
+							return `<button type="button" class="${cls}" data-ing="${ing}">${icon} ${ing}</button>`;
+						})
+						.join(" ");
+
+					container.querySelectorAll(".ing-chip").forEach((btn) => {
+						btn.addEventListener("click", () => {
+							const ingName = btn.getAttribute("data-ing");
+							if (ingName && ingredientsInput) {
+								const cur = ingredientsInput.value.trim();
+								const newLine = `• ${ingName}`;
+								if (!cur) {
+									ingredientsInput.value = newLine;
+								} else if (!cur.includes(ingName)) {
+									ingredientsInput.value = cur + "\n" + newLine;
+								}
+							}
+						});
+					});
 				}
 			} catch (e) {
 				console.error("[LOAD INGREDIENTS ERR]", e);
@@ -294,7 +319,10 @@ import Base from "../../layouts/Base.astro";
 								if (prepTimeInput && info.prep_time) prepTimeInput.value = info.prep_time;
 								if (cookTimeInput && info.cook_time) cookTimeInput.value = info.cook_time;
 								if (servingsInput && info.servings) servingsInput.value = info.servings;
-								if (ingredientsInput && info.ingredients && info.ingredients.length > 10) ingredientsInput.value = info.ingredients;
+								if (ingredientsInput && info.ingredients && info.ingredients.length > 10) {
+									ingredientsInput.value = info.ingredients;
+									loadAvailableIngredients(info.ingredients);
+								}
 								if (instructionsInput && info.instructions && info.instructions.length > 20) instructionsInput.value = info.instructions;
 
 								if (autofillBanner) {
@@ -698,6 +726,15 @@ import Base from "../../layouts/Base.astro";
 		background: var(--color-brand, #0066cc);
 		color: #ffffff;
 		transform: translateY(-1px);
+	}
+	.ing-chip.active-card-chip {
+		background: #10b981;
+		color: #ffffff;
+		border-color: #059669;
+		font-weight: 700;
+	}
+	.ing-chip.active-card-chip:hover {
+		background: #059669;
 	}
 	.remove-btn {
 		background: #ef4444;
