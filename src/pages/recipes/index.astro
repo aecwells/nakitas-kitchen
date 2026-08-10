@@ -1,13 +1,27 @@
 ---
-import { getEmDashCollection } from "emdash";
+import { getEmDashCollection, getTaxonomyTerms } from "emdash";
 import Base from "../../layouts/Base.astro";
 import RecipeCard from "../../components/RecipeCard.astro";
 
-const { entries: recipes, cacheHint } = await getEmDashCollection("recipes", {
-	orderBy: { createdAt: "desc" },
-});
+const [
+	{ entries: recipes, cacheHint },
+	categoryTerms,
+	tagTerms,
+] = await Promise.all([
+	getEmDashCollection("recipes", { orderBy: { createdAt: "desc" } }),
+	getTaxonomyTerms("category").catch(() => []),
+	getTaxonomyTerms("tag").catch(() => []),
+]);
 
 Astro.cache.set(cacheHint);
+
+// Group categories into parent categories and sub-categories from EmDash CMS
+const parentCategories = categoryTerms.filter((term: any) => !term.parentId && !term.parent);
+const getSubCategories = (parentSlug: string, parentId?: string) => {
+	return categoryTerms.filter(
+		(term: any) => term.parent === parentSlug || (parentId && term.parentId === parentId)
+	);
+};
 ---
 
 <Base title="Recipes & Barbecue Journal | Nakita's Kitchen" description="Handcrafted sourdough, outdoor smoker recipes on Kamado Joe and Oklahoma Joe, and meal kit favorites.">
@@ -45,35 +59,36 @@ Astro.cache.set(cacheHint);
 					</div>
 				</div>
 
-				<!-- Hierarchical Sub-Categories Widget -->
+				<!-- Dynamic EmDash Categories & Sub-Categories Widget -->
 				<div class="sidebar-widget">
-					<h4 class="widget-title">📂 Categories & Sub-Categories</h4>
+					<h4 class="widget-title">📂 Categories (EmDash CMS)</h4>
 					<div class="category-tree">
-						<button type="button" class="tree-btn active" data-cat="all">All Categories</button>
+						<button type="button" class="tree-btn active" data-cat="all">
+							<span>All Categories</span>
+							<span class="count-pill">{recipes.length}</span>
+						</button>
 						
-						<div class="tree-group">
-							<button type="button" class="tree-parent-btn" data-cat="outdoor-bbq">🔥 Outdoor BBQ & Live-Fire</button>
-							<div class="tree-sub-group">
-								<button type="button" class="tree-sub-btn" data-cat="kamado-joe">↳ Kamado Joe Classic III</button>
-								<button type="button" class="tree-sub-btn" data-cat="oklahoma-joe">↳ Oklahoma Joe Smoker</button>
-							</div>
-						</div>
-
-						<div class="tree-group">
-							<button type="button" class="tree-parent-btn" data-cat="breads">🍞 Breads & Sourdough</button>
-							<div class="tree-sub-group">
-								<button type="button" class="tree-sub-btn" data-cat="country-sourdough">↳ Country Sourdough</button>
-								<button type="button" class="tree-sub-btn" data-cat="jalapeno-cheddar">↳ Jalapeño Cheddar</button>
-							</div>
-						</div>
-
-						<div class="tree-group">
-							<button type="button" class="tree-parent-btn" data-cat="pastries">🥐 Pastries & Sweets</button>
-							<div class="tree-sub-group">
-								<button type="button" class="tree-sub-btn" data-cat="cardamom-knots">↳ Cardamom Knots</button>
-								<button type="button" class="tree-sub-btn" data-cat="shortbread-cookies">↳ Shortbread & Cookies</button>
-							</div>
-						</div>
+						{parentCategories.map((parent: any) => {
+							const subs = getSubCategories(parent.slug, parent.id);
+							return (
+								<div class="tree-group">
+									<button type="button" class="tree-parent-btn" data-cat={parent.slug}>
+										<span>{parent.label || parent.name}</span>
+										{parent.count !== undefined && <span class="count-pill">{parent.count}</span>}
+									</button>
+									{subs.length > 0 && (
+										<div class="tree-sub-group">
+											{subs.map((sub: any) => (
+												<button type="button" class="tree-sub-btn" data-cat={sub.slug}>
+													<span>↳ {sub.label || sub.name}</span>
+													{sub.count !== undefined && <span class="count-pill">{sub.count}</span>}
+												</button>
+											))}
+										</div>
+									)}
+								</div>
+							);
+						})}
 					</div>
 				</div>
 
@@ -98,6 +113,20 @@ Astro.cache.set(cacheHint);
 						<button type="button" class="var-chip" data-var="mozzarella">Mozzarella</button>
 					</div>
 				</div>
+
+				<!-- Dynamic EmDash Tags Cloud -->
+				{tagTerms && tagTerms.length > 0 && (
+					<div class="sidebar-widget">
+						<h4 class="widget-title">🏷️ Popular Tags</h4>
+						<div class="tags-cloud">
+							{tagTerms.map((tag: any) => (
+								<button type="button" class="tag-cloud-chip" data-tag={tag.slug}>
+									#{tag.label || tag.name}
+								</button>
+							))}
+						</div>
+					</div>
+				)}
 
 				<div class="sidebar-widget">
 					<h4 class="widget-title">📌 Recipe Source</h4>
@@ -153,10 +182,12 @@ Astro.cache.set(cacheHint);
 		const allergenSelect = document.getElementById("allergen-filter-select") as HTMLSelectElement;
 		const treeBtns = document.querySelectorAll(".tree-btn, .tree-parent-btn, .tree-sub-btn");
 		const varChips = document.querySelectorAll(".var-chip");
+		const tagChips = document.querySelectorAll(".tag-cloud-chip");
 		const cards = document.querySelectorAll(".recipe-card");
 
 		let activeCat = "all";
 		let activeVar = "";
+		let activeTag = "";
 
 		function applyFilters() {
 			const query = (searchInput?.value || "").toLowerCase().trim();
@@ -176,22 +207,26 @@ Astro.cache.set(cacheHint);
 				const matchesQuery = !query || title.includes(query) || ingredients.includes(query) || equipment.includes(query);
 				const matchesSource = sourceFilter === "all" || source.includes(sourceFilter);
 
-				// Category & Sub-Category Match
+				// Category Match
 				let matchesCat = true;
 				if (activeCat !== "all") {
 					if (activeCat === "breads") matchesCat = title.includes("sourdough") || title.includes("bread") || ingredients.includes("flour");
 					else if (activeCat === "country-sourdough") matchesCat = title.includes("sourdough") || title.includes("country");
 					else if (activeCat === "jalapeno-cheddar") matchesCat = title.includes("jalapeno") || title.includes("cheddar");
-					else if (activeCat === "pastries") matchesCat = title.includes("knot") || title.includes("shortbread") || title.includes("cookie");
+					else if (activeCat === "pastries" || activeCat === "cookies") matchesCat = title.includes("knot") || title.includes("shortbread") || title.includes("cookie") || title.includes("biscuits");
 					else if (activeCat === "cardamom-knots") matchesCat = title.includes("cardamom") || title.includes("knot");
 					else if (activeCat === "shortbread-cookies") matchesCat = title.includes("shortbread") || title.includes("cookie");
 					else if (activeCat === "outdoor-bbq") matchesCat = equipment.includes("kamado") || equipment.includes("oklahoma") || title.includes("smoked") || title.includes("chicken");
 					else if (activeCat === "kamado-joe") matchesCat = equipment.includes("kamado");
 					else if (activeCat === "oklahoma-joe") matchesCat = equipment.includes("oklahoma");
+					else matchesCat = title.includes(activeCat) || ingredients.includes(activeCat);
 				}
 
-				// Ingredient Variation Match
+				// Variation match
 				const matchesVar = !activeVar || ingredients.includes(activeVar) || title.includes(activeVar);
+
+				// Tag match
+				const matchesTag = !activeTag || title.includes(activeTag) || ingredients.includes(activeTag);
 
 				let matchesCooktime = true;
 				if (cooktimeFilter === "quick") {
@@ -209,7 +244,7 @@ Astro.cache.set(cacheHint);
 					matchesAllergen = !allergens.includes("wheat") && !allergens.includes("gluten") && !ingredients.includes("flour") && !ingredients.includes("bun");
 				}
 
-				if (matchesQuery && matchesSource && matchesCat && matchesVar && matchesCooktime && matchesAllergen) {
+				if (matchesQuery && matchesSource && matchesCat && matchesVar && matchesTag && matchesCooktime && matchesAllergen) {
 					el.style.display = "";
 				} else {
 					el.style.display = "none";
@@ -240,6 +275,20 @@ Astro.cache.set(cacheHint);
 					varChips.forEach((c) => c.classList.remove("active"));
 					chip.classList.add("active");
 					activeVar = chip.getAttribute("data-var") || "";
+				}
+				applyFilters();
+			});
+		});
+
+		tagChips.forEach((chip) => {
+			chip.addEventListener("click", () => {
+				if (chip.classList.contains("active")) {
+					chip.classList.remove("active");
+					activeTag = "";
+				} else {
+					tagChips.forEach((c) => c.classList.remove("active"));
+					chip.classList.add("active");
+					activeTag = chip.getAttribute("data-tag") || "";
 				}
 				applyFilters();
 			});
@@ -399,6 +448,9 @@ Astro.cache.set(cacheHint);
 	}
 
 	.tree-btn, .tree-parent-btn {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
 		text-align: left;
 		background: var(--color-bg-subtle, #f8fafc);
 		border: 1px solid var(--color-border, #e2e8f0);
@@ -419,6 +471,9 @@ Astro.cache.set(cacheHint);
 	}
 
 	.tree-sub-btn {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
 		text-align: left;
 		background: transparent;
 		border: 1px solid transparent;
@@ -442,8 +497,20 @@ Astro.cache.set(cacheHint);
 		border-color: var(--color-brand, #0066cc);
 	}
 
+	.count-pill {
+		font-size: 0.7rem;
+		background: rgba(0, 0, 0, 0.08);
+		padding: 0.1rem 0.45rem;
+		border-radius: 10px;
+	}
+
+	.tree-btn.active .count-pill, .tree-parent-btn.active .count-pill, .tree-sub-btn.active .count-pill {
+		background: rgba(255, 255, 255, 0.25);
+		color: #ffffff;
+	}
+
 	/* Variation Chips Styling */
-	.variation-chips {
+	.variation-chips, .tags-cloud {
 		display: flex;
 		flex-wrap: wrap;
 		gap: 0.35rem;
@@ -459,7 +526,7 @@ Astro.cache.set(cacheHint);
 		margin-top: 0.35rem;
 	}
 
-	.var-chip {
+	.var-chip, .tag-cloud-chip {
 		background: var(--color-bg-subtle, #f1f5f9);
 		border: 1px solid var(--color-border, #cbd5e1);
 		color: var(--color-text, #0f172a);
@@ -471,12 +538,12 @@ Astro.cache.set(cacheHint);
 		transition: all 0.15s ease;
 	}
 
-	.var-chip:hover {
+	.var-chip:hover, .tag-cloud-chip:hover {
 		border-color: var(--color-brand, #0066cc);
 		color: var(--color-brand, #0066cc);
 	}
 
-	.var-chip.active {
+	.var-chip.active, .tag-cloud-chip.active {
 		background: var(--color-brand, #0066cc);
 		color: #ffffff;
 		border-color: var(--color-brand, #0066cc);
