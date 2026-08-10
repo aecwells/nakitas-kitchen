@@ -67,8 +67,8 @@ export const POST: APIRoute = async ({ request, locals }) => {
 		const media = cfWorkers?.env?.MEDIA || (locals as any)?.env?.MEDIA || (locals as any)?.runtime?.env?.MEDIA;
 
 		// 1. Upload Front & Back images to R2 storage if available
-		let featuredImageSrc = "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=1200&h=800&fit=crop";
-		let cardScanImageSrc = "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=1200&h=800&fit=crop";
+		let featuredImageSrc = frontImage.startsWith("data:") ? frontImage : "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=1200&h=800&fit=crop";
+		let cardScanImageSrc = backImage.startsWith("data:") ? backImage : "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=1200&h=800&fit=crop";
 
 		if (media && frontImage.startsWith("data:")) {
 			try {
