@@ -9,7 +9,18 @@ const { recipe } = Astro.props;
 const data = recipe.data;
 ---
 
-<article class="recipe-card" data-source={data.recipe_source || ""} data-equipment={data.equipment || ""} data-title={data.title || ""}>
+<article
+	class="recipe-card"
+	data-title={(data.title || "").toLowerCase()}
+	data-source={(data.recipe_source || "").toLowerCase()}
+	data-equipment={(data.equipment || "").toLowerCase()}
+	data-method={(data.cooking_method || "").toLowerCase()}
+	data-prep={(data.prep_time || "").toLowerCase()}
+	data-cook={(data.cook_time || "").toLowerCase()}
+	data-servings={(data.servings || "").toLowerCase()}
+	data-ingredients={(data.ingredients || "").toLowerCase()}
+	data-allergens={(data.allergens || "").toLowerCase()}
+>
 	<a href={`/recipes/${recipe.id}`} class="card-link">
 		{data.featured_image && (
 			<div class="card-image">

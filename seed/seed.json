@@ -123,6 +123,21 @@
 					"slug": "card_scan_image",
 					"label": "Uploaded Recipe Card Photo",
 					"type": "image"
+				},
+				{
+					"slug": "gallery_image_1",
+					"label": "Gallery Photo 1 (Optional)",
+					"type": "image"
+				},
+				{
+					"slug": "gallery_image_2",
+					"label": "Gallery Photo 2 (Optional)",
+					"type": "image"
+				},
+				{
+					"slug": "gallery_image_3",
+					"label": "Gallery Photo 3 (Optional)",
+					"type": "image"
 				}
 			]
 		},
@@ -149,6 +164,21 @@
 				{
 					"slug": "featured_image",
 					"label": "Product Image",
+					"type": "image"
+				},
+				{
+					"slug": "gallery_image_1",
+					"label": "Gallery Photo 1 (Optional)",
+					"type": "image"
+				},
+				{
+					"slug": "gallery_image_2",
+					"label": "Gallery Photo 2 (Optional)",
+					"type": "image"
+				},
+				{
+					"slug": "gallery_image_3",
+					"label": "Gallery Photo 3 (Optional)",
 					"type": "image"
 				},
 				{

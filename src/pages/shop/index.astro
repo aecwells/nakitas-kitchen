@@ -20,14 +20,69 @@ Astro.cache.set(cacheHint);
 			</p>
 		</header>
 
-		<!-- Interactive Product Category Filter Chips -->
-		<div class="filter-bar">
-			<span class="filter-label">Filter Bakery Category:</span>
-			<div class="chips-row">
-				<button type="button" class="shop-filter-chip active" data-filter="all">All Bakery Items</button>
-				<button type="button" class="shop-filter-chip" data-filter="sourdough">🍞 Artisanal Sourdough</button>
-				<button type="button" class="shop-filter-chip" data-filter="pastry">🥐 Pastries & Knots</button>
-				<button type="button" class="shop-filter-chip" data-filter="cookies">🍪 Shortbread & Cookies</button>
+		<!-- Advanced Multi-Field Shop Filter Control Panel -->
+		<div class="advanced-filter-panel">
+			<div class="search-filter-row">
+				<div class="ingredient-search-box">
+					<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="search-icon">
+						<circle cx="11" cy="11" r="8"></circle>
+						<line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+					</svg>
+					<input
+						type="text"
+						id="shop-search-input"
+						placeholder="Search bakery items, ingredients (e.g. Organic Flour, Meyer Lemon, Cardamom, Cinnamon)..."
+						class="filter-text-input"
+					/>
+				</div>
+			</div>
+
+			<div class="filter-controls-grid">
+				<div class="filter-group">
+					<label for="category-filter-select">Bakery Category:</label>
+					<select id="category-filter-select" class="filter-select">
+						<option value="all">All Categories</option>
+						<option value="sourdough">Artisanal Sourdough</option>
+						<option value="pastry">Pastries & Knots</option>
+						<option value="cookies">Shortbread & Cookies</option>
+					</select>
+				</div>
+
+				<div class="filter-group">
+					<label for="weight-filter-select">Portion Size:</label>
+					<select id="weight-filter-select" class="filter-select">
+						<option value="all">All Portions</option>
+						<option value="loaf">Full Loaf (24 oz / 680g)</option>
+						<option value="pack">Pack / Knots (16 oz / 450g)</option>
+						<option value="box">Bakery Box (12 oz / 340g)</option>
+					</select>
+				</div>
+
+				<div class="filter-group">
+					<label for="allergen-filter-select">Allergen Safety:</label>
+					<select id="allergen-filter-select" class="filter-select">
+						<option value="all">All Ingredients</option>
+						<option value="no-dairy">Dairy-Free (No Dairy/Butter)</option>
+						<option value="no-wheat">Wheat/Gluten-Free</option>
+					</select>
+				</div>
+
+				<div class="filter-group">
+					<label for="stock-filter-select">Pre-Order Status:</label>
+					<select id="stock-filter-select" class="filter-select">
+						<option value="all">All Items</option>
+						<option value="in-stock">Available Pre-Orders Only</option>
+					</select>
+				</div>
+			</div>
+
+			<div class="quick-preset-row">
+				<span class="preset-label">Presets:</span>
+				<button type="button" class="preset-chip active" data-preset="all">All Bakery Items</button>
+				<button type="button" class="preset-chip" data-preset="sourdough">🍞 Artisanal Sourdough</button>
+				<button type="button" class="preset-chip" data-preset="pastry">🥐 Pastries & Knots</button>
+				<button type="button" class="preset-chip" data-preset="cookies">🍪 Shortbread & Cookies</button>
+				<button type="button" class="preset-chip" data-preset="lemon">🍋 Meyer Lemon</button>
 			</div>
 		</div>
 
@@ -54,31 +109,96 @@ Astro.cache.set(cacheHint);
 
 <script>
 	document.addEventListener("DOMContentLoaded", () => {
-		const chips = document.querySelectorAll(".shop-filter-chip");
+		const searchInput = document.getElementById("shop-search-input") as HTMLInputElement;
+		const categorySelect = document.getElementById("category-filter-select") as HTMLSelectElement;
+		const weightSelect = document.getElementById("weight-filter-select") as HTMLSelectElement;
+		const allergenSelect = document.getElementById("allergen-filter-select") as HTMLSelectElement;
+		const stockSelect = document.getElementById("stock-filter-select") as HTMLSelectElement;
+		const presetChips = document.querySelectorAll(".preset-chip");
 		const cards = document.querySelectorAll(".product-card");
 
-		chips.forEach((chip) => {
+		function applyFilters() {
+			const query = (searchInput?.value || "").toLowerCase().trim();
+			const catFilter = categorySelect?.value || "all";
+			const weightFilter = weightSelect?.value || "all";
+			const allergenFilter = allergenSelect?.value || "all";
+			const stockFilter = stockSelect?.value || "all";
+
+			cards.forEach((card) => {
+				const el = card as HTMLElement;
+				const title = el.getAttribute("data-title") || "";
+				const description = el.getAttribute("data-description") || "";
+				const netweight = el.getAttribute("data-netweight") || "";
+				const ingredients = el.getAttribute("data-ingredients") || "";
+				const allergens = el.getAttribute("data-allergens") || "";
+				const instock = el.getAttribute("data-instock") === "true";
+
+				// Query match
+				const matchesQuery = !query || title.includes(query) || description.includes(query) || ingredients.includes(query);
+
+				// Category match
+				let matchesCat = true;
+				if (catFilter === "sourdough") {
+					matchesCat = title.includes("sourdough") || title.includes("loaf") || title.includes("boule");
+				} else if (catFilter === "pastry") {
+					matchesCat = title.includes("knot") || title.includes("brioche") || title.includes("cinnamon") || title.includes("pastry");
+				} else if (catFilter === "cookies") {
+					matchesCat = title.includes("shortbread") || title.includes("cookie") || title.includes("box");
+				}
+
+				// Weight match
+				let matchesWeight = true;
+				if (weightFilter === "loaf") matchesWeight = netweight.includes("24") || netweight.includes("680");
+				else if (weightFilter === "pack") matchesWeight = netweight.includes("16") || netweight.includes("450");
+				else if (weightFilter === "box") matchesWeight = netweight.includes("12") || netweight.includes("340");
+
+				// Allergen exclusion
+				let matchesAllergen = true;
+				if (allergenFilter === "no-dairy") {
+					matchesAllergen = !allergens.includes("dairy") && !allergens.includes("milk") && !ingredients.includes("butter");
+				} else if (allergenFilter === "no-wheat") {
+					matchesAllergen = !allergens.includes("wheat") && !allergens.includes("gluten") && !ingredients.includes("flour");
+				}
+
+				// Stock match
+				const matchesStock = stockFilter === "all" || (stockFilter === "in-stock" && instock);
+
+				if (matchesQuery && matchesCat && matchesWeight && matchesAllergen && matchesStock) {
+					el.style.display = "";
+				} else {
+					el.style.display = "none";
+				}
+			});
+		}
+
+		searchInput?.addEventListener("input", applyFilters);
+		categorySelect?.addEventListener("change", applyFilters);
+		weightSelect?.addEventListener("change", applyFilters);
+		allergenSelect?.addEventListener("change", applyFilters);
+		stockSelect?.addEventListener("change", applyFilters);
+
+		presetChips.forEach((chip) => {
 			chip.addEventListener("click", () => {
-				chips.forEach((c) => c.classList.remove("active"));
+				presetChips.forEach((c) => c.classList.remove("active"));
 				chip.classList.add("active");
 
-				const filter = chip.getAttribute("data-filter");
-				cards.forEach((card) => {
-					const el = card as HTMLElement;
-					const title = (el.getAttribute("data-title") || "").toLowerCase();
-
-					if (filter === "all") {
-						el.style.display = "";
-					} else if (filter === "sourdough" && (title.includes("sourdough") || title.includes("loaf") || title.includes("boule"))) {
-						el.style.display = "";
-					} else if (filter === "pastry" && (title.includes("knot") || title.includes("brioche") || title.includes("cinnamon") || title.includes("pastry"))) {
-						el.style.display = "";
-					} else if (filter === "cookies" && (title.includes("shortbread") || title.includes("cookie") || title.includes("box"))) {
-						el.style.display = "";
-					} else {
-						el.style.display = "none";
-					}
-				});
+				const preset = chip.getAttribute("data-preset");
+				if (preset === "all") {
+					if (searchInput) searchInput.value = "";
+					if (categorySelect) categorySelect.value = "all";
+					if (weightSelect) weightSelect.value = "all";
+					if (allergenSelect) allergenSelect.value = "all";
+					if (stockSelect) stockSelect.value = "all";
+				} else if (preset === "sourdough") {
+					if (categorySelect) categorySelect.value = "sourdough";
+				} else if (preset === "pastry") {
+					if (categorySelect) categorySelect.value = "pastry";
+				} else if (preset === "cookies") {
+					if (categorySelect) categorySelect.value = "cookies";
+				} else if (preset === "lemon") {
+					if (searchInput) searchInput.value = "lemon";
+				}
+				applyFilters();
 			});
 		});
 	});
@@ -120,57 +240,132 @@ Astro.cache.set(cacheHint);
 		line-height: 1.6;
 		margin: 0;
 	}
-	.filter-bar {
+
+	/* Advanced Filter Control Panel */
+	.advanced-filter-panel {
+		background: var(--color-surface, #ffffff);
+		border: 1px solid var(--color-border, #e2e8f0);
+		border-radius: 16px;
+		padding: 1.5rem;
+		box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
+		margin-bottom: 3rem;
+	}
+
+	.ingredient-search-box {
+		position: relative;
+		margin-bottom: 1.25rem;
+	}
+
+	.search-icon {
+		position: absolute;
+		left: 1rem;
+		top: 50%;
+		transform: translateY(-50%);
+		color: var(--color-muted, #94a3b8);
+	}
+
+	.filter-text-input {
+		width: 100%;
+		padding: 0.85rem 1rem 0.85rem 2.8rem;
+		font-size: 1rem;
+		border: 1px solid var(--color-border, #cbd5e1);
+		border-radius: 10px;
+		background: var(--color-bg, #f8fafc);
+		color: var(--color-text, #0f172a);
+		transition: border-color 0.15s ease;
+	}
+
+	.filter-text-input:focus {
+		outline: none;
+		border-color: var(--color-brand, #0066cc);
+		box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.15);
+	}
+
+	.filter-controls-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+		gap: 1rem;
+		margin-bottom: 1.25rem;
+	}
+
+	.filter-group {
 		display: flex;
 		flex-direction: column;
-		align-items: center;
-		gap: 0.5rem;
-		margin-bottom: 2.5rem;
+		gap: 0.35rem;
 	}
-	.filter-label {
+
+	.filter-group label {
 		font-size: 0.75rem;
 		font-weight: 700;
 		text-transform: uppercase;
 		letter-spacing: 0.05em;
 		color: var(--color-muted, #64748b);
 	}
-	.chips-row {
+
+	.filter-select {
+		padding: 0.6rem 0.75rem;
+		font-size: 0.875rem;
+		font-weight: 600;
+		border: 1px solid var(--color-border, #cbd5e1);
+		border-radius: 8px;
+		background: var(--color-bg, #f8fafc);
+		color: var(--color-text, #0f172a);
+		cursor: pointer;
+	}
+
+	.quick-preset-row {
 		display: flex;
+		align-items: center;
 		gap: 0.5rem;
 		flex-wrap: wrap;
-		justify-content: center;
+		padding-top: 1rem;
+		border-top: 1px dashed var(--color-border, #e2e8f0);
 	}
-	.shop-filter-chip {
+
+	.preset-label {
+		font-size: 0.75rem;
+		font-weight: 700;
+		text-transform: uppercase;
+		color: var(--color-muted, #64748b);
+		margin-right: 0.25rem;
+	}
+
+	.preset-chip {
 		background: var(--color-bg-subtle, #f1f5f9);
 		border: 1px solid var(--color-border, #cbd5e1);
 		color: var(--color-text, #0f172a);
-		padding: 0.4rem 0.9rem;
-		border-radius: 20px;
-		font-size: 0.85rem;
+		padding: 0.35rem 0.8rem;
+		border-radius: 16px;
+		font-size: 0.8125rem;
 		font-weight: 600;
 		cursor: pointer;
 		transition: all 0.15s ease;
 	}
-	.shop-filter-chip:hover {
+
+	.preset-chip:hover {
 		border-color: var(--color-brand, #0066cc);
 		color: var(--color-brand, #0066cc);
 	}
-	.shop-filter-chip.active {
+
+	.preset-chip.active {
 		background: var(--color-brand, #0066cc);
 		color: #ffffff;
 		border-color: var(--color-brand, #0066cc);
 	}
+
 	.products-grid {
 		display: grid;
 		grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
 		gap: 2rem;
 		margin-bottom: 4rem;
 	}
+
 	.empty-state {
 		text-align: center;
 		padding: 4rem 1rem;
 		color: var(--color-muted, #64748b);
 	}
+
 	.cottage-info-banner {
 		background: var(--color-bg-subtle, #f8fafc);
 		border: 1px solid var(--color-border, #e2e8f0);
@@ -180,11 +375,13 @@ Astro.cache.set(cacheHint);
 		max-width: 800px;
 		margin: 0 auto;
 	}
+
 	.cottage-info-banner h3 {
 		font-size: 1.25rem;
 		margin-bottom: 0.5rem;
 		color: var(--color-text, #0f172a);
 	}
+
 	.cottage-info-banner p {
 		font-size: 0.9375rem;
 		color: var(--color-text-secondary, #475569);

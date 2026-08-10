@@ -25,15 +25,83 @@ Astro.cache.set(cacheHint);
 			</p>
 		</header>
 
-		<!-- Interactive Filter Chips Bar -->
-		<div class="filter-bar">
-			<span class="filter-label">Filter Category & Source:</span>
-			<div class="chips-row">
-				<button type="button" class="recipe-filter-chip active" data-filter="all">All Recipes</button>
-				<button type="button" class="recipe-filter-chip" data-filter="sourdough">🍞 Sourdough & Breads</button>
-				<button type="button" class="recipe-filter-chip" data-filter="smoker">🔥 Outdoor Smoker</button>
-				<button type="button" class="recipe-filter-chip" data-filter="hellofresh">📦 HelloFresh Cards</button>
-				<button type="button" class="recipe-filter-chip" data-filter="stovetop">🍳 Stovetop & Oven</button>
+		<!-- Advanced Multi-Field Recipe Filter Control Panel -->
+		<div class="advanced-filter-panel">
+			<div class="search-filter-row">
+				<div class="ingredient-search-box">
+					<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="search-icon">
+						<circle cx="11" cy="11" r="8"></circle>
+						<line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+					</svg>
+					<input
+						type="text"
+						id="ingredient-search-input"
+						placeholder="Filter by ingredient (e.g., Ground Beef, Potatoes, Cheddar, Thyme)..."
+						class="filter-text-input"
+					/>
+				</div>
+			</div>
+
+			<div class="filter-controls-grid">
+				<div class="filter-group">
+					<label for="source-filter-select">Recipe Source:</label>
+					<select id="source-filter-select" class="filter-select">
+						<option value="all">All Sources</option>
+						<option value="hellofresh">HelloFresh Cards</option>
+						<option value="homechef">HomeChef Cards</option>
+						<option value="nakita">Nakita's Original</option>
+					</select>
+				</div>
+
+				<div class="filter-group">
+					<label for="equipment-filter-select">Cooking Equipment:</label>
+					<select id="equipment-filter-select" class="filter-select">
+						<option value="all">All Equipment</option>
+						<option value="kamado">Kamado Joe Smoker</option>
+						<option value="oklahoma">Oklahoma Joe Smoker</option>
+						<option value="skillet">Stovetop Skillet & Oven</option>
+						<option value="oven">Indoor Oven</option>
+					</select>
+				</div>
+
+				<div class="filter-group">
+					<label for="method-filter-select">Cooking Method:</label>
+					<select id="method-filter-select" class="filter-select">
+						<option value="all">All Methods</option>
+						<option value="pan-seared">Pan-Seared & Oven Bake</option>
+						<option value="smoke">Slow Smoked / Barbecue</option>
+						<option value="fermentation">Fermentation & Baking</option>
+					</select>
+				</div>
+
+				<div class="filter-group">
+					<label for="cooktime-filter-select">Max Cook Time:</label>
+					<select id="cooktime-filter-select" class="filter-select">
+						<option value="all">Any Duration</option>
+						<option value="quick">Quick (&le; 30 mins)</option>
+						<option value="medium">Under 1 Hour</option>
+						<option value="slow">Slow Cook / Smoke (&gt; 1 hr)</option>
+					</select>
+				</div>
+
+				<div class="filter-group">
+					<label for="allergen-filter-select">Allergen Safety:</label>
+					<select id="allergen-filter-select" class="filter-select">
+						<option value="all">All Ingredients</option>
+						<option value="no-dairy">Dairy-Free (No Dairy/Milk)</option>
+						<option value="no-wheat">Wheat/Gluten-Free</option>
+					</select>
+				</div>
+			</div>
+
+			<div class="quick-preset-row">
+				<span class="preset-label">Presets:</span>
+				<button type="button" class="preset-chip active" data-preset="all">All Recipes</button>
+				<button type="button" class="preset-chip" data-preset="sourdough">🍞 Sourdough</button>
+				<button type="button" class="preset-chip" data-preset="smoker">🔥 Outdoor Smoker</button>
+				<button type="button" class="preset-chip" data-preset="hellofresh">📦 HelloFresh</button>
+				<button type="button" class="preset-chip" data-preset="beef">🥩 Ground Beef</button>
+				<button type="button" class="preset-chip" data-preset="cheese">🧀 White Cheddar</button>
 			</div>
 		</div>
 
@@ -53,35 +121,103 @@ Astro.cache.set(cacheHint);
 
 <script>
 	document.addEventListener("DOMContentLoaded", () => {
-		const chips = document.querySelectorAll(".recipe-filter-chip");
+		const searchInput = document.getElementById("ingredient-search-input") as HTMLInputElement;
+		const sourceSelect = document.getElementById("source-filter-select") as HTMLSelectElement;
+		const equipmentSelect = document.getElementById("equipment-filter-select") as HTMLSelectElement;
+		const methodSelect = document.getElementById("method-filter-select") as HTMLSelectElement;
+		const cooktimeSelect = document.getElementById("cooktime-filter-select") as HTMLSelectElement;
+		const allergenSelect = document.getElementById("allergen-filter-select") as HTMLSelectElement;
+		const presetChips = document.querySelectorAll(".preset-chip");
 		const cards = document.querySelectorAll(".recipe-card");
 
-		chips.forEach((chip) => {
+		function applyFilters() {
+			const query = (searchInput?.value || "").toLowerCase().trim();
+			const sourceFilter = sourceSelect?.value || "all";
+			const equipmentFilter = equipmentSelect?.value || "all";
+			const methodFilter = methodSelect?.value || "all";
+			const cooktimeFilter = cooktimeSelect?.value || "all";
+			const allergenFilter = allergenSelect?.value || "all";
+
+			cards.forEach((card) => {
+				const el = card as HTMLElement;
+				const title = el.getAttribute("data-title") || "";
+				const source = el.getAttribute("data-source") || "";
+				const equipment = el.getAttribute("data-equipment") || "";
+				const method = el.getAttribute("data-method") || "";
+				const cook = el.getAttribute("data-cook") || "";
+				const ingredients = el.getAttribute("data-ingredients") || "";
+				const allergens = el.getAttribute("data-allergens") || "";
+
+				// Query match (searches title + ingredients + equipment)
+				const matchesQuery = !query || title.includes(query) || ingredients.includes(query) || equipment.includes(query);
+
+				// Source match
+				const matchesSource = sourceFilter === "all" || source.includes(sourceFilter);
+
+				// Equipment match
+				const matchesEquipment = equipmentFilter === "all" || equipment.includes(equipmentFilter);
+
+				// Method match
+				const matchesMethod = methodFilter === "all" || method.includes(methodFilter);
+
+				// Cook time match
+				let matchesCooktime = true;
+				if (cooktimeFilter === "quick") {
+					matchesCooktime = cook.includes("15") || cook.includes("20") || cook.includes("25") || cook.includes("30") || cook.includes("10");
+				} else if (cooktimeFilter === "medium") {
+					matchesCooktime = !cook.includes("90") && !cook.includes("2 hour") && !cook.includes("3 hour");
+				} else if (cooktimeFilter === "slow") {
+					matchesCooktime = cook.includes("hour") || cook.includes("60") || cook.includes("90") || cook.includes("120");
+				}
+
+				// Allergen exclusion match
+				let matchesAllergen = true;
+				if (allergenFilter === "no-dairy") {
+					matchesAllergen = !allergens.includes("dairy") && !allergens.includes("milk") && !ingredients.includes("cheddar") && !ingredients.includes("cheese");
+				} else if (allergenFilter === "no-wheat") {
+					matchesAllergen = !allergens.includes("wheat") && !allergens.includes("gluten") && !ingredients.includes("flour") && !ingredients.includes("bun");
+				}
+
+				if (matchesQuery && matchesSource && matchesEquipment && matchesMethod && matchesCooktime && matchesAllergen) {
+					el.style.display = "";
+				} else {
+					el.style.display = "none";
+				}
+			});
+		}
+
+		searchInput?.addEventListener("input", applyFilters);
+		sourceSelect?.addEventListener("change", applyFilters);
+		equipmentSelect?.addEventListener("change", applyFilters);
+		methodSelect?.addEventListener("change", applyFilters);
+		cooktimeSelect?.addEventListener("change", applyFilters);
+		allergenSelect?.addEventListener("change", applyFilters);
+
+		presetChips.forEach((chip) => {
 			chip.addEventListener("click", () => {
-				chips.forEach((c) => c.classList.remove("active"));
+				presetChips.forEach((c) => c.classList.remove("active"));
 				chip.classList.add("active");
 
-				const filter = chip.getAttribute("data-filter");
-				cards.forEach((card) => {
-					const el = card as HTMLElement;
-					const source = (el.getAttribute("data-source") || "").toLowerCase();
-					const equip = (el.getAttribute("data-equipment") || "").toLowerCase();
-					const title = (el.getAttribute("data-title") || "").toLowerCase();
-
-					if (filter === "all") {
-						el.style.display = "";
-					} else if (filter === "sourdough" && (title.includes("sourdough") || title.includes("bread") || title.includes("boule") || title.includes("knot"))) {
-						el.style.display = "";
-					} else if (filter === "smoker" && (equip.includes("kamado") || equip.includes("smoke") || equip.includes("pellet") || title.includes("chicken") || title.includes("pizza"))) {
-						el.style.display = "";
-					} else if (filter === "hellofresh" && (source.includes("hellofresh") || title.includes("hellofresh") || title.includes("burger") || title.includes("pot pie"))) {
-						el.style.display = "";
-					} else if (filter === "stovetop" && (equip.includes("oven") || equip.includes("skillet") || equip.includes("pan") || title.includes("burger"))) {
-						el.style.display = "";
-					} else {
-						el.style.display = "none";
-					}
-				});
+				const preset = chip.getAttribute("data-preset");
+				if (preset === "all") {
+					if (searchInput) searchInput.value = "";
+					if (sourceSelect) sourceSelect.value = "all";
+					if (equipmentSelect) equipmentSelect.value = "all";
+					if (methodSelect) methodSelect.value = "all";
+					if (cooktimeSelect) cooktimeSelect.value = "all";
+					if (allergenSelect) allergenSelect.value = "all";
+				} else if (preset === "sourdough") {
+					if (searchInput) searchInput.value = "sourdough";
+				} else if (preset === "smoker") {
+					if (equipmentSelect) equipmentSelect.value = "kamado";
+				} else if (preset === "hellofresh") {
+					if (sourceSelect) sourceSelect.value = "hellofresh";
+				} else if (preset === "beef") {
+					if (searchInput) searchInput.value = "beef";
+				} else if (preset === "cheese") {
+					if (searchInput) searchInput.value = "cheddar";
+				}
+				applyFilters();
 			});
 		});
 	});
@@ -143,51 +279,125 @@ Astro.cache.set(cacheHint);
 		line-height: 1.6;
 		margin: 0;
 	}
-	.filter-bar {
+
+	/* Advanced Filter Control Panel */
+	.advanced-filter-panel {
+		background: var(--color-surface, #ffffff);
+		border: 1px solid var(--color-border, #e2e8f0);
+		border-radius: 16px;
+		padding: 1.5rem;
+		box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
+		margin-bottom: 3rem;
+	}
+
+	.ingredient-search-box {
+		position: relative;
+		margin-bottom: 1.25rem;
+	}
+
+	.search-icon {
+		position: absolute;
+		left: 1rem;
+		top: 50%;
+		transform: translateY(-50%);
+		color: var(--color-muted, #94a3b8);
+	}
+
+	.filter-text-input {
+		width: 100%;
+		padding: 0.85rem 1rem 0.85rem 2.8rem;
+		font-size: 1rem;
+		border: 1px solid var(--color-border, #cbd5e1);
+		border-radius: 10px;
+		background: var(--color-bg, #f8fafc);
+		color: var(--color-text, #0f172a);
+		transition: border-color 0.15s ease;
+	}
+
+	.filter-text-input:focus {
+		outline: none;
+		border-color: var(--color-brand, #0066cc);
+		box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.15);
+	}
+
+	.filter-controls-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+		gap: 1rem;
+		margin-bottom: 1.25rem;
+	}
+
+	.filter-group {
 		display: flex;
 		flex-direction: column;
-		align-items: center;
-		gap: 0.5rem;
-		margin-bottom: 2.5rem;
+		gap: 0.35rem;
 	}
-	.filter-label {
+
+	.filter-group label {
 		font-size: 0.75rem;
 		font-weight: 700;
 		text-transform: uppercase;
 		letter-spacing: 0.05em;
 		color: var(--color-muted, #64748b);
 	}
-	.chips-row {
+
+	.filter-select {
+		padding: 0.6rem 0.75rem;
+		font-size: 0.875rem;
+		font-weight: 600;
+		border: 1px solid var(--color-border, #cbd5e1);
+		border-radius: 8px;
+		background: var(--color-bg, #f8fafc);
+		color: var(--color-text, #0f172a);
+		cursor: pointer;
+	}
+
+	.quick-preset-row {
 		display: flex;
+		align-items: center;
 		gap: 0.5rem;
 		flex-wrap: wrap;
-		justify-content: center;
+		padding-top: 1rem;
+		border-top: 1px dashed var(--color-border, #e2e8f0);
 	}
-	.recipe-filter-chip {
+
+	.preset-label {
+		font-size: 0.75rem;
+		font-weight: 700;
+		text-transform: uppercase;
+		color: var(--color-muted, #64748b);
+		margin-right: 0.25rem;
+	}
+
+	.preset-chip {
 		background: var(--color-bg-subtle, #f1f5f9);
 		border: 1px solid var(--color-border, #cbd5e1);
 		color: var(--color-text, #0f172a);
-		padding: 0.4rem 0.9rem;
-		border-radius: 20px;
-		font-size: 0.85rem;
+		padding: 0.35rem 0.8rem;
+		border-radius: 16px;
+		font-size: 0.8125rem;
 		font-weight: 600;
 		cursor: pointer;
 		transition: all 0.15s ease;
 	}
-	.recipe-filter-chip:hover {
+
+	.preset-chip:hover {
 		border-color: var(--color-brand, #0066cc);
 		color: var(--color-brand, #0066cc);
 	}
-	.recipe-filter-chip.active {
+
+	.preset-chip.active {
 		background: var(--color-brand, #0066cc);
 		color: #ffffff;
 		border-color: var(--color-brand, #0066cc);
 	}
+
 	.recipes-grid {
 		display: grid;
 		grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
 		gap: 2rem;
 	}
+
 	.empty-state {
 		text-align: center;
 		padding: 4rem 1rem;

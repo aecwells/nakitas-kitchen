@@ -9,7 +9,15 @@ const { product } = Astro.props;
 const data = product.data;
 ---
 
-<article class="product-card" data-title={data.title || ""}>
+<article
+	class="product-card"
+	data-title={(data.title || "").toLowerCase()}
+	data-description={(data.description || "").toLowerCase()}
+	data-netweight={(data.net_weight || "").toLowerCase()}
+	data-ingredients={(data.explicit_ingredients || "").toLowerCase()}
+	data-allergens={(data.allergens || "").toLowerCase()}
+	data-instock={data.in_stock ? "true" : "false"}
+>
 	<a href={`/shop/${product.id}`} class="card-link">
 		{data.featured_image && (
 			<div class="card-image">

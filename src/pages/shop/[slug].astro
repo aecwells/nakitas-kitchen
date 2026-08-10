@@ -20,6 +20,14 @@ const [categories, tags] = await Promise.all([
 	getEntryTerms("products", data.id, "tag").catch(() => []),
 ]);
 
+// Collect all gallery images (Featured + Gallery 1-3)
+const galleryImages = [
+	data.featured_image,
+	data.gallery_image_1,
+	data.gallery_image_2,
+	data.gallery_image_3,
+].filter(Boolean);
+
 // Check if user is logged into EmDash Admin
 const isLoggedIn = !!Astro.locals.user;
 
@@ -57,15 +65,39 @@ if (data.matched_recipe_slug) {
 		</div>
 
 		<div class="product-grid">
-			<!-- LEFT COLUMN: Product Visuals & Official Statutory Packaging Sticker -->
+			<!-- LEFT COLUMN: Product Multi-Image Gallery & Official Statutory Packaging Sticker -->
 			<div class="product-gallery">
-				{data.featured_image ? (
-					<div class="image-wrapper">
-						<Image image={data.featured_image} alt={data.title} />
-					</div>
-				) : (
-					<div class="image-placeholder">No Image Available</div>
-				)}
+				<div class="gallery-wrapper">
+					{galleryImages.length > 0 ? (
+						<div class="main-image-frame">
+							<img
+								id="main-product-img"
+								src={galleryImages[0]?.src ? (galleryImages[0].src.startsWith("http") ? galleryImages[0].src : `/_emdash/api/media/file/${galleryImages[0].src}`) : "/placeholder.jpg"}
+								alt={galleryImages[0]?.alt || data.title}
+							/>
+						</div>
+					) : (
+						<div class="image-placeholder">No Product Image Available</div>
+					)}
+
+					{galleryImages.length > 1 && (
+						<div class="gallery-thumbnails">
+							{galleryImages.map((img: any, index: number) => {
+								const imgSrc = img.src ? (img.src.startsWith("http") ? img.src : `/_emdash/api/media/file/${img.src}`) : "/placeholder.jpg";
+								return (
+									<button
+										type="button"
+										class={`thumb-btn ${index === 0 ? "active" : ""}`}
+										data-img-src={imgSrc}
+										data-img-alt={img.alt || `${data.title} - Image ${index + 1}`}
+									>
+										<img src={imgSrc} alt={img.alt || `${data.title} Thumbnail`} />
+									</button>
+								);
+							})}
+						</div>
+					)}
+				</div>
 
 				{tags && tags.length > 0 && (
 					<div class="product-tags">
@@ -170,6 +202,25 @@ if (data.matched_recipe_slug) {
 
 <script>
 	document.addEventListener("DOMContentLoaded", () => {
+		// Gallery thumbnail switcher
+		const mainImg = document.getElementById("main-product-img") as HTMLImageElement;
+		const thumbBtns = document.querySelectorAll(".thumb-btn");
+
+		thumbBtns.forEach((btn) => {
+			btn.addEventListener("click", () => {
+				thumbBtns.forEach((b) => b.classList.remove("active"));
+				btn.classList.add("active");
+
+				const newSrc = btn.getAttribute("data-img-src");
+				const newAlt = btn.getAttribute("data-img-alt");
+				if (mainImg && newSrc) {
+					mainImg.src = newSrc;
+					if (newAlt) mainImg.alt = newAlt;
+				}
+			});
+		});
+
+		// Modal trigger
 		const openStickerBtn = document.getElementById("open-sticker-btn");
 		const stickerModal = document.getElementById("sticker-modal-overlay");
 
@@ -228,7 +279,12 @@ if (data.matched_recipe_slug) {
 		flex-direction: column;
 		gap: 1.25rem;
 	}
-	.image-wrapper {
+	.gallery-wrapper {
+		display: flex;
+		flex-direction: column;
+		gap: 0.75rem;
+	}
+	.main-image-frame {
 		border-radius: 16px;
 		overflow: hidden;
 		background: var(--color-bg-subtle, #f8fafc);
@@ -236,10 +292,41 @@ if (data.matched_recipe_slug) {
 		aspect-ratio: 4 / 3;
 		box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
 	}
-	.image-wrapper img {
+	.main-image-frame img {
 		width: 100%;
 		height: 100%;
 		object-fit: cover;
+		transition: opacity 0.2s ease;
+	}
+	.gallery-thumbnails {
+		display: flex;
+		gap: 0.6rem;
+		overflow-x: auto;
+		padding-bottom: 0.25rem;
+	}
+	.thumb-btn {
+		width: 72px;
+		height: 72px;
+		border-radius: 10px;
+		overflow: hidden;
+		border: 2px solid transparent;
+		background: var(--color-bg-subtle, #f1f5f9);
+		padding: 0;
+		cursor: pointer;
+		flex-shrink: 0;
+		transition: all 0.15s ease;
+	}
+	.thumb-btn img {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+	}
+	.thumb-btn:hover {
+		border-color: var(--color-brand, #0066cc);
+	}
+	.thumb-btn.active {
+		border-color: var(--color-brand, #0066cc);
+		box-shadow: 0 0 0 2px rgba(0, 102, 204, 0.3);
 	}
 	.image-placeholder {
 		aspect-ratio: 4 / 3;
