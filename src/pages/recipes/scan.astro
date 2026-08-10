@@ -169,6 +169,11 @@ import Base from "../../layouts/Base.astro";
 		const titleInput = document.getElementById("title") as HTMLInputElement;
 		const prepTimeInput = document.getElementById("prep_time") as HTMLInputElement;
 		const cookTimeInput = document.getElementById("cook_time") as HTMLInputElement;
+		const servingsInput = document.getElementById("servings") as HTMLInputElement;
+		const ingredientsInput = document.getElementById("ingredients") as HTMLTextAreaElement;
+		const instructionsInput = document.getElementById("instructions") as HTMLTextAreaElement;
+		const sourceSelect = document.getElementById("source") as HTMLSelectElement;
+
 		// Fetch and render Available Kitchen Ingredients Chips
 		async function loadAvailableIngredients() {
 			const container = document.getElementById("ingredients-chip-container");
