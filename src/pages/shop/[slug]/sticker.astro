@@ -4,6 +4,12 @@ import { getEmDashEntry } from "emdash";
 const { slug } = Astro.params;
 if (!slug) return Astro.redirect("/404");
 
+// Require Admin Login to access thermal sticker print page
+const isLoggedIn = !!Astro.locals.user;
+if (!isLoggedIn) {
+	return Astro.redirect(`/_emdash/admin/login?redirect=/shop/${slug}/sticker`);
+}
+
 const { entry: product } = await getEmDashEntry("products", slug);
 if (!product) return Astro.redirect("/404");
 
@@ -30,7 +36,7 @@ const cottageLicenseNumber = data.cottage_license_number || "CFO-LA-2026-9481";
 	<head>
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-		<title>Print Sticker Label — {data.title} | Nakita's Kitchen</title>
+		<title>Print Sticker Label — {data.title} | Baker Admin</title>
 		<style>
 			* { box-sizing: border-box; }
 			body {
@@ -48,7 +54,7 @@ const cottageLicenseNumber = data.cottage_license_number || "CFO-LA-2026-9481";
 				gap: 1rem;
 			}
 			.btn {
-				background: #0066cc;
+				background: #d97706;
 				color: #fff;
 				border: none;
 				padding: 0.75rem 1.5rem;

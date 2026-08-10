@@ -20,6 +20,9 @@ const [categories, tags] = await Promise.all([
 	getEntryTerms("products", data.id, "tag").catch(() => []),
 ]);
 
+// Check if user is logged into EmDash Admin
+const isLoggedIn = !!Astro.locals.user;
+
 // Resolve active ingredients from matched recipe or fallback
 let activeIngredientsText = data.explicit_ingredients || "Organic Flour, Butter, Sugar, Sea Salt.";
 if (data.matched_recipe_slug) {
@@ -101,27 +104,37 @@ if (data.matched_recipe_slug) {
 						<span>{data.in_stock ? "Pre-Order Now with Stripe" : "Sold Out"}</span>
 					</button>
 
-					<!-- Printable Sticker Label Trigger Button -->
-					<button type="button" id="open-sticker-btn" class="print-sticker-cta-btn">
-						<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-							<polyline points="6 9 6 2 18 2 18 9"></polyline>
-							<path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
-							<rect x="6" y="14" width="12" height="8"></rect>
-						</svg>
-						<span>Print Cottage Sales Sticker (Logo + QR Code + Ingredients)</span>
-					</button>
+					<!-- Printable Sticker Label Trigger Button (GATED TO ADMIN ONLY) -->
+					{isLoggedIn && (
+						<div class="admin-sticker-bar">
+							<span class="admin-label-tag">🔒 Baker Admin Tool</span>
+							<button type="button" id="open-sticker-btn" class="print-sticker-cta-btn">
+								<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+									<polyline points="6 9 6 2 18 2 18 9"></polyline>
+									<path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+									<rect x="6" y="14" width="12" height="8"></rect>
+								</svg>
+								<span>🖨️ Print Cottage Sales Sticker (3" x 4" QR Code)</span>
+							</button>
+						</div>
+					)}
 
 					<p class="pickup-note">
 						📍 Pickup location: Local Porch / Saturday Farmers Market. Direct pre-order under Cottage License.
 					</p>
 				</div>
 
-				<!-- Cottage License & Ingredients Notice -->
+				<!-- Official Cottage Bakery Packaging Sticker & Statutory Notice -->
 				<CottageIngredientNotice
+					productTitle={data.title}
+					productSlug={product.id}
+					netWeight={data.net_weight}
+					price={data.price}
 					matchedRecipeSlug={data.matched_recipe_slug}
 					explicitIngredients={data.explicit_ingredients}
 					allergens={data.allergens}
 					cottageLicenseNumber={data.cottage_license_number}
+					isLoggedIn={isLoggedIn}
 				/>
 			</div>
 		</div>
@@ -133,16 +146,18 @@ if (data.matched_recipe_slug) {
 		</section>
 	</div>
 
-	<!-- Printable Cottage Sticker Modal -->
-	<CottageStickerModal
-		title={data.title}
-		slug={product.id}
-		netWeight={data.net_weight}
-		ingredientsText={activeIngredientsText}
-		allergens={data.allergens}
-		cottageLicenseNumber={data.cottage_license_number}
-		price={data.price}
-	/>
+	<!-- Printable Cottage Sticker Modal (GATED TO ADMIN ONLY) -->
+	{isLoggedIn && (
+		<CottageStickerModal
+			title={data.title}
+			slug={product.id}
+			netWeight={data.net_weight}
+			ingredientsText={activeIngredientsText}
+			allergens={data.allergens}
+			cottageLicenseNumber={data.cottage_license_number}
+			price={data.price}
+		/>
+	)}
 </Base>
 
 <script>
@@ -321,13 +336,29 @@ if (data.matched_recipe_slug) {
 		background: var(--color-border, #cbd5e1);
 		cursor: not-allowed;
 	}
+	.admin-sticker-bar {
+		background: #fffbeb;
+		border: 1px dashed #d97706;
+		border-radius: 12px;
+		padding: 0.75rem;
+		margin-bottom: 0.75rem;
+	}
+	.admin-label-tag {
+		font-size: 0.6875rem;
+		font-weight: 700;
+		text-transform: uppercase;
+		color: #b45309;
+		display: block;
+		margin-bottom: 0.4rem;
+		letter-spacing: 0.05em;
+	}
 	.print-sticker-cta-btn {
 		width: 100%;
-		background: var(--color-bg-subtle, #f1f5f9);
-		border: 1.5px solid var(--color-border, #cbd5e1);
-		color: var(--color-text, #0f172a);
+		background: #d97706;
+		border: none;
+		color: #ffffff;
 		padding: 0.75rem 1rem;
-		border-radius: 12px;
+		border-radius: 8px;
 		font-size: 0.875rem;
 		font-weight: 700;
 		cursor: pointer;
@@ -336,12 +367,9 @@ if (data.matched_recipe_slug) {
 		justify-content: center;
 		gap: 0.5rem;
 		transition: all 0.15s ease;
-		margin-bottom: 0.75rem;
 	}
 	.print-sticker-cta-btn:hover {
-		background: #d97706;
-		color: #ffffff;
-		border-color: #d97706;
+		background: #b45309;
 	}
 	.pickup-note {
 		font-size: 0.8125rem;

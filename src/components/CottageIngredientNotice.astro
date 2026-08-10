@@ -2,17 +2,27 @@
 import { getEmDashEntry } from "emdash";
 
 interface Props {
+	productTitle?: string;
+	productSlug?: string;
+	netWeight?: string;
+	price?: string;
 	cottageLicenseNumber?: string;
 	matchedRecipeSlug?: string;
 	explicitIngredients?: string;
 	allergens?: string;
+	isLoggedIn?: boolean;
 }
 
 const {
+	productTitle = "Artisanal Bakery Item",
+	productSlug,
+	netWeight = "12 oz (340g)",
+	price,
 	cottageLicenseNumber = "CFO-LA-2026-9481",
 	matchedRecipeSlug,
 	explicitIngredients,
 	allergens,
+	isLoggedIn = false,
 } = Astro.props;
 
 let ingredientsText = explicitIngredients || "";
@@ -29,12 +39,24 @@ if (matchedRecipeSlug) {
 		// Fallback to explicit ingredients if match fails
 	}
 }
+
+const productUrl = productSlug
+	? `https://nakitas-kitchen.nakitas-kitchen.workers.dev/shop/${productSlug}`
+	: "https://nakitas-kitchen.nakitas-kitchen.workers.dev/shop";
+const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(productUrl)}`;
 ---
 
-<div class="cottage-notice-box">
-	<div class="notice-header">
-		<span class="notice-badge">Cottage Food Operation</span>
-		<span class="license-no">License #{cottageLicenseNumber}</span>
+<div class="cottage-sticker-container">
+	<div class="sticker-card-header">
+		<div class="header-left">
+			<span class="notice-badge">Official Cottage Packaging Label</span>
+			<span class="license-no">License #{cottageLicenseNumber}</span>
+		</div>
+		{isLoggedIn && (
+			<button type="button" id="open-sticker-btn" class="admin-print-badge-btn" title="Print 3x4 Packaging Sticker Label">
+				<span>🖨️ Print Sticker Label</span>
+			</button>
+		)}
 	</div>
 
 	{recipeTitle && (
@@ -43,7 +65,7 @@ if (matchedRecipeSlug) {
 				<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
 					<path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
 				</svg>
-				<span>Ingredients pulled from recipe: <strong>{recipeTitle}</strong></span>
+				<span>Ingredients synced from recipe: <strong>{recipeTitle}</strong></span>
 			</div>
 			{matchedRecipeSlug && (
 				<a href={`/recipes/${matchedRecipeSlug}`} class="recipe-link-badge">
@@ -53,52 +75,116 @@ if (matchedRecipeSlug) {
 		</div>
 	)}
 
-	<div class="ingredients-section">
-		<h4 class="section-title">Full Ingredients Declaration:</h4>
-		<pre class="ingredients-content">{ingredientsText || "Ingredients available upon request."}</pre>
-	</div>
-
-	{allergens && (
-		<div class="allergen-alert">
-			<strong>Allergen Warning:</strong> {allergens}
+	<!-- Official Visual Cottage Bakery Product Sticker Frame -->
+	<div class="cottage-sticker-frame" id="printable-sticker">
+		<div class="sticker-top-brand">
+			<div class="sticker-logo-wrap">
+				<img src="/logo.jpg" alt="Nakita's Kitchen Logo" class="sticker-dog-img" />
+			</div>
+			<div class="sticker-brand-text">
+				<h2 class="sticker-bakery-title">NAKITA'S KITCHEN</h2>
+				<span class="sticker-license">Cottage Food License #{cottageLicenseNumber}</span>
+			</div>
 		</div>
-	)}
 
-	<p class="statutory-declaration">
-		<em>"Made in a Home Kitchen that has not been inspected by the Department of State or Local Health Services."</em>
-	</p>
+		<div class="sticker-divider"></div>
+
+		<div class="sticker-product-header">
+			<h3 class="sticker-product-name">{productTitle}</h3>
+			<div class="sticker-meta-row">
+				<span class="sticker-weight">NET WT: {netWeight}</span>
+				{price && <span class="sticker-price">${price}</span>}
+			</div>
+		</div>
+
+		<div class="sticker-divider"></div>
+
+		<div class="sticker-ingredients-box">
+			<span class="section-heading">INGREDIENTS IN DESCENDING ORDER:</span>
+			<p class="ingredients-list-text">{ingredientsText || "Ingredients available upon request."}</p>
+		</div>
+
+		{allergens && (
+			<div class="sticker-allergen-box">
+				<strong>ALLERGEN WARNING:</strong> {allergens}
+			</div>
+		)}
+
+		<div class="sticker-statutory-notice">
+			"MADE IN A HOME KITCHEN THAT HAS NOT BEEN INSPECTED BY THE DEPARTMENT OF STATE OR LOCAL HEALTH SERVICES."
+		</div>
+
+		<div class="sticker-footer-grid">
+			<div class="qr-code-col">
+				<img src={qrApiUrl} alt="Product QR Code" class="qr-code-img" />
+				<span class="qr-caption">Scan for Recipe 📱</span>
+			</div>
+			<div class="bakery-address-col">
+				<span class="bakery-name">Nakita's Kitchen Bakery</span>
+				<span class="bakery-loc">Los Angeles, CA 90024</span>
+				<span class="bakery-batch">Batch #: {new Date().toISOString().slice(0, 10).replace(/-/g, "")}</span>
+			</div>
+		</div>
+	</div>
 </div>
 
 <style>
-	.cottage-notice-box {
+	.cottage-sticker-container {
 		background: var(--color-bg-subtle, #f8fafc);
 		border: 1px solid var(--color-border, #e2e8f0);
-		border-radius: 12px;
-		padding: 1.25rem 1.5rem;
-		margin-top: 1.5rem;
-		font-size: 0.9375rem;
+		border-radius: 16px;
+		padding: 1.5rem;
+		margin-top: 2rem;
 	}
-	.notice-header {
+
+	.sticker-card-header {
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
-		margin-bottom: 0.75rem;
+		margin-bottom: 1rem;
+		flex-wrap: wrap;
+		gap: 0.75rem;
 	}
+
+	.header-left {
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+	}
+
 	.notice-badge {
 		background: var(--color-brand, #0066cc);
 		color: #fff;
-		font-weight: 600;
+		font-weight: 700;
 		font-size: 0.75rem;
 		text-transform: uppercase;
 		letter-spacing: 0.05em;
-		padding: 0.25rem 0.6rem;
-		border-radius: 4px;
+		padding: 0.3rem 0.7rem;
+		border-radius: 20px;
 	}
+
 	.license-no {
 		font-family: var(--font-mono, monospace);
 		font-size: 0.8125rem;
 		color: var(--color-muted, #64748b);
 	}
+
+	.admin-print-badge-btn {
+		background: #d97706;
+		color: #ffffff;
+		border: none;
+		padding: 0.35rem 0.85rem;
+		border-radius: 20px;
+		font-size: 0.8125rem;
+		font-weight: 700;
+		cursor: pointer;
+		transition: background 0.15s ease, transform 0.15s ease;
+	}
+	.admin-print-badge-btn:hover {
+		background: #b45309;
+		transform: translateY(-1px);
+	}
+
 	.recipe-match-indicator {
 		display: flex;
 		align-items: center;
@@ -106,17 +192,19 @@ if (matchedRecipeSlug) {
 		gap: 0.5rem;
 		color: var(--color-brand, #0066cc);
 		font-size: 0.875rem;
-		margin-bottom: 0.75rem;
+		margin-bottom: 1.25rem;
 		padding: 0.5rem 0.75rem;
 		background: rgba(0, 102, 204, 0.08);
 		border-radius: 8px;
 		flex-wrap: wrap;
 	}
+
 	.indicator-left {
 		display: flex;
 		align-items: center;
 		gap: 0.5rem;
 	}
+
 	.recipe-link-badge {
 		background: var(--color-brand, #0066cc);
 		color: #ffffff !important;
@@ -127,35 +215,187 @@ if (matchedRecipeSlug) {
 		text-decoration: none;
 		transition: background 0.15s ease;
 	}
-	.recipe-link-badge:hover {
-		background: var(--color-brand-hover, #004499);
+
+	/* Official Printable Visual Sticker Frame Styling */
+	.cottage-sticker-frame {
+		max-width: 380px;
+		margin: 0 auto;
+		background: #ffffff;
+		border: 2px solid #0f172a;
+		border-radius: 12px;
+		padding: 1.15rem;
+		color: #0f172a;
+		font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+		box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+		display: flex;
+		flex-direction: column;
+		justify-content: space-between;
 	}
-	.section-title {
-		font-weight: 600;
-		margin: 0 0 0.4rem 0;
-		color: var(--color-text, #1e293b);
+
+	.sticker-top-brand {
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
 	}
-	.ingredients-content {
-		font-family: var(--font-body, inherit);
-		white-space: pre-wrap;
-		margin: 0 0 1rem 0;
-		color: var(--color-text-secondary, #475569);
-		line-height: 1.5;
+
+	.sticker-logo-wrap {
+		width: 44px;
+		height: 44px;
+		border-radius: 50%;
+		border: 1.5px solid #0f172a;
+		padding: 1px;
+		flex-shrink: 0;
 	}
-	.allergen-alert {
-		background: #fff3cd;
-		color: #856404;
-		border-left: 4px solid #ffeba2;
-		padding: 0.6rem 0.8rem;
-		border-radius: 4px;
-		margin-bottom: 0.75rem;
-		font-size: 0.875rem;
+
+	.sticker-dog-img {
+		width: 100%;
+		height: 100%;
+		border-radius: 50%;
+		object-fit: cover;
 	}
-	.statutory-declaration {
-		font-size: 0.8125rem;
-		color: var(--color-muted, #64748b);
+
+	.sticker-brand-text {
+		display: flex;
+		flex-direction: column;
+	}
+
+	.sticker-bakery-title {
+		font-family: Georgia, serif;
+		font-size: 1.15rem;
+		font-weight: 800;
+		letter-spacing: -0.01em;
 		margin: 0;
-		border-top: 1px dashed var(--color-border, #cbd5e1);
-		padding-top: 0.6rem;
+		color: #0f172a;
+		line-height: 1.1;
+	}
+
+	.sticker-license {
+		font-size: 0.6875rem;
+		font-weight: 700;
+		text-transform: uppercase;
+		color: #475569;
+		letter-spacing: 0.05em;
+	}
+
+	.sticker-divider {
+		height: 1.5px;
+		background: #0f172a;
+		margin: 0.6rem 0;
+	}
+
+	.sticker-product-name {
+		font-size: 1.25rem;
+		font-weight: 800;
+		margin: 0 0 0.3rem 0;
+		color: #0f172a;
+		line-height: 1.2;
+		text-transform: uppercase;
+	}
+
+	.sticker-meta-row {
+		display: flex;
+		justify-content: space-between;
+		font-size: 0.8125rem;
+		font-weight: 700;
+		color: #334155;
+	}
+
+	.sticker-price {
+		background: #0f172a;
+		color: #ffffff;
+		padding: 0.1rem 0.5rem;
+		border-radius: 4px;
+	}
+
+	.section-heading {
+		font-size: 0.625rem;
+		font-weight: 800;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		color: #475569;
+		display: block;
+		margin-bottom: 0.2rem;
+	}
+
+	.ingredients-list-text {
+		font-size: 0.75rem;
+		line-height: 1.35;
+		margin: 0;
+		color: #1e293b;
+		white-space: pre-wrap;
+	}
+
+	.sticker-allergen-box {
+		background: #fef3c7;
+		border: 1px solid #f59e0b;
+		color: #92400e;
+		font-size: 0.6875rem;
+		font-weight: 700;
+		padding: 0.35rem 0.5rem;
+		border-radius: 4px;
+		margin: 0.4rem 0;
+	}
+
+	.sticker-statutory-notice {
+		font-size: 0.625rem;
+		font-weight: 700;
+		text-transform: uppercase;
+		text-align: center;
+		line-height: 1.25;
+		color: #0f172a;
+		border: 1px solid #0f172a;
+		padding: 0.35rem 0.4rem;
+		border-radius: 4px;
+		margin: 0.4rem 0;
+	}
+
+	.sticker-footer-grid {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.75rem;
+		padding-top: 0.4rem;
+		border-top: 1px dashed #cbd5e1;
+	}
+
+	.qr-code-col {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+	}
+
+	.qr-code-img {
+		width: 60px;
+		height: 60px;
+		border: 1px solid #0f172a;
+		border-radius: 4px;
+	}
+
+	.qr-caption {
+		font-size: 0.5625rem;
+		font-weight: 700;
+		color: #475569;
+		margin-top: 0.2rem;
+	}
+
+	.bakery-address-col {
+		display: flex;
+		flex-direction: column;
+		align-items: flex-end;
+		text-align: right;
+		font-size: 0.65rem;
+		color: #475569;
+		line-height: 1.3;
+	}
+
+	.bakery-name {
+		font-weight: 700;
+		color: #0f172a;
+	}
+
+	.bakery-batch {
+		font-family: monospace;
+		font-size: 0.5625rem;
+		color: #64748b;
 	}
 </style>
