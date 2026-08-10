@@ -39,21 +39,63 @@ Astro.cache.set(cacheHint);
 						<input
 							type="text"
 							id="ingredient-search-input"
-							placeholder="Ground Beef, Potatoes, Cheddar..."
+							placeholder="Ground Beef, Romaine, Vanilla..."
 							class="filter-text-input"
 						/>
 					</div>
 				</div>
 
+				<!-- Hierarchical Sub-Categories Widget -->
 				<div class="sidebar-widget">
-					<h4 class="widget-title">⚡ Quick Categories</h4>
-					<div class="quick-preset-list">
-						<button type="button" class="preset-btn active" data-preset="all">All Recipes</button>
-						<button type="button" class="preset-btn" data-preset="sourdough">🍞 Sourdough & Breads</button>
-						<button type="button" class="preset-btn" data-preset="smoker">🔥 Outdoor Smoker</button>
-						<button type="button" class="preset-btn" data-preset="hellofresh">📦 HelloFresh Cards</button>
-						<button type="button" class="preset-btn" data-preset="beef">🥩 Ground Beef</button>
-						<button type="button" class="preset-btn" data-preset="cheese">🧀 White Cheddar</button>
+					<h4 class="widget-title">📂 Categories & Sub-Categories</h4>
+					<div class="category-tree">
+						<button type="button" class="tree-btn active" data-cat="all">All Categories</button>
+						
+						<div class="tree-group">
+							<button type="button" class="tree-parent-btn" data-cat="breads">🍞 Breads & Sourdough</button>
+							<div class="tree-sub-group">
+								<button type="button" class="tree-sub-btn" data-cat="country-sourdough">↳ Country Sourdough</button>
+								<button type="button" class="tree-sub-btn" data-cat="jalapeno-cheddar">↳ Jalapeño Cheddar</button>
+							</div>
+						</div>
+
+						<div class="tree-group">
+							<button type="button" class="tree-parent-btn" data-cat="pastries">🥐 Pastries & Sweets</button>
+							<div class="tree-sub-group">
+								<button type="button" class="tree-sub-btn" data-cat="cardamom-knots">↳ Cardamom Knots</button>
+								<button type="button" class="tree-sub-btn" data-cat="shortbread-cookies">↳ Shortbread & Cookies</button>
+							</div>
+						</div>
+
+						<div class="tree-group">
+							<button type="button" class="tree-parent-btn" data-cat="outdoor-bbq">🔥 Outdoor BBQ & Smoking</button>
+							<div class="tree-sub-group">
+								<button type="button" class="tree-sub-btn" data-cat="kamado-joe">↳ Kamado Joe Classic III</button>
+								<button type="button" class="tree-sub-btn" data-cat="oklahoma-joe">↳ Oklahoma Joe Smoker</button>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<!-- Ingredient Variation & Form Types Widget -->
+				<div class="sidebar-widget">
+					<h4 class="widget-title">🌿 Ingredient Form & Variations</h4>
+					<div class="variation-chips">
+						<span class="var-group-label">Vanilla:</span>
+						<button type="button" class="var-chip" data-var="vanilla paste">Paste</button>
+						<button type="button" class="var-chip" data-var="vanilla extract">Extract</button>
+						
+						<span class="var-group-label">Lettuce:</span>
+						<button type="button" class="var-chip" data-var="romaine">Romaine</button>
+						<button type="button" class="var-chip" data-var="iceberg">Iceberg</button>
+
+						<span class="var-group-label">Flour Type:</span>
+						<button type="button" class="var-chip" data-var="bread flour">Bread Flour</button>
+						<button type="button" class="var-chip" data-var="rye">Whole Rye</button>
+
+						<span class="var-group-label">Cheese Type:</span>
+						<button type="button" class="var-chip" data-var="white cheddar">White Cheddar</button>
+						<button type="button" class="var-chip" data-var="mozzarella">Mozzarella</button>
 					</div>
 				</div>
 
@@ -65,25 +107,6 @@ Astro.cache.set(cacheHint);
 						<option value="homechef">HomeChef Cards</option>
 						<option value="nakita">Nakita's Original</option>
 					</select>
-				</div>
-
-				<div class="sidebar-widget">
-					<h4 class="widget-title">⚙️ Equipment & Method</h4>
-					<div class="select-stack">
-						<select id="equipment-filter-select" class="filter-select">
-							<option value="all">All Equipment</option>
-							<option value="kamado">Kamado Joe Smoker</option>
-							<option value="oklahoma">Oklahoma Joe Smoker</option>
-							<option value="skillet">Stovetop Skillet & Oven</option>
-							<option value="oven">Indoor Oven</option>
-						</select>
-						<select id="method-filter-select" class="filter-select">
-							<option value="all">All Methods</option>
-							<option value="pan-seared">Pan-Seared & Oven Bake</option>
-							<option value="smoke">Slow Smoked / Barbecue</option>
-							<option value="fermentation">Fermentation & Baking</option>
-						</select>
-					</div>
 				</div>
 
 				<div class="sidebar-widget">
@@ -126,18 +149,18 @@ Astro.cache.set(cacheHint);
 	document.addEventListener("DOMContentLoaded", () => {
 		const searchInput = document.getElementById("ingredient-search-input") as HTMLInputElement;
 		const sourceSelect = document.getElementById("source-filter-select") as HTMLSelectElement;
-		const equipmentSelect = document.getElementById("equipment-filter-select") as HTMLSelectElement;
-		const methodSelect = document.getElementById("method-filter-select") as HTMLSelectElement;
 		const cooktimeSelect = document.getElementById("cooktime-filter-select") as HTMLSelectElement;
 		const allergenSelect = document.getElementById("allergen-filter-select") as HTMLSelectElement;
-		const presetBtns = document.querySelectorAll(".preset-btn");
+		const treeBtns = document.querySelectorAll(".tree-btn, .tree-parent-btn, .tree-sub-btn");
+		const varChips = document.querySelectorAll(".var-chip");
 		const cards = document.querySelectorAll(".recipe-card");
+
+		let activeCat = "all";
+		let activeVar = "";
 
 		function applyFilters() {
 			const query = (searchInput?.value || "").toLowerCase().trim();
 			const sourceFilter = sourceSelect?.value || "all";
-			const equipmentFilter = equipmentSelect?.value || "all";
-			const methodFilter = methodSelect?.value || "all";
 			const cooktimeFilter = cooktimeSelect?.value || "all";
 			const allergenFilter = allergenSelect?.value || "all";
 
@@ -146,15 +169,29 @@ Astro.cache.set(cacheHint);
 				const title = el.getAttribute("data-title") || "";
 				const source = el.getAttribute("data-source") || "";
 				const equipment = el.getAttribute("data-equipment") || "";
-				const method = el.getAttribute("data-method") || "";
 				const cook = el.getAttribute("data-cook") || "";
 				const ingredients = el.getAttribute("data-ingredients") || "";
 				const allergens = el.getAttribute("data-allergens") || "";
 
 				const matchesQuery = !query || title.includes(query) || ingredients.includes(query) || equipment.includes(query);
 				const matchesSource = sourceFilter === "all" || source.includes(sourceFilter);
-				const matchesEquipment = equipmentFilter === "all" || equipment.includes(equipmentFilter);
-				const matchesMethod = methodFilter === "all" || method.includes(methodFilter);
+
+				// Category & Sub-Category Match
+				let matchesCat = true;
+				if (activeCat !== "all") {
+					if (activeCat === "breads") matchesCat = title.includes("sourdough") || title.includes("bread") || ingredients.includes("flour");
+					else if (activeCat === "country-sourdough") matchesCat = title.includes("sourdough") || title.includes("country");
+					else if (activeCat === "jalapeno-cheddar") matchesCat = title.includes("jalapeno") || title.includes("cheddar");
+					else if (activeCat === "pastries") matchesCat = title.includes("knot") || title.includes("shortbread") || title.includes("cookie");
+					else if (activeCat === "cardamom-knots") matchesCat = title.includes("cardamom") || title.includes("knot");
+					else if (activeCat === "shortbread-cookies") matchesCat = title.includes("shortbread") || title.includes("cookie");
+					else if (activeCat === "outdoor-bbq") matchesCat = equipment.includes("kamado") || equipment.includes("oklahoma") || title.includes("smoked") || title.includes("chicken");
+					else if (activeCat === "kamado-joe") matchesCat = equipment.includes("kamado");
+					else if (activeCat === "oklahoma-joe") matchesCat = equipment.includes("oklahoma");
+				}
+
+				// Ingredient Variation Match
+				const matchesVar = !activeVar || ingredients.includes(activeVar) || title.includes(activeVar);
 
 				let matchesCooktime = true;
 				if (cooktimeFilter === "quick") {
@@ -172,7 +209,7 @@ Astro.cache.set(cacheHint);
 					matchesAllergen = !allergens.includes("wheat") && !allergens.includes("gluten") && !ingredients.includes("flour") && !ingredients.includes("bun");
 				}
 
-				if (matchesQuery && matchesSource && matchesEquipment && matchesMethod && matchesCooktime && matchesAllergen) {
+				if (matchesQuery && matchesSource && matchesCat && matchesVar && matchesCooktime && matchesAllergen) {
 					el.style.display = "";
 				} else {
 					el.style.display = "none";
@@ -182,34 +219,27 @@ Astro.cache.set(cacheHint);
 
 		searchInput?.addEventListener("input", applyFilters);
 		sourceSelect?.addEventListener("change", applyFilters);
-		equipmentSelect?.addEventListener("change", applyFilters);
-		methodSelect?.addEventListener("change", applyFilters);
 		cooktimeSelect?.addEventListener("change", applyFilters);
 		allergenSelect?.addEventListener("change", applyFilters);
 
-		presetBtns.forEach((btn) => {
+		treeBtns.forEach((btn) => {
 			btn.addEventListener("click", () => {
-				presetBtns.forEach((b) => b.classList.remove("active"));
+				treeBtns.forEach((b) => b.classList.remove("active"));
 				btn.classList.add("active");
+				activeCat = btn.getAttribute("data-cat") || "all";
+				applyFilters();
+			});
+		});
 
-				const preset = btn.getAttribute("data-preset");
-				if (preset === "all") {
-					if (searchInput) searchInput.value = "";
-					if (sourceSelect) sourceSelect.value = "all";
-					if (equipmentSelect) equipmentSelect.value = "all";
-					if (methodSelect) methodSelect.value = "all";
-					if (cooktimeSelect) cooktimeSelect.value = "all";
-					if (allergenSelect) allergenSelect.value = "all";
-				} else if (preset === "sourdough") {
-					if (searchInput) searchInput.value = "sourdough";
-				} else if (preset === "smoker") {
-					if (equipmentSelect) equipmentSelect.value = "kamado";
-				} else if (preset === "hellofresh") {
-					if (sourceSelect) sourceSelect.value = "hellofresh";
-				} else if (preset === "beef") {
-					if (searchInput) searchInput.value = "beef";
-				} else if (preset === "cheese") {
-					if (searchInput) searchInput.value = "cheddar";
+		varChips.forEach((chip) => {
+			chip.addEventListener("click", () => {
+				if (chip.classList.contains("active")) {
+					chip.classList.remove("active");
+					activeVar = "";
+				} else {
+					varChips.forEach((c) => c.classList.remove("active"));
+					chip.classList.add("active");
+					activeVar = chip.getAttribute("data-var") || "";
 				}
 				applyFilters();
 			});
@@ -307,6 +337,11 @@ Astro.cache.set(cacheHint);
 		box-sizing: border-box;
 	}
 
+	.sidebar-widget:last-child {
+		border-bottom: none;
+		padding-bottom: 0;
+	}
+
 	.widget-title {
 		font-size: 0.8125rem;
 		font-weight: 800;
@@ -347,13 +382,20 @@ Astro.cache.set(cacheHint);
 		border-color: var(--color-brand, #0066cc);
 	}
 
-	.quick-preset-list {
+	/* Category Tree Styling */
+	.category-tree {
 		display: flex;
 		flex-direction: column;
 		gap: 0.35rem;
 	}
 
-	.preset-btn {
+	.tree-group {
+		display: flex;
+		flex-direction: column;
+		gap: 0.2rem;
+	}
+
+	.tree-btn, .tree-parent-btn {
 		text-align: left;
 		background: var(--color-bg-subtle, #f8fafc);
 		border: 1px solid var(--color-border, #e2e8f0);
@@ -361,17 +403,77 @@ Astro.cache.set(cacheHint);
 		padding: 0.45rem 0.75rem;
 		border-radius: 8px;
 		font-size: 0.85rem;
+		font-weight: 700;
+		cursor: pointer;
+		transition: all 0.15s ease;
+	}
+
+	.tree-sub-group {
+		display: flex;
+		flex-direction: column;
+		gap: 0.2rem;
+		padding-left: 0.85rem;
+	}
+
+	.tree-sub-btn {
+		text-align: left;
+		background: transparent;
+		border: 1px solid transparent;
+		color: var(--color-text-secondary, #475569);
+		padding: 0.3rem 0.6rem;
+		border-radius: 6px;
+		font-size: 0.8rem;
 		font-weight: 600;
 		cursor: pointer;
 		transition: all 0.15s ease;
 	}
 
-	.preset-btn:hover {
+	.tree-sub-btn:hover {
+		color: var(--color-brand, #0066cc);
+		background: var(--color-bg-subtle, #f1f5f9);
+	}
+
+	.tree-btn.active, .tree-parent-btn.active, .tree-sub-btn.active {
+		background: var(--color-brand, #0066cc);
+		color: #ffffff;
+		border-color: var(--color-brand, #0066cc);
+	}
+
+	/* Variation Chips Styling */
+	.variation-chips {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.35rem;
+		align-items: center;
+	}
+
+	.var-group-label {
+		width: 100%;
+		font-size: 0.7rem;
+		font-weight: 700;
+		text-transform: uppercase;
+		color: var(--color-muted, #64748b);
+		margin-top: 0.35rem;
+	}
+
+	.var-chip {
+		background: var(--color-bg-subtle, #f1f5f9);
+		border: 1px solid var(--color-border, #cbd5e1);
+		color: var(--color-text, #0f172a);
+		padding: 0.25rem 0.55rem;
+		border-radius: 12px;
+		font-size: 0.75rem;
+		font-weight: 600;
+		cursor: pointer;
+		transition: all 0.15s ease;
+	}
+
+	.var-chip:hover {
 		border-color: var(--color-brand, #0066cc);
 		color: var(--color-brand, #0066cc);
 	}
 
-	.preset-btn.active {
+	.var-chip.active {
 		background: var(--color-brand, #0066cc);
 		color: #ffffff;
 		border-color: var(--color-brand, #0066cc);

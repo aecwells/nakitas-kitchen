@@ -258,12 +258,42 @@
 					"label": "Breads & Sourdough"
 				},
 				{
+					"slug": "country-sourdough",
+					"label": "Country Sourdough",
+					"parent": "breads"
+				},
+				{
+					"slug": "jalapeno-cheddar",
+					"label": "Jalapeño Cheddar",
+					"parent": "breads"
+				},
+				{
 					"slug": "pastries",
 					"label": "Pastries & Sweets"
 				},
 				{
+					"slug": "cardamom-knots",
+					"label": "Cardamom & Cinnamon Knots",
+					"parent": "pastries"
+				},
+				{
+					"slug": "shortbread-cookies",
+					"label": "Shortbread & Cookies",
+					"parent": "pastries"
+				},
+				{
 					"slug": "outdoor-bbq",
 					"label": "Outdoor BBQ & Smoking"
+				},
+				{
+					"slug": "kamado-joe",
+					"label": "Kamado Joe Classic III",
+					"parent": "outdoor-bbq"
+				},
+				{
+					"slug": "oklahoma-joe",
+					"label": "Oklahoma Joe Smoker",
+					"parent": "outdoor-bbq"
 				},
 				{
 					"slug": "meal-kits",

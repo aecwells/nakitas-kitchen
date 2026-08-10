@@ -25,6 +25,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
 			ingredients: "",
 			instructions: "",
 			source: "HelloFresh",
+			allergens: "",
 		};
 
 		async function runVisionOCR(dataUrl: string, promptText: string) {
@@ -81,7 +82,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
 		// Run Front and Back Card Vision OCR in Parallel (Promise.all)
 		const frontTask = (async () => {
 			if (!frontImageData) return;
-			const frontPrompt = "Look at the front of this HelloFresh recipe card image. Read the main bold dish title printed to the right of the HELLO FRESH logo (e.g. Cheesy Smashed Burgers). Read the cook time (e.g. 35-45 Minutes). Read all itemized ingredients with quantities from the right column (e.g. 10 oz Ground Beef, 12 oz Potatoes, 2 Potato Buns, 1/2 Cup White Cheddar Cheese, 1 TBSP Old Bay Seasoning, 2 TBSP Mayonnaise). Output plain text formatted as:\nTitle: <Title>\nCook Time: <Time>\nIngredients:\n• <Ing1>\n• <Ing2>";
+			const frontPrompt = "Look at the front of this HelloFresh recipe card image. Read the main bold dish title printed to the right of the HELLO FRESH logo (e.g. Cheesy Smashed Burgers). Read the cook time (e.g. 35-45 Minutes). Read all itemized ingredients with exact form variations and quantities from the right column (e.g. 10 oz Ground Beef, 12 oz Yukon Gold Potatoes, 2 Potato Buns, 1/2 Cup White Cheddar Cheese, 1 TBSP Old Bay Seasoning, 2 TBSP Mayonnaise). Identify common allergens (Dairy, Wheat, Nuts, Soy). Output plain text formatted as:\nTitle: <Title>\nCook Time: <Time>\nAllergens: <Allergens>\nIngredients:\n• <Ing1>\n• <Ing2>";
 			const frontText = await runVisionOCR(frontImageData, frontPrompt);
 			if (frontText) {
 				console.log("[FRONT OCR RAW]:", frontText);
@@ -99,7 +100,11 @@ export const POST: APIRoute = async ({ request, locals }) => {
 				const cookMatch = frontText.match(/(?:cook time|time|minutes):\s*([^\n]+)/i);
 				if (cookMatch) extractedInfo.cook_time = cookMatch[1].trim();
 
-				// 3. Extract Ingredients List
+				// 3. Extract Allergens
+				const allergenMatch = frontText.match(/(?:allergens|allergen|contains):\s*([^\n]+)/i);
+				if (allergenMatch) extractedInfo.allergens = allergenMatch[1].trim();
+
+				// 4. Extract Ingredients List
 				const ingIndex = frontText.toLowerCase().indexOf("ingredients");
 				if (ingIndex !== -1) {
 					const ingLines = frontText.slice(ingIndex).split("\n").map(l => l.trim()).filter(l => l.length > 2 && !l.toLowerCase().includes("ingredients:"));

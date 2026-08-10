@@ -40,14 +40,45 @@ Astro.cache.set(cacheHint);
 					</div>
 				</div>
 
+				<!-- Hierarchical Sub-Categories Widget -->
 				<div class="sidebar-widget">
-					<h4 class="widget-title">🍞 Bakery Categories</h4>
-					<div class="quick-preset-list">
-						<button type="button" class="preset-btn active" data-preset="all">All Bakery Items</button>
-						<button type="button" class="preset-btn" data-preset="sourdough">🍞 Artisanal Sourdough</button>
-						<button type="button" class="preset-btn" data-preset="pastry">🥐 Pastries & Knots</button>
-						<button type="button" class="preset-btn" data-preset="cookies">🍪 Shortbread & Cookies</button>
-						<button type="button" class="preset-btn" data-preset="lemon">🍋 Meyer Lemon</button>
+					<h4 class="widget-title">🍞 Bakery Sub-Categories</h4>
+					<div class="category-tree">
+						<button type="button" class="tree-btn active" data-cat="all">All Bakery Items</button>
+						
+						<div class="tree-group">
+							<button type="button" class="tree-parent-btn" data-cat="breads">🍞 Breads & Sourdough</button>
+							<div class="tree-sub-group">
+								<button type="button" class="tree-sub-btn" data-cat="country-sourdough">↳ Country Sourdough</button>
+								<button type="button" class="tree-sub-btn" data-cat="jalapeno-cheddar">↳ Jalapeño Cheddar</button>
+							</div>
+						</div>
+
+						<div class="tree-group">
+							<button type="button" class="tree-parent-btn" data-cat="pastries">🥐 Pastries & Sweets</button>
+							<div class="tree-sub-group">
+								<button type="button" class="tree-sub-btn" data-cat="cardamom-knots">↳ Cardamom Knots</button>
+								<button type="button" class="tree-sub-btn" data-cat="shortbread-cookies">↳ Shortbread & Cookies</button>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<!-- Ingredient Variation & Form Types Widget -->
+				<div class="sidebar-widget">
+					<h4 class="widget-title">🌿 Ingredient Form & Variations</h4>
+					<div class="variation-chips">
+						<span class="var-group-label">Flour Type:</span>
+						<button type="button" class="var-chip" data-var="bread flour">Organic Bread Flour</button>
+						<button type="button" class="var-chip" data-var="rye">Whole Rye</button>
+						
+						<span class="var-group-label">Spices & Citrus:</span>
+						<button type="button" class="var-chip" data-var="meyer lemon">Meyer Lemon</button>
+						<button type="button" class="var-chip" data-var="cinnamon">Ceylon Cinnamon</button>
+						<button type="button" class="var-chip" data-var="cardamom">Cardamom</button>
+
+						<span class="var-group-label">Dairy & Fat:</span>
+						<button type="button" class="var-chip" data-var="irish butter">Irish Butter</button>
 					</div>
 				</div>
 
@@ -110,8 +141,12 @@ Astro.cache.set(cacheHint);
 		const weightSelect = document.getElementById("weight-filter-select") as HTMLSelectElement;
 		const allergenSelect = document.getElementById("allergen-filter-select") as HTMLSelectElement;
 		const stockSelect = document.getElementById("stock-filter-select") as HTMLSelectElement;
-		const presetBtns = document.querySelectorAll(".preset-btn");
+		const treeBtns = document.querySelectorAll(".tree-btn, .tree-parent-btn, .tree-sub-btn");
+		const varChips = document.querySelectorAll(".var-chip");
 		const cards = document.querySelectorAll(".product-card");
+
+		let activeCat = "all";
+		let activeVar = "";
 
 		function applyFilters() {
 			const query = (searchInput?.value || "").toLowerCase().trim();
@@ -130,6 +165,20 @@ Astro.cache.set(cacheHint);
 
 				const matchesQuery = !query || title.includes(query) || description.includes(query) || ingredients.includes(query);
 
+				// Category & Sub-Category Match
+				let matchesCat = true;
+				if (activeCat !== "all") {
+					if (activeCat === "breads") matchesCat = title.includes("sourdough") || title.includes("loaf");
+					else if (activeCat === "country-sourdough") matchesCat = title.includes("sourdough") || title.includes("country");
+					else if (activeCat === "jalapeno-cheddar") matchesCat = title.includes("jalapeno") || title.includes("cheddar");
+					else if (activeCat === "pastries") matchesCat = title.includes("knot") || title.includes("shortbread");
+					else if (activeCat === "cardamom-knots") matchesCat = title.includes("cardamom") || title.includes("knot");
+					else if (activeCat === "shortbread-cookies") matchesCat = title.includes("shortbread");
+				}
+
+				// Variation match
+				const matchesVar = !activeVar || ingredients.includes(activeVar) || title.includes(activeVar);
+
 				let matchesWeight = true;
 				if (weightFilter === "loaf") matchesWeight = netweight.includes("24") || netweight.includes("680");
 				else if (weightFilter === "pack") matchesWeight = netweight.includes("16") || netweight.includes("450");
@@ -144,7 +193,7 @@ Astro.cache.set(cacheHint);
 
 				const matchesStock = stockFilter === "all" || (stockFilter === "in-stock" && instock);
 
-				if (matchesQuery && matchesWeight && matchesAllergen && matchesStock) {
+				if (matchesQuery && matchesCat && matchesVar && matchesWeight && matchesAllergen && matchesStock) {
 					el.style.display = "";
 				} else {
 					el.style.display = "none";
@@ -157,25 +206,24 @@ Astro.cache.set(cacheHint);
 		allergenSelect?.addEventListener("change", applyFilters);
 		stockSelect?.addEventListener("change", applyFilters);
 
-		presetBtns.forEach((btn) => {
+		treeBtns.forEach((btn) => {
 			btn.addEventListener("click", () => {
-				presetBtns.forEach((b) => b.classList.remove("active"));
+				treeBtns.forEach((b) => b.classList.remove("active"));
 				btn.classList.add("active");
+				activeCat = btn.getAttribute("data-cat") || "all";
+				applyFilters();
+			});
+		});
 
-				const preset = btn.getAttribute("data-preset");
-				if (preset === "all") {
-					if (searchInput) searchInput.value = "";
-					if (weightSelect) weightSelect.value = "all";
-					if (allergenSelect) allergenSelect.value = "all";
-					if (stockSelect) stockSelect.value = "all";
-				} else if (preset === "sourdough") {
-					if (searchInput) searchInput.value = "sourdough";
-				} else if (preset === "pastry") {
-					if (searchInput) searchInput.value = "knot";
-				} else if (preset === "cookies") {
-					if (searchInput) searchInput.value = "shortbread";
-				} else if (preset === "lemon") {
-					if (searchInput) searchInput.value = "lemon";
+		varChips.forEach((chip) => {
+			chip.addEventListener("click", () => {
+				if (chip.classList.contains("active")) {
+					chip.classList.remove("active");
+					activeVar = "";
+				} else {
+					varChips.forEach((c) => c.classList.remove("active"));
+					chip.classList.add("active");
+					activeVar = chip.getAttribute("data-var") || "";
 				}
 				applyFilters();
 			});
@@ -253,6 +301,11 @@ Astro.cache.set(cacheHint);
 		box-sizing: border-box;
 	}
 
+	.sidebar-widget:last-child {
+		border-bottom: none;
+		padding-bottom: 0;
+	}
+
 	.widget-title {
 		font-size: 0.8125rem;
 		font-weight: 800;
@@ -293,13 +346,20 @@ Astro.cache.set(cacheHint);
 		border-color: var(--color-brand, #0066cc);
 	}
 
-	.quick-preset-list {
+	/* Category Tree Styling */
+	.category-tree {
 		display: flex;
 		flex-direction: column;
 		gap: 0.35rem;
 	}
 
-	.preset-btn {
+	.tree-group {
+		display: flex;
+		flex-direction: column;
+		gap: 0.2rem;
+	}
+
+	.tree-btn, .tree-parent-btn {
 		text-align: left;
 		background: var(--color-bg-subtle, #f8fafc);
 		border: 1px solid var(--color-border, #e2e8f0);
@@ -307,17 +367,77 @@ Astro.cache.set(cacheHint);
 		padding: 0.45rem 0.75rem;
 		border-radius: 8px;
 		font-size: 0.85rem;
+		font-weight: 700;
+		cursor: pointer;
+		transition: all 0.15s ease;
+	}
+
+	.tree-sub-group {
+		display: flex;
+		flex-direction: column;
+		gap: 0.2rem;
+		padding-left: 0.85rem;
+	}
+
+	.tree-sub-btn {
+		text-align: left;
+		background: transparent;
+		border: 1px solid transparent;
+		color: var(--color-text-secondary, #475569);
+		padding: 0.3rem 0.6rem;
+		border-radius: 6px;
+		font-size: 0.8rem;
 		font-weight: 600;
 		cursor: pointer;
 		transition: all 0.15s ease;
 	}
 
-	.preset-btn:hover {
+	.tree-sub-btn:hover {
+		color: var(--color-brand, #0066cc);
+		background: var(--color-bg-subtle, #f1f5f9);
+	}
+
+	.tree-btn.active, .tree-parent-btn.active, .tree-sub-btn.active {
+		background: var(--color-brand, #0066cc);
+		color: #ffffff;
+		border-color: var(--color-brand, #0066cc);
+	}
+
+	/* Variation Chips Styling */
+	.variation-chips {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.35rem;
+		align-items: center;
+	}
+
+	.var-group-label {
+		width: 100%;
+		font-size: 0.7rem;
+		font-weight: 700;
+		text-transform: uppercase;
+		color: var(--color-muted, #64748b);
+		margin-top: 0.35rem;
+	}
+
+	.var-chip {
+		background: var(--color-bg-subtle, #f1f5f9);
+		border: 1px solid var(--color-border, #cbd5e1);
+		color: var(--color-text, #0f172a);
+		padding: 0.25rem 0.55rem;
+		border-radius: 12px;
+		font-size: 0.75rem;
+		font-weight: 600;
+		cursor: pointer;
+		transition: all 0.15s ease;
+	}
+
+	.var-chip:hover {
 		border-color: var(--color-brand, #0066cc);
 		color: var(--color-brand, #0066cc);
 	}
 
-	.preset-btn.active {
+	.var-chip.active {
 		background: var(--color-brand, #0066cc);
 		color: #ffffff;
 		border-color: var(--color-brand, #0066cc);
