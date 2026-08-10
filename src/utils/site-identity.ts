@@ -12,13 +12,13 @@ export interface BlogSiteIdentitySettings {
 	favicon?: MediaReference;
 }
 
-const DEFAULT_SITE_TITLE = "My Blog";
-const DEFAULT_SITE_TAGLINE = "Thoughts, stories, and ideas.";
+const DEFAULT_SITE_TITLE = "Nakita's Kitchen";
+const DEFAULT_SITE_TAGLINE = "Live-Fire BBQ, Outdoor Smoker Cooking & Artisanal Sourdough Journal.";
 
 export function resolveBlogSiteIdentity(settings?: BlogSiteIdentitySettings) {
 	return {
-		siteTitle: settings?.title ?? DEFAULT_SITE_TITLE,
-		siteTagline: settings?.tagline ?? DEFAULT_SITE_TAGLINE,
+		siteTitle: settings?.title && settings.title !== "My Blog" ? settings.title : DEFAULT_SITE_TITLE,
+		siteTagline: settings?.tagline && !settings.tagline.includes("Thoughts") ? settings.tagline : DEFAULT_SITE_TAGLINE,
 		siteLogo: settings?.logo?.url ? settings.logo : null,
 	};
 }

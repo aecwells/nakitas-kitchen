@@ -11,7 +11,7 @@ const [
 	{ entries: products, cacheHint: productCache },
 	settings,
 ] = await Promise.all([
-	getEmDashCollection("recipes", { orderBy: { createdAt: "desc" }, limit: 3 }),
+	getEmDashCollection("recipes", { orderBy: { createdAt: "desc" }, limit: 6 }),
 	getEmDashCollection("products", { orderBy: { createdAt: "desc" }, limit: 3 }),
 	getSiteSettings(),
 ]);
@@ -24,56 +24,36 @@ if (Astro.cache?.enabled) {
 }
 ---
 
-<Base title={siteTitle} description={siteTagline}>
-	<!-- Hero Section -->
+<Base title={`${siteTitle} | Live-Fire BBQ & Outdoor Cooking Journal`} description="Low & slow smoking on our Oklahoma Joe DLX 900, wood-fired Kamado Joe bakes, plus artisanal sourdoughs.">
+	<!-- BBQ & Outdoor Cooking Hero Section -->
 	<section class="hero-banner">
 		<div class="hero-container">
 			<div class="hero-content">
-				<span class="hero-badge">Artisanal Cottage Bakery & Kitchen</span>
-				<h1 class="hero-title">Handcrafted Sourdough & Kitchen Recipes</h1>
+				<span class="hero-badge">🔥 Live-Fire BBQ & Outdoor Cooking Journal</span>
+				<h1 class="hero-title">Smoked Barbecue & Outdoor Cooking</h1>
 				<p class="hero-subtitle">
-					From 36-hour cold fermented wild yeast boules to buttery cardamom knots. Baked in small batches locally under Cottage Food License #CFO-LA-2026-9481.
+					Low & slow smoking on our <strong>Oklahoma Joe DLX 900</strong>, 700°F wood-fired <strong>Kamado Joe Classic III</strong> bakes & Joetisserie spit roasts, plus artisanal sourdoughs and cottage bakery pre-orders.
 				</p>
 				<div class="hero-buttons">
-					<a href="/shop" class="btn-primary">Pre-Order Cottage Bakery &rarr;</a>
-					<a href="/recipes" class="btn-secondary">Explore Recipes</a>
+					<a href="/recipes" class="btn-primary">🔥 Explore BBQ & Smoker Recipes &rarr;</a>
+					<a href="/shop" class="btn-secondary">🥖 Cottage Bakery Pre-Orders</a>
 				</div>
 			</div>
 		</div>
 	</section>
 
 	<div class="home-content container">
-		<!-- Featured Cottage Bakery Storefront Section -->
-		{products && products.length > 0 && (
-			<section class="section-block">
-				<header class="section-header">
-					<div>
-						<span class="section-tag">Weekly Pre-Orders</span>
-						<h2 class="section-heading">Cottage Bakery Shop</h2>
-					</div>
-					<a href="/shop" class="section-link">View All Bakery Items &rarr;</a>
-				</header>
-
-				<div class="products-grid">
-					{products.map((product) => (
-						<ProductCard product={product} />
-					))}
-				</div>
-			</section>
-		)}
-
-		<!-- Featured Recipes Section -->
+		<!-- Featured BBQ & Outdoor Recipes Section -->
 		{recipes && recipes.length > 0 && (
 			<section class="section-block">
 				<header class="section-header">
 					<div>
-						<span class="section-tag">From the Journal</span>
-						<h2 class="section-heading">Kitchen Recipes & Guides</h2>
+						<span class="section-badge">🔥 Outdoor Smoker & Cooking Journal</span>
+						<h2 class="section-title">Latest Smoker & Kitchen Recipes</h2>
 					</div>
 					<a href="/recipes" class="section-link">View All Recipes &rarr;</a>
 				</header>
-
-				<div class="recipes-grid">
+				<div class="grid-layout">
 					{recipes.map((recipe) => (
 						<RecipeCard recipe={recipe} />
 					))}
@@ -81,16 +61,23 @@ if (Astro.cache?.enabled) {
 			</section>
 		)}
 
-		<!-- Cottage Food Compliance Notice -->
-		<section class="cottage-declaration-card">
-			<div class="declaration-icon">🏡</div>
-			<div class="declaration-text">
-				<h3>Registered Cottage Food Operation</h3>
-				<p>
-					All food products sold through Nakita's Kitchen are produced under Cottage Food Operation License #CFO-LA-2026-9481. Every item lists full ingredients, allergen disclosures, and net weight for transparent home kitchen baking.
-				</p>
-			</div>
-		</section>
+		<!-- Featured Cottage Bakery Storefront Section -->
+		{products && products.length > 0 && (
+			<section class="section-block">
+				<header class="section-header">
+					<div>
+						<span class="section-badge cottage">🥖 Fresh Saturday Bakes</span>
+						<h2 class="section-title">Cottage Bakery Pre-Orders</h2>
+					</div>
+					<a href="/shop" class="section-link">Visit Bakery Shop &rarr;</a>
+				</header>
+				<div class="grid-layout">
+					{products.map((product) => (
+						<ProductCard product={product} />
+					))}
+				</div>
+			</section>
+		)}
 	</div>
 </Base>
 
@@ -100,35 +87,41 @@ if (Astro.cache?.enabled) {
 		color: #ffffff;
 		padding: 4.5rem 1.5rem;
 		text-align: center;
+		border-bottom: 1px solid var(--color-border, #334155);
 	}
 	.hero-container {
 		max-width: 800px;
 		margin: 0 auto;
 	}
 	.hero-badge {
-		background: rgba(255, 255, 255, 0.15);
-		color: #38bdf8;
-		font-weight: 600;
+		display: inline-block;
+		background: rgba(217, 119, 6, 0.2);
+		border: 1px solid rgba(217, 119, 6, 0.5);
+		color: #f59e0b;
+		font-weight: 700;
 		font-size: 0.8125rem;
 		text-transform: uppercase;
 		letter-spacing: 0.08em;
-		padding: 0.35rem 0.9rem;
+		padding: 0.35rem 1rem;
 		border-radius: 20px;
-		display: inline-block;
-		margin-bottom: 1.25rem;
+		margin-bottom: 1rem;
 	}
 	.hero-title {
-		font-size: clamp(2.25rem, 5vw, 3.5rem);
+		font-size: 3rem;
 		font-weight: 800;
-		line-height: 1.15;
 		margin: 0 0 1.25rem 0;
+		line-height: 1.15;
 		letter-spacing: -0.02em;
+		color: #ffffff;
 	}
 	.hero-subtitle {
-		font-size: 1.1875rem;
+		font-size: 1.15rem;
+		line-height: 1.65;
 		color: #94a3b8;
-		line-height: 1.6;
 		margin: 0 0 2rem 0;
+	}
+	.hero-subtitle strong {
+		color: #f8fafc;
 	}
 	.hero-buttons {
 		display: flex;
@@ -137,93 +130,88 @@ if (Astro.cache?.enabled) {
 		flex-wrap: wrap;
 	}
 	.btn-primary {
-		background: var(--color-brand, #0066cc);
+		background: #d97706;
 		color: #ffffff;
-		padding: 0.85rem 1.75rem;
-		border-radius: 8px;
 		font-weight: 700;
+		font-size: 1rem;
+		padding: 0.85rem 1.6rem;
+		border-radius: 12px;
 		text-decoration: none;
-		transition: transform 0.2s ease, background 0.2s ease;
+		transition: background 0.15s ease, transform 0.15s ease;
 	}
 	.btn-primary:hover {
-		background: var(--color-brand-hover, #0052a3);
-		transform: translateY(-2px);
+		background: #b45309;
+		transform: translateY(-1px);
 	}
 	.btn-secondary {
 		background: rgba(255, 255, 255, 0.1);
 		color: #ffffff;
-		padding: 0.85rem 1.75rem;
-		border-radius: 8px;
-		font-weight: 600;
-		text-decoration: none;
 		border: 1px solid rgba(255, 255, 255, 0.2);
-		transition: background 0.2s ease;
+		font-weight: 600;
+		font-size: 1rem;
+		padding: 0.85rem 1.6rem;
+		border-radius: 12px;
+		text-decoration: none;
+		transition: background 0.15s ease;
 	}
 	.btn-secondary:hover {
 		background: rgba(255, 255, 255, 0.2);
 	}
-	.container {
-		max-width: 1200px;
+
+	.home-content {
+		max-width: 1240px;
 		margin: 0 auto;
-		padding: 3.5rem 1.5rem;
+		padding: 4rem 1.5rem;
+		display: flex;
+		flex-direction: column;
+		gap: 4rem;
 	}
+
 	.section-block {
-		margin-bottom: 4rem;
+		display: flex;
+		flex-direction: column;
+		gap: 1.5rem;
 	}
+
 	.section-header {
 		display: flex;
 		justify-content: space-between;
 		align-items: flex-end;
-		margin-bottom: 2rem;
-		border-bottom: 1px solid var(--color-border, #e2e8f0);
-		padding-bottom: 1rem;
 	}
-	.section-tag {
-		font-size: 0.8125rem;
-		text-transform: uppercase;
-		letter-spacing: 0.05em;
-		font-weight: 600;
-		color: var(--color-brand, #0066cc);
-	}
-	.section-heading {
-		font-size: 1.875rem;
+
+	.section-badge {
+		font-size: 0.75rem;
 		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+		color: #d97706;
+	}
+
+	.section-badge.cottage {
+		color: #16a34a;
+	}
+
+	.section-title {
+		font-size: 1.85rem;
+		font-weight: 800;
 		color: var(--color-text, #0f172a);
 		margin: 0.25rem 0 0 0;
 	}
+
 	.section-link {
 		color: var(--color-brand, #0066cc);
-		font-weight: 600;
-		text-decoration: none;
+		font-weight: 700;
 		font-size: 0.9375rem;
+		text-decoration: none;
 	}
-	.products-grid,
-	.recipes-grid {
+
+	.section-link:hover {
+		text-decoration: underline;
+	}
+
+	.grid-layout {
 		display: grid;
 		grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
 		gap: 2rem;
-	}
-	.cottage-declaration-card {
-		display: flex;
-		align-items: center;
-		gap: 1.5rem;
-		background: var(--color-bg-subtle, #f8fafc);
-		border: 1px solid var(--color-border, #e2e8f0);
-		border-radius: 16px;
-		padding: 2rem;
-	}
-	.declaration-icon {
-		font-size: 2.5rem;
-	}
-	.declaration-text h3 {
-		margin: 0 0 0.4rem 0;
-		font-weight: 700;
-		color: var(--color-text, #0f172a);
-	}
-	.declaration-text p {
-		margin: 0;
-		font-size: 0.9375rem;
-		color: var(--color-text-secondary, #475569);
-		line-height: 1.6;
 	}
 </style>
