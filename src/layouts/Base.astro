@@ -554,6 +554,10 @@ const isLoggedIn = !!Astro.locals.user;
 				position: relative;
 				width: 44px;
 				height: 44px;
+				min-width: 44px;
+				min-height: 44px;
+				aspect-ratio: 1 / 1;
+				flex-shrink: 0;
 				border-radius: 50%;
 				background: #ffffff;
 				padding: 2px;
@@ -562,8 +566,12 @@ const isLoggedIn = !!Astro.locals.user;
 			}
 
 			.footer-sticker {
-				width: 52px;
-				height: 52px;
+				width: 44px !important;
+				height: 44px !important;
+				min-width: 44px !important;
+				min-height: 44px !important;
+				aspect-ratio: 1 / 1 !important;
+				flex-shrink: 0 !important;
 			}
 
 			.sticker-logo-img {
