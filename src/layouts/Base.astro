@@ -145,12 +145,13 @@ const isLoggedIn = !!Astro.locals.user;
 					}
 				</div>
 
-				<!-- Centered Brand Logo & Title -->
+				<!-- Centered Brand: Logo Between "Nakita's" and "Kitchen" -->
 				<a href="/" class="site-title-brand">
+					<span class="brand-text-word">Nakita's</span>
 					<div class="sticker-logo-container">
 						<img src="/logo.jpg" alt="Nakita's Kitchen Chef Dog Logo" class="sticker-logo-img" />
 					</div>
-					<span class="brand-text-name">Nakita's Kitchen</span>
+					<span class="brand-text-word">Kitchen</span>
 				</a>
 
 				<!-- Right Menu Group (Desktop) -->
@@ -289,10 +290,11 @@ const isLoggedIn = !!Astro.locals.user;
 				<div class="footer-grid">
 					<div class="footer-brand">
 						<a href="/" class="footer-logo-brand">
+							<span class="brand-text-word">Nakita's</span>
 							<div class="sticker-logo-container footer-sticker">
 								<img src="/logo.jpg" alt="Nakita's Kitchen Chef Dog Logo" class="sticker-logo-img" />
 							</div>
-							<span class="footer-brand-title">Nakita's Kitchen</span>
+							<span class="brand-text-word">Kitchen</span>
 						</a>
 						<p class="footer-tagline">{siteTagline}</p>
 					</div>
@@ -530,7 +532,7 @@ const isLoggedIn = !!Astro.locals.user;
 			.footer-logo-brand {
 				display: flex;
 				align-items: center;
-				gap: 0.75rem;
+				gap: 0.65rem;
 				text-decoration: none;
 				color: var(--color-text);
 				font-weight: 700;
@@ -540,11 +542,10 @@ const isLoggedIn = !!Astro.locals.user;
 				flex-shrink: 0;
 			}
 
-			.brand-text-name,
-			.footer-brand-title {
+			.brand-text-word {
 				font-family: var(--font-heading, "Playfair Display", serif);
 				font-weight: 700;
-				font-size: 1.25rem;
+				font-size: 1.35rem;
 				color: var(--color-text);
 				white-space: nowrap;
 			}
@@ -574,7 +575,7 @@ const isLoggedIn = !!Astro.locals.user;
 			}
 
 			.site-title-brand:hover .sticker-logo-container {
-				transform: scale(1.08) rotate(-3deg);
+				transform: scale(1.12) rotate(-4deg);
 			}
 
 			.nav-icon-btn {
@@ -692,10 +693,18 @@ const isLoggedIn = !!Astro.locals.user;
 				position: fixed;
 				inset: 0;
 				z-index: 2000;
-				display: flex;
+				display: none;
 				align-items: flex-start;
 				justify-content: center;
 				padding-top: 12vh;
+			}
+
+			.search-modal-overlay.is-open {
+				display: flex !important;
+			}
+
+			.search-modal-overlay[hidden] {
+				display: none !important;
 			}
 
 			.search-modal-backdrop {
@@ -746,6 +755,13 @@ const isLoggedIn = !!Astro.locals.user;
 				display: flex;
 				align-items: center;
 				justify-content: center;
+				transition: background 0.15s ease;
+			}
+
+			.close-search-btn:hover {
+				background: #ef4444;
+				color: #ffffff;
+				border-color: #ef4444;
 			}
 
 			:global(.modal-live-search) {
@@ -902,7 +918,7 @@ const isLoggedIn = !!Astro.locals.user;
 					margin: 0;
 				}
 
-				.brand-text-name {
+				.brand-text-word {
 					font-size: 1.1rem;
 				}
 			}
@@ -935,7 +951,7 @@ const isLoggedIn = !!Astro.locals.user;
 					if (mobileDrawer) mobileDrawer.hidden = !mobileDrawer.hidden;
 				});
 
-				// Intuitive Search Modal Handler
+				// Intuitive Search Modal Handler (Opens & Closes reliably)
 				const searchModal = document.getElementById("search-modal-overlay");
 				const searchBackdrop = document.getElementById("search-backdrop");
 				const closeSearchBtn = document.getElementById("close-search-modal");
@@ -944,6 +960,7 @@ const isLoggedIn = !!Astro.locals.user;
 
 				function openSearchModal() {
 					if (!searchModal) return;
+					searchModal.classList.add("is-open");
 					searchModal.hidden = false;
 					document.body.style.overflow = "hidden";
 					setTimeout(() => {
@@ -954,6 +971,7 @@ const isLoggedIn = !!Astro.locals.user;
 
 				function closeSearchModal() {
 					if (!searchModal) return;
+					searchModal.classList.remove("is-open");
 					searchModal.hidden = true;
 					document.body.style.overflow = "";
 				}
