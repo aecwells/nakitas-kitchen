@@ -4,18 +4,50 @@ export const prerender = false;
 
 export const POST: APIRoute = async ({ request, locals }) => {
 	try {
-		const body = await request.json();
+		let title = "";
+		let source = "";
+		let equipment = "";
+		let prepTime = "";
+		let cookTime = "";
+		let servings = "";
+		let defaultIngredients = "";
+		let rawInstructions = "";
+		let frontImage = "";
+		let backImage = "";
 
-		const title = body.title || "Scanned HelloFresh Recipe";
-		const source = body.source || "HelloFresh Meal Card";
-		const equipment = body.equipment || "Indoor Oven & Stovetop Skillet";
-		const prepTime = body.prep_time || "15 mins";
-		const cookTime = body.cook_time || "50-65 mins";
-		const servings = body.servings || "2-4 servings (750 Cal)";
-		const defaultIngredients = body.ingredients || "";
-		const rawInstructions = body.instructions || "";
-		const frontImage = body.front_image || "";
-		const backImage = body.back_image || "";
+		const contentType = request.headers.get("content-type") || "";
+		if (contentType.includes("application/json")) {
+			const body = await request.json();
+			title = body.title || "";
+			source = body.source || "";
+			equipment = body.equipment || "";
+			prepTime = body.prep_time || "";
+			cookTime = body.cook_time || "";
+			servings = body.servings || "";
+			defaultIngredients = body.ingredients || "";
+			rawInstructions = body.instructions || "";
+			frontImage = body.front_image || "";
+			backImage = body.back_image || "";
+		} else {
+			const formData = await request.formData();
+			title = (formData.get("title") as string) || "";
+			source = (formData.get("source") as string) || "";
+			equipment = (formData.get("equipment") as string) || "";
+			prepTime = (formData.get("prep_time") as string) || "";
+			cookTime = (formData.get("cook_time") as string) || "";
+			servings = (formData.get("servings") as string) || "";
+			defaultIngredients = (formData.get("ingredients") as string) || "";
+			rawInstructions = (formData.get("instructions") as string) || "";
+			frontImage = (formData.get("front_image_data") as string) || "";
+			backImage = (formData.get("back_image_data") as string) || "";
+		}
+
+		if (!title) title = "Scanned HelloFresh Recipe";
+		if (!source) source = "HelloFresh Meal Card";
+		if (!equipment) equipment = "Indoor Oven & Stovetop Skillet";
+		if (!prepTime) prepTime = "15 mins";
+		if (!cookTime) cookTime = "35-45 mins";
+		if (!servings) servings = "2-4 servings (990 Cal)";
 
 		const slug = title
 			.toLowerCase()
