@@ -520,8 +520,9 @@ import Base from "../../layouts/Base.astro";
 				});
 
 				const data = await res.json();
-				if (data.success && data.redirectUrl) {
-					window.location.href = data.redirectUrl;
+				const redirectTarget = data.redirect || data.redirectUrl;
+				if (data.success && redirectTarget) {
+					window.location.href = redirectTarget;
 				} else {
 					alert("Error: " + (data.error || "Failed to process card"));
 					submitBtn.disabled = false;
